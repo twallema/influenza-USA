@@ -130,3 +130,7 @@ dmypy.json
 
 # Macbook
 .DS_Store
+
+# long-format mobility data
+data/interim/mobility/mobility_2011_2015-longform.csv
+data/interim/mobility/mobility_2016_2020-longform.csv
