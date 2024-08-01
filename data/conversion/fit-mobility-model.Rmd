@@ -197,6 +197,8 @@ write.csv(M_hatRad, "../interim/mobility/matrix_radiation_2011_2015.csv")
 
 ## Visualise model vs. data histogram
 
+Why do the model and the data deviate so much? Because we are fundamentally comparing apples and pears. The mobility survey contains a sample for the number of commuters for approx. 1% of the possible number of trips, which means data are very sparse.
+
 ```{r compare}
 # normalise with population size
 M_copy = sweep(M, 1, as.vector(N), FUN = "/")
@@ -206,21 +208,14 @@ M_hatRad_copy = sweep(M_hatRad, 1, as.vector(N), FUN = "/")
 model_vector <- as.vector(M_hatRad_copy)
 data_vector <- as.vector(M_copy)
 
-# remove all model preditions under 1 (obscures comparison)
-#model_vector <- model_vector[model_vector >= 1]
-#data_vector <- data_vector[data_vector >= 1]
-
 # transform data
 model_transform <- log10(model_vector)
 data_transform <- log10(data_vector)
-
-model_transform <- model_transform[model_transform >= -6]
 
 # compute continuous model density
 model_transform_density <- density(model_transform)
 
 # visualise transform
-png("histogram_comparison.png", width = 1000, height = 600)
-hist(x=data_transform, breaks=30, xlab = "log10 mobility counts", probability=TRUE, main = "Comparison data-model", xlim=c(-10,1), ylim = c(0, 2))
+hist(x=data_transform, breaks=30, xlab = "log10 normalised commutes", probability=TRUE, main = "Comparison data-model", xlim=c(-12,1), ylim = c(0, 1))
 lines(model_transform_density, col = "red", lwd = 2)
 ```
