@@ -194,3 +194,33 @@ ggsave("matrix_county_radiation.png")
 ```{r save}
 write.csv(M_hatRad, "../interim/mobility/matrix_radiation_2011_2015.csv")
 ```
+
+## Visualise model vs. data histogram
+
+```{r compare}
+# normalise with population size
+M_copy = sweep(M, 1, as.vector(N), FUN = "/")
+M_hatRad_copy = sweep(M_hatRad, 1, as.vector(N), FUN = "/")
+
+# flatten data
+model_vector <- as.vector(M_hatRad_copy)
+data_vector <- as.vector(M_copy)
+
+# remove all model preditions under 1 (obscures comparison)
+#model_vector <- model_vector[model_vector >= 1]
+#data_vector <- data_vector[data_vector >= 1]
+
+# transform data
+model_transform <- log10(model_vector)
+data_transform <- log10(data_vector)
+
+model_transform <- model_transform[model_transform >= -6]
+
+# compute continuous model density
+model_transform_density <- density(model_transform)
+
+# visualise transform
+png("histogram_comparison.png", width = 1000, height = 600)
+hist(x=data_transform, breaks=30, xlab = "log10 mobility counts", probability=TRUE, main = "Comparison data-model", xlim=c(-10,1), ylim = c(0, 2))
+lines(model_transform_density, col = "red", lwd = 2)
+```
