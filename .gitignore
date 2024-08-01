@@ -131,6 +131,7 @@ dmypy.json
 # Macbook
 .DS_Store
 
-# long-format mobility data
+# US county level mobility data
 data/interim/mobility/mobility_2011_2015-longform.csv
 data/interim/mobility/mobility_2016_2020-longform.csv
+data/interim/mobility/matrix_radiation_2011_2015.csv

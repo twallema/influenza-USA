@@ -1,0 +1,196 @@
+---
+title: "Mobility_Model_USA"
+output: html_document
+date: "2024-08-01"
+author: "Rita Verstraeten, Ghent University"
+---
+
+This file creates the mobility matrices for the counties of the USA. 
+
+```{r setup, include=FALSE}
+rm(list=ls())
+library(mobility)
+library(ggplot2)
+library(reshape2)
+library(viridis)
+library(ggstance)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  autodep=TRUE
+)
+```
+
+## Loading the US data 
+```{r mobility data from excel}
+library(readxl)
+data_long <- read.csv("../interim/mobility/mobility_2011_2015-longform.csv", colClasses = c(origin = "character", destination = "character")) 
+length(unique(data_long$origin)) # 3222
+length(unique(data_long$destination)) # 3222 OK
+```
+
+## Building the mobility matrix
+```{r creating the mobility matrix}
+M <- get_mob_matrix(orig = data_long$origin, 
+                    dest = data_long$destination, 
+                    value = data_long$commuters)
+M[1:8, 1:8]
+```
+
+```{r plot M, fig.height=7, fig.width=7, echo=FALSE}
+ggplot(data=melt(M)) +
+  geom_tile(aes(x=factor(destination),
+                y=factor(origin),
+                fill=log10(value))) +
+  xlab('Destination') + ylab("Origin") +
+  theme_bw() + theme(axis.text.x=element_text(size=10),
+                     axis.text.y=element_text(size=10),
+                     axis.title.x=element_text(size=12, margin = margin(t = 15)),
+                     axis.title.y=element_text(size=12, margin = margin(r = 15)),
+                     legend.position='bottom') +
+  viridis::scale_fill_viridis(option='inferno', direction=1, limits=c(-7, 4)) +
+  guides(fill=guide_colorbar(title='Log of observed trips',
+                             title.position='top',
+                             label.theme=element_text(size=9),
+                             barwidth=20,
+                             barheight=0.5,
+                             frame.colour='black',
+                             ticks=TRUE))
+```
+Grey cells represent missing or non-existing travel routes
+
+## Building the distance matrix
+Mobility models require that distances be provided for all routes even if these observations are missing in the mobility matrix ($M$). A distance matrix for all unique routes can be built by getting all unique coordinates in the travel data using the `get_unique_coords()` function and then calculating the distances among all locations with `get_distance_matrix()`. Note that there is no requirement for the units of the distance matrix. However, we recommend the scale used is sensible for the spatial scale of the study area.
+
+So, usually you would have x and y coordinates for this. But seeing as you have already calculated the distances, all I need to do is turn that into a matrix. 
+
+```{r distance matrix from long format data}
+D <- dcast(data_long, origin ~ destination, value.var = "distance_km")
+rownames(D) <- D$origin
+D <- D[,-1]
+colnames(D) <- rownames(D)
+head(D)
+```
+
+## Creating the population size vector
+This is simply a vector with the county codes and their respective population sizes. 
+First I want to check that every origin has a unique population size that is the same for every origin entry in the dataframe. 
+```{r creating the population vector}
+unique_populations <- unique(data_long[, c("origin", "origin_population")])
+nrow(unique_populations) # 3222 --> OK
+
+N <- setNames(unique_populations$origin_population, unique_populations$origin)
+head(N)
+```
+
+Note that since the distance matrix ($D$) and population vector ($N$) are covariates used by models, they cannot have missing values and must all have matching dimensions. Code below checks that all data dimensions match. 
+```{r checking dimentions of matrices correspond}
+N <- as.matrix(N)
+head(N)
+M <- as.matrix(M) #
+D <- as.matrix(D) 
+
+print(str(N)) # int [1:3222, 1]
+print(str(M)) # num [1:3222, 1:3222]
+print(str(D)) # num [1:3222, 1:3222]
+
+all(
+     sapply(list(dim(D)[1], length(N)), FUN = identical, dim(M)[1]), # checks if the number of rows in D and the length of N are both identical to the number of rows in M.
+     sapply(list(dimnames(D)$origin, names(N)), FUN = identical, dimnames(M)$origin)
+)
+
+sapply(list(dim(D)[1], length(N)), FUN = identical, dim(M)[1]) # TRUE, TRUE 
+#so the number of rows in D and M are equal to the length of N 
+
+sapply(list(dimnames(D)$origin, names(N)), FUN = identical, dimnames(M)$origin) # FALSE FALSE
+dimnames(D)$origin == names(N) # whether rownames of D == rownames of vector N 
+names(N) <- rownames(N)
+dimnames(D)$origin == names(N)
+
+part2 <- sapply(list(dimnames(D)$origin, names(N)), FUN = identical, dimnames(M)$origin)
+print(part2) #FALSE FALSE
+
+# we need to reorder D so that the names correspond to the names order in M
+D <- D[rownames(M), colnames(M)]
+
+# this is because the structure of D is different from that of M - Assigning names 'origin' and 'destination' to the components of dimnames(D)
+dimnames(D) <- list(origin = dimnames(D)[[1]], destination = dimnames(D)[[2]])
+str(dimnames(D))
+
+part2 <- sapply(list(dimnames(D)$origin, names(N)), FUN = identical, dimnames(M)$origin)
+print(part2) #TRUE FALSE
+
+str(names(N))
+str(dimnames(D)$origin)
+order_origins_M <- dimnames(M)$origin
+N <- N[match(order_origins_M, names(N))]
+
+part2 <- sapply(list(dimnames(D)$origin, names(N)), FUN = identical, dimnames(M)$origin)
+print(part2) #TRUE TRUE
+```
+
+
+# Listing the 3 matrices to obtain the correct format for the mobility function
+```{r listing the matrices}
+colnames(N) <- NULL
+#str(N)
+matrix_list <-  list(M = M, D = D, N = N)
+#str(matrix_list)
+```
+
+## Fit the radiation model
+```{r fit}
+modRad <- mobility(data=matrix_list, model='radiation', type='basic', DIC=TRUE, parallel=TRUE)
+```
+
+Fitting a mobility model to a large number of locations (e.g. $\gt 100$) or drawing a large number of samples from posterior distributions (e.g. 10000) may take several minutes. If computation is cumbersome, then the model can run sampling chains in parallel instead of sequentially by specifying `parallel = TRUE`.
+
+The fitting function `mobility()` returns results as a `mobility.model` that contains information on the type of model, the data used, and the estimated model parameters.
+```{r chains}
+str(modRad)
+```
+
+The `check()` function provides goodness of fit metrics and summary plots for the fitted model.
+```{r check, fig.height=4, fig.width=7.25}
+check(modRad)
+```
+
+## Simulating a fitted mobility model
+Once we have verified that our model fits the data adequately, we can simulate connectivity values among locations in our data using the estimated parameter values in the `'mobility.model'` object using the `predict()` function.
+
+```{r sim}
+M_hatRad <- predict(modRad)
+```
+
+# Plotting the radiation model
+```{r radiation sim_plot, data_plot, fig.height=10, fig.width=10}
+#breaks <- c(150, 300, 600, 1500, 3500, 7500, 15000, 45000, 100000, 280000)
+melted_Mhat <- melt(M_hatRad)
+melted_Mhat$destination <- factor(melted_Mhat$destination, levels = levels(factor(melted_Mhat$destination)))
+melted_Mhat$origin <- factor(melted_Mhat$origin, levels = rev(levels(factor(melted_Mhat$origin))))
+
+ggplot(data=melted_Mhat) +
+  geom_tile(aes(x=factor(destination),
+                y=factor(origin),
+                fill=log10(value))) +
+  xlab('Destination') + ylab("Origin") +
+  theme_bw() + theme(axis.text.x=element_text(size=10, angle=90, hjust=1, vjust = 0.5),
+                     axis.text.y=element_text(size=10),
+                     axis.title.x=element_text(size=12, margin = margin(t = 15)),
+                     axis.title.y=element_text(size=12, margin = margin(r = 15)),
+                     legend.position='bottom') +
+  viridis::scale_fill_viridis(option='inferno', direction=1, limits=c(-7, 4))+
+  guides(fill=guide_colorbar(title='log10(Observed number of modeled trips)',
+                             title.position='top',
+                             label.theme=element_text(size=9),
+                             barwidth=20,
+                             barheight=0.5,
+                             frame.colour='black',
+                             ticks=TRUE))
+ggsave("matrix_county_radiation.png")
+```
+## Save result
+```{r save}
+write.csv(M_hatRad, "../interim/mobility/matrix_radiation_2011_2015.csv")
+```

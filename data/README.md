@@ -20,6 +20,8 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `commuting_flows_county_2011_2015.xlsx`: Contains the estimated number of commuters from county X to county Y, between 2011 and 2015. Preferably used over the 2016-2020 survey because of the COVID-19 pandemic in 2020. Downloaded from https://www.census.gov/data/tables/2015/demo/metro-micro/commuting-flows-2015.html
 
++ `mobilityFlowsCounty.csv`: Mobility flows from aggregated cellphone data between US Counties. Available on 04/14/2020 and 03/09/2020. Found by Rita Verstraeten by attending ESPIDAM 2024 Conference, EPIcx-lab. Downloaded from https://github.com/EPIcx-lab/ESPIDAM2024_Networks-and-Contact-Patterns-in-Infectious-Disease-Models/tree/main/mobilityflows
+
 ### Geography
 
 #### cb_2022_us_state_500k
@@ -39,8 +41,19 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `demography_states_2023.csv`: Columns: 1) State code, 2) Age group, 3) Population. Formatted from the county-level demography files in `data/raw/demography/counties/cc-est2023-syasex-xx.csv` using `data/conversion/build-demography.py`. 
 
+### Mobility
+
++ `mobility_2011_2015-longform.csv`: Long-format mobility data needed to calibrate a mobility model. Made from raw file `commuting_flows_county_2011_2015.xlsx` using `compile-mobility-data.py`.
+
++ `mobility_2016_2020-longform.csv`: Long-format mobility data needed to calibrate a mobility model. Made from raw file `commuting_flows_county_2016_2020.xlsx` using `compile-mobility-data.py`.
+
++ `matrix_radiation_2011_2015.csv`: Square origin-destination commuter's mobility matrix. USA, county level, 2011-2015. Made using the interim data in `mobility_2011_2015-longform.csv` and script `fit-mobility-model.Rmd`.
+
+
 ## Conversion
 
 + `build-demography.py`: Script used to convert the raw county-level population per year of age into state and county level population in age groups.
 
 + `compile-mobility-data.py`: Script used to compile the county-level demographic data, commuter survey, and geodata into a long-form dataset containing the origin and destination US county FIPS codes, the number of inhabitants in the origin and destination counties, the number of commuters from the origin to the destination county, and the distance between the centroids of the origin and destination counties. These data are the ideal format to build a mobility model. Build the demographic data before running this script. Large file: > 500 Mb.
+
++ `fit-mobility-model.Rmd`: Script using the R Mobility package to fit mobility models to the commuter data. Authored by Rita Verstraeten.
