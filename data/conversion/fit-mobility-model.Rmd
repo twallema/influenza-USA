@@ -190,9 +190,10 @@ ggplot(data=melted_Mhat) +
                              ticks=TRUE))
 ggsave("matrix_county_radiation.png")
 ```
-## Save result
+## Save result at the county level
+
 ```{r save}
-write.csv(M_hatRad, "../interim/mobility/matrix_radiation_2011_2015.csv")
+write.csv(M_hatRad, "../interim/mobility/matrix_radiation_2011_2015_counties.csv")
 ```
 
 ## Visualise model vs. data histogram
@@ -218,4 +219,32 @@ model_transform_density <- density(model_transform)
 # visualise transform
 hist(x=data_transform, breaks=30, xlab = "log10 normalised commutes", probability=TRUE, main = "Comparison data-model", xlim=c(-12,1), ylim = c(0, 1))
 lines(model_transform_density, col = "red", lwd = 2)
+```
+
+## Convert county-level to US state level
+
+```{r conversion to state level data}
+# load libraries
+library(dplyr)
+library(tidyr)
+
+# convert the matrix to a data frame
+df <- as.data.frame(as.table(M_hatRad))
+
+# extract state codes from FIPS codes
+df <- df %>%
+  mutate(origin_state = substr(origin, 1, 2),
+         destination_state = substr(destination, 1, 2))
+
+# aggregate destination counties
+df <- df %>%
+  group_by(origin_state, destination_state) %>%
+  summarize(total_commutes = sum(Freq, na.rm = TRUE), .groups = 'drop')
+
+matrix_df <- df %>%
+  pivot_wider(names_from = destination_state, values_from = total_commutes, values_fill = list(total_commutes = 0)) %>%
+  as.matrix()
+
+# save data
+write.csv(matrix_df, "../interim/mobility/matrix_radiation_2011_2015_states.csv", row.names=FALSE)
 ```

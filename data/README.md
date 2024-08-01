@@ -47,13 +47,14 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `mobility_2016_2020-longform.csv`: Long-format mobility data needed to calibrate a mobility model. Made from raw file `commuting_flows_county_2016_2020.xlsx` using `compile-mobility-data.py`.
 
-+ `matrix_radiation_2011_2015.csv`: Square origin-destination commuter's mobility matrix. USA, county level, 2011-2015. Made using the interim data in `mobility_2011_2015-longform.csv` and script `fit-mobility-model.Rmd`.
++ `matrix_radiation_2011_2015_counties.csv`: Square origin-destination commuter's mobility matrix. USA, county level, 2011-2015. Made using the interim data in `mobility_2011_2015-longform.csv` and script `fit-mobility-model.Rmd`.
 
++ `matrix_radiation_2011_2015_states.csv`: Square origin-destination commuter's mobility matrix. USA, state level, 2011-2015. Made using the interim data in `mobility_2011_2015-longform.csv` and script `fit-mobility-model.Rmd`.
 
 ## Conversion
 
 + `build-demography.py`: Script used to convert the raw county-level population per year of age into state and county level population in age groups.
 
-+ `compile-mobility-data.py`: Script used to compile the county-level demographic data, commuter survey, and geodata into a long-form dataset containing the origin and destination US county FIPS codes, the number of inhabitants in the origin and destination counties, the number of commuters from the origin to the destination county, and the distance between the centroids of the origin and destination counties. These data are the ideal format to build a mobility model. Build the demographic data before running this script. Large file: > 500 Mb.
++ `compile-commuter-mobility-data.py`: Script used to compile the county-level demographic data, commuter survey, and geodata into a long-form dataset containing the origin and destination US county FIPS codes, the number of inhabitants in the origin and destination counties, the number of commuters from the origin to the destination county, and the distance between the centroids of the origin and destination counties. These data are the ideal format to build a mobility model. Build the demographic data before running this script. Large file: > 500 Mb.
 
-+ `fit-mobility-model.Rmd`: Script using the R Mobility package to fit mobility models to the commuter data. Authored by Rita Verstraeten.
++ `fit-mobility-model.Rmd`: Script using the R Mobility package to fit mobility models to the commuter data at the US county level, and convert them to the US State level. Authored by Rita Verstraeten.
