@@ -119,4 +119,4 @@ for fy,fn in zip(file_years,file_names):
     # step 6: add the distances (equality of indices asserted)
     out['distance_km'] = gdf['distance_km']
     # step 7: save results
-    out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_{fy}-longform.csv'))
+    out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_{fy}-longform.csv'), index=False)
