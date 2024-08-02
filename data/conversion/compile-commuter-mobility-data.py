@@ -1,5 +1,5 @@
 """
-A script to format and bundle the necessary data to build a US county-level mobility model, outputs a dataframe containing,
+A script to format and bundle the necessary data to build a US county-level mobility model using the R mobility package, outputs a dataframe containing,
 
 columns:
 --------
@@ -8,7 +8,7 @@ origin: str
     Origin county FIPS code (post 2020)
 
 destination: str
-    Destination county FIPS code (post 2020). There are a lot of unobserved trajectories among the US counties, which are assigned NaN.
+    Destination county FIPS code (post 2020). Of the 10M possible trips, only 1% were observed in the survey, data are sparse.
 
 commuters: int
     Number of inhabitants commuting from origin to destination 
@@ -29,6 +29,9 @@ Changes made to the FIPS codes since the appearance of the 2011-2015 commuter ce
 - Connecticut (State 9) counties were completely redefined in 2020: https://www2.census.gov/geo/pdfs/reference/ct_county_equiv_change.pdf
 - Alaska (State 2) has split county 02261 into two new counties: 02063 and 02066: https://www.census.gov/programs-surveys/geography/technical-documentation/county-changes.2010.html#list-tab-957819518
 Data from 2011-2015 not overlapping with the anno-2020 FIPS codes is ommitted from the dataset (11 values). 
+
+The 2011-2015 commuter census data for the 11 missing post-2020 counties have an artificial on-diagonal entry set to the US-average fraction of county inhabitants commuting.
+This is necessary because a radiation mobility model distributes the sum of all trips originating from an origin across all destinations
 """
 
 ############################
@@ -66,7 +69,7 @@ FIPS_2020 = demography.index.unique().values
 ## Compute distance matrix ##
 #############################
 
-# load shapefiles
+# # load shapefiles
 gdf = gpd.read_file(os.path.join(os.getcwd(),'../raw/geography/cb_2022_us_county_500k/cb_2022_us_county_500k.shp'))
 # geodata contains 56 states, as opposed to 52 in the mobility and demography data
 # excess states as compared to demography and mobility are: FIPS 60 (Samoa), 66 (Guam), 69 (Mariana Islands), 78 (Virgin Islands)
@@ -118,5 +121,13 @@ for fy,fn in zip(file_years,file_names):
     out['destination_population'] = out['destination'].map(demography.squeeze())
     # step 6: add the distances (equality of indices asserted)
     out['distance_km'] = gdf['distance_km']
+    # step 7: compute the average fraction of the population in the non-missing US counties commuting
+    missing_origins = out[(pd.isna(out['commuters']) & (out['origin'] == out['destination']))]['origin'].values # identify origins with only nans (confirmed 11 values)
+    avg = out.groupby(by='origin')['commuters'].sum()/ demography.squeeze() # do a groupby origin and sum over destinations to get total number of commutes from an origin
+    avg = avg.dropna().mean() # average dataframe
+    # assign rounded average on diagonal
+    for mo in missing_origins:
+        out.loc[((out['origin'] == mo) & (out['destination'] == mo)), 'commuters'] = int(avg*demography.loc[mo, 'population'])
     # step 7: save results
     out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_{fy}-longform.csv'), index=False)
+
