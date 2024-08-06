@@ -25,7 +25,7 @@ knitr::opts_chunk$set(
 ## Loading the US data 
 ```{r mobility data from excel}
 library(readxl)
-data_long <- read.csv("../interim/mobility/mobility_2011_2015-longform.csv", colClasses = c(origin = "character", destination = "character")) 
+data_long <- read.csv("../interim/mobility/mobility_commuters_2016-2020_longform.csv", colClasses = c(origin = "character", destination = "character")) 
 length(unique(data_long$origin)) # 3222
 length(unique(data_long$destination)) # 3222 OK
 ```
@@ -140,8 +140,11 @@ matrix_list <-  list(M = M, D = D, N = N)
 ```
 
 ## Fit the radiation model
+
+Default fitting settings are: n_chain=2, n_burn=1000, n_samp=1000, n_thin=2, which takes about 1-2 hours to fit.
+
 ```{r fit}
-modRad <- mobility(data=matrix_list, model='radiation', type='basic', DIC=TRUE, parallel=TRUE)
+modRad <- mobility(data=matrix_list, model='departure-diffusion', type='radiation', DIC=TRUE, parallel=TRUE, n_chain=2, n_burn=1000, n_samp=1000, n_thin=2)
 ```
 
 Fitting a mobility model to a large number of locations (e.g. $\gt 100$) or drawing a large number of samples from posterior distributions (e.g. 10000) may take several minutes. If computation is cumbersome, then the model can run sampling chains in parallel instead of sequentially by specifying `parallel = TRUE`.
@@ -193,7 +196,7 @@ ggsave("matrix_county_radiation.png")
 ## Save result at the county level
 
 ```{r save}
-write.csv(M_hatRad, "../interim/mobility/matrix_radiation_2011_2015_counties.csv")
+write.csv(M_hatRad, "../interim/mobility/matrix_radiation_counties.csv")
 ```
 
 ## Visualise model vs. data histogram
@@ -246,5 +249,5 @@ matrix_df <- df %>%
   as.matrix()
 
 # save data
-write.csv(matrix_df, "../interim/mobility/matrix_radiation_2011_2015_states.csv", row.names=FALSE)
+write.csv(matrix_df, "../interim/mobility/matrix_radiation_states.csv", row.names=FALSE)
 ```
