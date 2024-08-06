@@ -1,5 +1,5 @@
 """
-A script to format and bundle the necessary data to build a US county-level mobility model using the R mobility package, outputs a dataframe containing,
+A script to format and bundle the commuter mobility survey data to build a US county-level mobility model using the R mobility package, outputs a dataframe containing,
 
 columns:
 --------
@@ -39,6 +39,7 @@ This is necessary because a radiation mobility model distributes the sum of all 
 ############################
 
 import os
+import numpy as np
 import pandas as pd
 import geopandas as gpd
 
@@ -69,7 +70,7 @@ FIPS_2020 = demography.index.unique().values
 ## Compute distance matrix ##
 #############################
 
-# # load shapefiles
+# load shapefiles
 gdf = gpd.read_file(os.path.join(os.getcwd(),'../raw/geography/cb_2022_us_county_500k/cb_2022_us_county_500k.shp'))
 # geodata contains 56 states, as opposed to 52 in the mobility and demography data
 # excess states as compared to demography and mobility are: FIPS 60 (Samoa), 66 (Guam), 69 (Mariana Islands), 78 (Virgin Islands)
@@ -121,13 +122,24 @@ for fy,fn in zip(file_years,file_names):
     out['destination_population'] = out['destination'].map(demography.squeeze())
     # step 6: add the distances (equality of indices asserted)
     out['distance_km'] = gdf['distance_km']
-    # step 7: compute the average fraction of the population in the non-missing US counties commuting
+    # step 7: correct for missing counties
     missing_origins = out[(pd.isna(out['commuters']) & (out['origin'] == out['destination']))]['origin'].values # identify origins with only nans (confirmed 11 values)
-    avg = out.groupby(by='origin')['commuters'].sum()/ demography.squeeze() # do a groupby origin and sum over destinations to get total number of commutes from an origin
-    avg = avg.dropna().mean() # average dataframe
-    # assign rounded average on diagonal
+    ## step 7a: compute the average number of commutes relative to pop. size
+    n_total = out.groupby(by='origin')['commuters'].sum()
+    f_commuting = n_total / demography.squeeze() 
+    f_commuting = f_commuting.dropna().mean() 
+    ## step 7b: compute the off-diagonal fraction 
+    n_offdiagonal = out[out['origin'] != out['destination']].groupby(by='origin')['commuters'].sum()
+    f_offdiagonal = (n_offdiagonal / n_total).dropna().mean()
+    ## step 7c: verify by computing the on-diagonal fraction
+    n_ondiagonal = out[out['origin'] == out['destination']].groupby(by='origin')['commuters'].sum()
+    f_ondiagonal = (n_ondiagonal / n_total).dropna().mean()
+    ## step 7d: fill out missing data (rows) by using the USA-average commuting fraction and on/off-diagonal distribution
     for mo in missing_origins:
-        out.loc[((out['origin'] == mo) & (out['destination'] == mo)), 'commuters'] = int(avg*demography.loc[mo, 'population'])
-    # step 7: save results
+        out.loc[((out['origin'] == mo) & (out['destination'] == mo)), 'commuters'] = int(f_commuting*f_ondiagonal*demography.loc[mo, 'population'])
+        out.loc[((out['origin'] == mo) & (out['destination'] != mo)), 'commuters'] = np.ones(len(out.loc[((out['origin'] == mo) & (out['destination'] != mo)), 'commuters'])) * int(f_commuting*(1-f_ondiagonal)*demography.loc[mo, 'population']) / len(out.loc[((out['origin'] == mo) & (out['destination'] != mo)), 'commuters'])
+    ## inherent assumption: no filling out of rows (trips into the missing post-2020 FIPS counties)
+    ##  this means that for counties highly connected to Alaska or Connecticut, the total number of off-diagonal trips will be underestimated, although this effect should be small.
+    # step 8: save results
     out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_{fy}-longform.csv'), index=False)
 
