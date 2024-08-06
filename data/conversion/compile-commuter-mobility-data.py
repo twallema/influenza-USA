@@ -141,5 +141,5 @@ for fy,fn in zip(file_years,file_names):
     ## inherent assumption: no filling out of rows (trips into the missing post-2020 FIPS counties)
     ##  this means that for counties highly connected to Alaska or Connecticut, the total number of off-diagonal trips will be underestimated, although this effect should be small.
     # step 8: save results
-    out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_{fy}-longform.csv'), index=False)
+    out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_commuters_{fy}_longform.csv'), index=False)
 

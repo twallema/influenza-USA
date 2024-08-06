@@ -176,6 +176,6 @@ n_test = n.values / demography.values # there are
 
 # step 8: save results
 out = out.drop(columns = ['state_o', 'state_d'])
-out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_cellphone-longform.csv'), index=False)
+out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_cellphone_09032020_longform.csv'), index=False)
 
 
