@@ -16,7 +16,7 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### Mobility
 
-+ `commuting_flows_county_2016_2020.xlsx`: Contains the estimated number of commuters from county X to county Y, between 2016 and 2020. ACS warns that uncertainty on the estimates is high due to the inclusion of the pandemic year 2020. Row 6 was manually removed in MS Excel to match the format of the 2011-2015 dataset. Downloaded from https://www.census.gov/data/tables/2020/demo/metro-micro/commuting-flows-2020.html 
++ `commuting_flows_county_2016_2020.xlsx`: Contains the estimated number of commuters from county X to county Y, between 2016 and 2020. ACS warns that uncertainty on the estimates is high due to the inclusion of the pandemic year 2020. Row 6 was manually removed in MS Excel to match the format of the 2011-2015 dataset. Route 12071 (Lee county, FL) traveling to 48301 (Loving county, TX), separated by 2189 miles, populations 834 573 and 43 respectively contained 47 travellers (margin of error 57) and was removed from the dataset because it resulted in errors during the inference of the departure-diffusion radiation model in `fit-mobility-models.Rmd`. 2011-2015 dataset contained NA as one would expect. Downloaded from https://www.census.gov/data/tables/2020/demo/metro-micro/commuting-flows-2020.html 
 
 + `commuting_flows_county_2011_2015.xlsx`: Contains the estimated number of commuters from county X to county Y, between 2011 and 2015. Preferably used over the 2016-2020 survey because of the COVID-19 pandemic in 2020. Downloaded from https://www.census.gov/data/tables/2015/demo/metro-micro/commuting-flows-2015.html
 
