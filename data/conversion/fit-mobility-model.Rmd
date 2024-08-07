@@ -25,7 +25,7 @@ knitr::opts_chunk$set(
 ## Loading the US data 
 ```{r mobility data from excel}
 library(readxl)
-data_long <- read.csv("../interim/mobility/mobility_commuters_2016-2020_longform.csv", colClasses = c(origin = "character", destination = "character")) 
+data_long <- read.csv("../interim/mobility/mobility_cellphone_09032020_longform.csv", colClasses = c(origin = "character", destination = "character")) 
 length(unique(data_long$origin)) # 3222
 length(unique(data_long$destination)) # 3222 OK
 ```
@@ -35,7 +35,7 @@ length(unique(data_long$destination)) # 3222 OK
 M <- get_mob_matrix(orig = data_long$origin, 
                     dest = data_long$destination, 
                     value = data_long$commuters)
-M[1:8, 1:8]
+M[309:311, 2659:2661]
 ```
 
 ```{r plot M, fig.height=7, fig.width=7, echo=FALSE}
@@ -196,7 +196,7 @@ ggsave("matrix_county_radiation.png")
 ## Save result at the county level
 
 ```{r save}
-write.csv(M_hatRad, "../interim/mobility/matrix_radiation_counties.csv")
+write.csv(M_hatRad, "../interim/mobility/matrix_counties.csv")
 ```
 
 ## Visualise model vs. data histogram
@@ -249,5 +249,5 @@ matrix_df <- df %>%
   as.matrix()
 
 # save data
-write.csv(matrix_df, "../interim/mobility/matrix_radiation_states.csv", row.names=FALSE)
+write.csv(matrix_df, "../interim/mobility/matrix_states.csv", row.names=FALSE)
 ```
