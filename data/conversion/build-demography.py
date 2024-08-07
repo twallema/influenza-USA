@@ -53,6 +53,7 @@ for fn in file_names:
         # state level data
         agg = data.groupby(['STATE', 'age_group'], observed=False)['TOT_POP'].sum().reset_index()
         agg.columns = ['state', 'age', 'population']
+        agg['state'] = agg['state'].apply(lambda x: f"{x:02}")
         df_states = pd.concat([df_states, agg], ignore_index=True)
 
 # sort codes
