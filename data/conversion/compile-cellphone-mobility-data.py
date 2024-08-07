@@ -174,7 +174,6 @@ for fips in n.index:
     out.loc[((out['origin'] == fips) & (out['destination'] == '02066')), 'commuters'] = n.loc[fips] * r_pop.loc['02066']
 
 # step 6: remove all trips going into the three smallest US counties (influxes in the dataset are not realistic)
-# Alternative 
 out.loc[((out['origin'] != '48301') & (out['destination'] == '48301')), 'commuters'] = np.nan # --> 113 other counties in the dataset that have an influx into 48301 Loving County (pop: 64) 
 out.loc[((out['origin'] != '15005') & (out['destination'] == '15005')), 'commuters'] = np.nan
 out.loc[((out['origin'] != '48269') & (out['destination'] == '48269')), 'commuters'] = np.nan
@@ -188,6 +187,6 @@ n_test = n.values / demography.values # there are
 
 # step 9: save results
 out = out.drop(columns = ['state_o', 'state_d'])
-out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_cellphone_09032020_longform.csv'), index=False)
+out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_cellphone_09032020_counties_longform.csv'), index=False)
 
 

@@ -35,7 +35,7 @@ length(unique(data_long$destination)) # 3222 OK
 M <- get_mob_matrix(orig = data_long$origin, 
                     dest = data_long$destination, 
                     value = data_long$commuters)
-M[309:311, 2659:2661]
+M[310:318, 310:318]
 ```
 
 ```{r plot M, fig.height=7, fig.width=7, echo=FALSE}
@@ -144,7 +144,7 @@ matrix_list <-  list(M = M, D = D, N = N)
 Default fitting settings are: n_chain=2, n_burn=1000, n_samp=1000, n_thin=2, which takes about 1-2 hours to fit.
 
 ```{r fit}
-modRad <- mobility(data=matrix_list, model='departure-diffusion', type='radiation', DIC=TRUE, parallel=TRUE, n_chain=2, n_burn=1000, n_samp=1000, n_thin=2)
+modRad <- mobility(data=matrix_list, model='radiation', type='basic', DIC=TRUE, parallel=TRUE, n_chain=2, n_burn=1000, n_samp=1000, n_thin=2)
 ```
 
 Fitting a mobility model to a large number of locations (e.g. $\gt 100$) or drawing a large number of samples from posterior distributions (e.g. 10000) may take several minutes. If computation is cumbersome, then the model can run sampling chains in parallel instead of sequentially by specifying `parallel = TRUE`.
@@ -208,9 +208,16 @@ Why do the model and the data deviate so much? Because we are fundamentally comp
 M_copy = sweep(M, 1, as.vector(N), FUN = "/")
 M_hatRad_copy = sweep(M_hatRad, 1, as.vector(N), FUN = "/")
 
+# compare model and data were values exist in data
+M_hatRad_copy[is.na(M_copy)] <- NA
+
 # flatten data
 model_vector <- as.vector(M_hatRad_copy)
 data_vector <- as.vector(M_copy)
+
+# throw out NA values in estimated matrix
+model_vector <- na.omit(model_vector)
+data_vector <- na.omit(data_vector)
 
 # transform data
 model_transform <- log10(model_vector)
@@ -220,7 +227,7 @@ data_transform <- log10(data_vector)
 model_transform_density <- density(model_transform)
 
 # visualise transform
-hist(x=data_transform, breaks=30, xlab = "log10 normalised commutes", probability=TRUE, main = "Comparison data-model", xlim=c(-12,1), ylim = c(0, 1))
+hist(x=data_transform, breaks=30, xlab = "log10 normalised commutes", probability=TRUE, main = "Comparison data-model", xlim=c(-8,1), ylim = c(0, 1))
 lines(model_transform_density, col = "red", lwd = 2)
 ```
 
