@@ -124,6 +124,7 @@ for fy,fn in zip(file_years,file_names):
     out['distance_km'] = gdf['distance_km']
     # step 7: correct for missing counties
     missing_origins = out[(pd.isna(out['commuters']) & (out['origin'] == out['destination']))]['origin'].values # identify origins with only nans (confirmed 11 values)
+    missing_origins_states = [mo[0:2] for mo in missing_origins] # extract state FIPS
     ## step 7a: compute the average number of commutes relative to pop. size
     n_total = out.groupby(by='origin')['commuters'].sum()
     f_commuting = n_total / demography.squeeze() 
@@ -135,11 +136,18 @@ for fy,fn in zip(file_years,file_names):
     n_ondiagonal = out[out['origin'] == out['destination']].groupby(by='origin')['commuters'].sum()
     f_ondiagonal = (n_ondiagonal / n_total).dropna().mean()
     ## step 7d: fill out missing data (rows) by using the USA-average commuting fraction and on/off-diagonal distribution
-    for mo in missing_origins:
+    out['state_d'] = out['destination'].apply(lambda x: f"{x[0:2]:02}")
+    for mo, mo_state in zip(missing_origins, missing_origins_states):
+        # on-diagonal
         out.loc[((out['origin'] == mo) & (out['destination'] == mo)), 'commuters'] = int(f_commuting*f_ondiagonal*demography.loc[mo, 'population'])
-        out.loc[((out['origin'] == mo) & (out['destination'] != mo)), 'commuters'] = np.ones(len(out.loc[((out['origin'] == mo) & (out['destination'] != mo)), 'commuters'])) * int(f_commuting*(1-f_ondiagonal)*demography.loc[mo, 'population']) / len(out.loc[((out['origin'] == mo) & (out['destination'] != mo)), 'commuters'])
+        # off-diagonal
+        n = len(out.loc[((out['origin'] == mo) & (out['destination'] != mo) & (out['state_d'] == mo_state)), 'commuters'])
+        demo = out.loc[((out['origin'] == mo) & (out['destination'] != mo) & (out['state_d'] == mo_state)), 'destination_population']
+        demo = demo / demo.sum()
+        out.loc[((out['origin'] == mo) & (out['destination'] != mo) & (out['state_d'] == mo_state)), 'commuters'] = int(f_commuting*(1-f_ondiagonal)*demography.loc[mo, 'population']) * demo.values
     ## inherent assumption: no filling out of rows (trips into the missing post-2020 FIPS counties)
     ##  this means that for counties highly connected to Alaska or Connecticut, the total number of off-diagonal trips will be underestimated, although this effect should be small.
     # step 8: save results
+    out = out.drop(columns = ['state_d'])
     out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_commuters_{fy}_longform.csv'), index=False)
 
