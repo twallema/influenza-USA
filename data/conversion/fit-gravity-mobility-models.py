@@ -7,11 +7,11 @@ Made because the R mobility package was unfeasibly slow during the inference.
 ## Settings ##
 ##############
 
-n_mcmc = 100
-n_burn = 50
-n_thin = 2
+n_mcmc = 200
+n_burn = 100
+n_thin = 3
 multip_chains = 5
-dataset_name = 'mobility_cellphone_09032020_counties_longform.csv'
+dataset_name = 'mobility_commuters_2016_2020_counties_longform.csv'
 
 ############################
 ## Load required packages ##
@@ -167,6 +167,24 @@ if __name__ == '__main__':
     theta = np.mean(flat_samples, axis=0)
     ymodel = depdiff_powerlawgravity(theta[0], theta[1], theta[2], theta[3], theta[4], D, N) 
 
+    # compute summary statistics
+    ## R-squared
+    R2 = 1 - np.sum((ymodel[~np.isnan(ydata)]-ydata[~np.isnan(ydata)])**2) / np.sum((np.mean(ydata[~np.isnan(ydata)]) - ydata[~np.isnan(ydata)])**2)
+    ## MAPE
+    ydata_q = ydata[~np.isnan(ydata)].flatten()
+    q_25 = np.quantile(ydata_q, 0.10)
+    q_75 = np.quantile(ydata_q, 0.90)
+    MAPE = 100*np.sum(np.abs(ymodel[((ydata>1) & (~np.isnan(ydata)))]-ydata[((ydata>1) & (~np.isnan(ydata)))])/ydata[((ydata>1) & (~np.isnan(ydata)))])*(1/len(ydata[((ydata>1) & (~np.isnan(ydata)))]))
+    MAPE_q25 = 100*np.sum(np.abs(ymodel[((ydata<q_25) & (~np.isnan(ydata) & (ydata!=0)))]-ydata[((ydata<q_25) & (~np.isnan(ydata) & (ydata!=0)))])/ydata[((ydata<q_25) & (~np.isnan(ydata) & (ydata!=0)))])*(1/len(ydata[((ydata<q_25) & (~np.isnan(ydata) & (ydata!=0)))]))
+    MAPE_q75 = 100*np.sum(np.abs(ymodel[((ydata>q_75) & (~np.isnan(ydata)))]-ydata[((ydata>q_75) & (~np.isnan(ydata)))])/ydata[((ydata>q_75) & (~np.isnan(ydata)))])*(1/len(ydata[((ydata>q_75) & (~np.isnan(ydata)))]))
+    
+    # print summary statistics
+    print(f"alpha: {theta[0]:.2f}, beta: {theta[1]:.2f}, 'theta: {theta[2]:.2f}, 'omega': {theta[3]:.2f}, 'gamma': {theta[4]:.2f}")
+    print(f"R-squared: {R2:.2f}")
+    print(f"MAPE: {MAPE:.1f}")
+    print(f"MAPE q_10: {MAPE_q25:1f}")
+    print(f"MAPE q_90: {MAPE_q75:.1f}")
+
     # normalise model prediction and data with number of inhabitants
     ymodel = ymodel / N[:, np.newaxis]
     ydata = ydata / N[:, np.newaxis]
@@ -175,13 +193,6 @@ if __name__ == '__main__':
     ymodel = ymodel[~np.isnan(ydata)]
     ydata = ydata[~np.isnan(ydata)]
 
-    # summary statistics
-    print(f"alpha: {theta[0]:.2f}, beta: {theta[1]:.2f}, 'theta: {theta[2]:.2f}, 'omega': {theta[3]:.2f}, 'gamma': {theta[4]:.2f}")
-    R2 = 1 - np.sum((ymodel-ydata)**2) / np.sum((np.mean(ydata) - ydata)**2)
-    print(f"R-squared: {R2:.2f}")
-    MAPE = 100*np.sum(np.abs(ymodel[ydata!=0]-ydata[ydata!=0])/ydata[ydata!=0])*(1/len(ydata[ydata!=0]))
-    print(f"MAPE: {MAPE:.2f}")
-    
     # transform data
     ymodel = np.log10(ymodel+1e-99)
     ydata = np.log10(ydata+1e-99)
@@ -198,7 +209,7 @@ if __name__ == '__main__':
     ax[0].plot(xs, density(xs), color='red')
     ax[0].set_xlim([-8,1])
     props = dict(boxstyle='round', facecolor='wheat', alpha=1)
-    ax[0].text(0.05, 0.95, f"$R^2 = $ {R2:.2f}\nMAPE = {MAPE:.1f}%", transform=ax[0].transAxes, fontsize=12,verticalalignment='top', bbox=props)
+    ax[0].text(0.05, 0.95, f"$R^2 = $ {R2:.2f}\nMAPE = {MAPE:.1f}%\nMAPE q10 = {MAPE_q25:.1f}%\nMAPE q90 = {MAPE_q75:.1f}%", transform=ax[0].transAxes, fontsize=10,verticalalignment='top', bbox=props)
     
     # predicted versus data
     ax[1].scatter(ydata, ymodel, marker='o', s=10, color='black', alpha=0.2)
