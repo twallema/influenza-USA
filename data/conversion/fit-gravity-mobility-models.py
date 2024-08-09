@@ -1,14 +1,6 @@
 """
 A script to calibrate a departure-diffusion power law gravity model to the long-format mobility data originating from the commuter survey or SafeGraph data.
 Made because the R mobility package was unfeasibly slow during the inference.
-
-inputs:
--------
-
-
-remarks:
---------
-
 """
 
 ##############
@@ -31,7 +23,7 @@ import numpy as np
 import pandas as pd
 from scipy.special import gammaln
 import matplotlib.pyplot as plt
-from pySODM.optimization.mcmc import perturbate_theta 
+from pySODM.optimization.mcmc import perturbate_theta
 
 ##################################################################
 ## Load long-format mobility data and convert into model inputs ##
@@ -46,8 +38,15 @@ N = data.drop_duplicates(subset='origin')['origin_population'].reset_index(drop=
 ## Define a departure-diffusion power law gravity model ##
 ##########################################################
 
-def depdiff_powerlawgravity(tau, theta, omega, gamma, D_ij, N_i):
+def depdiff_powerlawgravity(alpha, beta, theta, omega, gamma, D_ij, N_i, stochastic=False):
     
+    if stochastic == True:
+        # sample probability of travel 
+        tau_i = np.random.beta(alpha, beta, size=D_ij.shape[0])
+    else:
+        # use expectation value
+        tau_i = np.ones(D_ij.shape[0]) * alpha / (alpha+beta)
+
     # compute pi_ij
     N_ij = np.tile(N, (D_ij.shape[0], 1))
     T = (N_ij ** omega) / (D_ij ** gamma)
@@ -56,10 +55,10 @@ def depdiff_powerlawgravity(tau, theta, omega, gamma, D_ij, N_i):
     pi_ij = T / np.transpose(np.tile(sum_j, (D_ij.shape[0], 1)))
 
     # compute off-diagonal elements
-    M_hat = theta * N_i[:, np.newaxis] * tau * pi_ij 
+    M_hat = theta * N_i[:, np.newaxis] * tau_i[:, np.newaxis] * pi_ij 
 
     # fill in diagonal
-    np.fill_diagonal(M_hat, theta * N_i * (1-tau))
+    np.fill_diagonal(M_hat, theta * N_i * (1-tau_i))
 
     return M_hat
 
@@ -78,9 +77,14 @@ def log_prior_uniform(x, bounds):
 
 # poisson likelihood
 def poisson_ll(ymodel, ydata):
-    # offset zeros
-    ymodel = ymodel + 1
-    ydata = ydata + 1
+    # offset negative values
+    if ((np.min(ymodel) < 0) | (np.min(ydata) < 0)):
+        offset_value = (-1 - 1e-6)*np.min([np.min(ymodel), np.min(ydata)])
+        ymodel += offset_value
+        ydata += offset_value
+    elif ((np.min(ymodel) == 0) | (np.min(ydata) == 0)):
+        ymodel += 1e-6
+        ydata += 1e-6
     return - np.sum(ymodel) + np.sum(ydata*np.log(ymodel)) - np.sum(gammaln(ydata))
 
 # RMSE likelihood
@@ -90,7 +94,7 @@ def RMSE_ll(ymodel, ydata):
 def log_posterior_probability(theta):
 
     # simulate model
-    ymodel = depdiff_powerlawgravity(theta[0], theta[1], theta[2], theta[3], D, N) 
+    ymodel = depdiff_powerlawgravity(theta[0], theta[1], theta[2], theta[3], theta[4], D, N) 
 
     # compute log posterior probability
     lp=0
@@ -99,6 +103,7 @@ def log_posterior_probability(theta):
         lp += log_prior_uniform(par, bounds[i])
     # likelihood
     lp += poisson_ll(ymodel[~np.isnan(ydata)], ydata[~np.isnan(ydata)])
+
     return lp
 
 ###################
@@ -106,12 +111,12 @@ def log_posterior_probability(theta):
 ###################
 
 # define parameters
-theta = np.array([0.5,2,1,1])
-bounds = [(0, 1), (0, 10), (0, np.inf), (0, np.inf)] # tau, beta, theta, omega, gamma
+theta = np.array([20,20,2,1,1])
+bounds = [(0, 100), (0, 100), (0, 10), (0, np.inf), (0, np.inf)] # alpha, beta, theta, omega, gamma
 ydata = M
 
 # perturbate initial estimate
-ndim, nwalkers, pos = perturbate_theta(theta, pert=[0.25,0.25,0.25,0.25], multiplier=multip_chains, bounds=bounds)
+ndim, nwalkers, pos = perturbate_theta(theta, pert=[0.10,0.10,0.10,0.10,0.10], multiplier=multip_chains, bounds=bounds)
 
 # run inference in parallel
 sampler = emcee.EnsembleSampler(
@@ -124,9 +129,9 @@ if __name__ == '__main__':
         sampler.run_mcmc(pos, n_mcmc, progress=True)
 
     # traceplot
-    fig, axes = plt.subplots(4, figsize=(10, 7), sharex=True)
+    fig, axes = plt.subplots(5, figsize=(10, 7), sharex=True)
     samples = sampler.get_chain()
-    labels = ["tau", "theta", 'omega', 'gamma']
+    labels = ["alpha", "beta", "theta", 'omega', 'gamma']
     for i in range(ndim):
         ax = axes[i]
         ax.plot(samples[:, :, i], "k", alpha=0.3)
@@ -160,7 +165,7 @@ if __name__ == '__main__':
 
     # simulate model
     theta = np.mean(flat_samples, axis=0)
-    ymodel = depdiff_powerlawgravity(theta[0], theta[1], theta[2], theta[3], D, N) 
+    ymodel = depdiff_powerlawgravity(theta[0], theta[1], theta[2], theta[3], theta[4], D, N) 
 
     # normalise model prediction and data with number of inhabitants
     ymodel = ymodel / N[:, np.newaxis]
@@ -169,36 +174,50 @@ if __name__ == '__main__':
     # slice where data is present
     ymodel = ymodel[~np.isnan(ydata)]
     ydata = ydata[~np.isnan(ydata)]
+
+    # summary statistics
+    print(f"alpha: {theta[0]:.2f}, beta: {theta[1]:.2f}, 'theta: {theta[2]:.2f}, 'omega': {theta[3]:.2f}, 'gamma': {theta[4]:.2f}")
+    R2 = 1 - np.sum((ymodel-ydata)**2) / np.sum((np.mean(ydata) - ydata)**2)
+    print(f"R-squared: {R2:.2f}")
+    MAPE = 100*np.sum(np.abs(ymodel[ydata!=0]-ydata[ydata!=0])/ydata[ydata!=0])*(1/len(ydata[ydata!=0]))
+    print(f"MAPE: {MAPE:.2f}")
     
     # transform data
     ymodel = np.log10(ymodel+1e-99)
     ydata = np.log10(ydata+1e-99)
-
-    # summary statistics
-    print(f"tau: {theta[0]:.2f}, 'theta: {theta[1]:.2f}, 'omega': {theta[2]:.2f}, 'gamma': {theta[3]:.2f}")
-    R2 = 1 - np.sum((ymodel-ydata)**2) / np.sum((np.mean(ydata) - ydata)**2)
-    print(f"R-squared: {R2:.2f}")
 
     # compute density
     from scipy.stats import gaussian_kde
     density = gaussian_kde(ymodel)
     xs = np.linspace(-8, 1, 500)
 
-    fig, ax = plt.subplots()
-    ax.set_title('Comparison data-model')
-    ax.hist(ydata, bins=500, density=True, color='black', alpha=0.5)
-    ax.plot(xs, density(xs), color='red')
-    ax.set_xlim([-8,1])
-    ax.set_xlabel('log10 normalised commutes')
+    fig, ax = plt.subplots(nrows=2)
+    # density comparison
+    ax[0].set_title('Comparison data-model')
+    ax[0].hist(ydata, bins=500, density=True, color='black', alpha=0.5)
+    ax[0].plot(xs, density(xs), color='red')
+    ax[0].set_xlim([-8,1])
+    props = dict(boxstyle='round', facecolor='wheat', alpha=1)
+    ax[0].text(0.05, 0.95, f"$R^2 = $ {R2:.2f}\nMAPE = {MAPE:.1f}%", transform=ax[0].transAxes, fontsize=12,verticalalignment='top', bbox=props)
+    
+    # predicted versus data
+    ax[1].scatter(ydata, ymodel, marker='o', s=10, color='black', alpha=0.2)
+    ax[1].plot(range(-8,2), range(-8,2), color='red', linestyle='--')
+    ax[1].set_xlim([-8,1])
+    ax[1].set_ylim([-8,1])
+    ax[1].set_xlabel('log10 norm. trips (data)')
+    ax[1].set_ylabel('log10 norm. trips (model)')
+    plt.savefig(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/departure_diffusion_power_gravitation/comparison.png'), dpi=200)
     plt.show()
     plt.close()
+
 
     ################################################
     ## Compare estimated mobility matrix and data ##
     ################################################
 
     # simulate model
-    ymodel = depdiff_powerlawgravity(theta[0], theta[1], theta[2], theta[3], D, N) 
+    ymodel = depdiff_powerlawgravity(theta[0], theta[1], theta[2], theta[3], theta[4], D, N, stochastic=False) 
 
     # convert to pandas dataframe
     origin_idx, destination_idx = np.meshgrid(data['origin'].unique(), data['destination'].unique(), indexing='ij')
