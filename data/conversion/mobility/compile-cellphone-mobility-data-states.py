@@ -1,5 +1,5 @@
 """
-A script to format and bundle the cellphone mobility data to build a US county-level mobility model using the R mobility package, outputs a dataframe containing,
+A script to aggregate the cellphone mobility data at the US county level into a long format at the US state level. Contains origin and destination demographics and distance between state centroids for use with mobility models.
 
 columns:
 --------
@@ -25,7 +25,6 @@ distance_km: float
 remarks:
 --------
 
-
 """
 
 ############################
@@ -33,7 +32,6 @@ remarks:
 ############################
 
 import sys, os
-import numpy as np
 import pandas as pd
 import geopandas as gpd
 
@@ -69,7 +67,6 @@ gdf = gdf[['GEOID', 'centroid']].merge(gdf[['GEOID', 'centroid']], how='cross', 
 gdf['distance_km'] = gdf.apply(
     lambda row: row['centroid_origin'].distance(row['centroid_destination']) / 1000, axis=1
 )
-print(gdf[gdf['GEOID_origin'] == '05'])
 
 ###############################################
 ## Load & build county level mobility matrix ##
