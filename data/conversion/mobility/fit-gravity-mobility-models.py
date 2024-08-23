@@ -87,10 +87,6 @@ def poisson_ll(ymodel, ydata):
         ydata += 1e-6
     return - np.sum(ymodel) + np.sum(ydata*np.log(ymodel)) - np.sum(gammaln(ydata))
 
-# RMSE likelihood
-def RMSE_ll(ymodel, ydata):
-    return - np.sqrt(len(ydata) * np.sum((ymodel-ydata)**2) )
-
 def log_posterior_probability(theta):
 
     # simulate model
@@ -218,7 +214,7 @@ if __name__ == '__main__':
     ax[1].set_ylim([-8,1])
     ax[1].set_xlabel('log10 norm. trips (data)')
     ax[1].set_ylabel('log10 norm. trips (model)')
-    plt.savefig(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/departure_diffusion_power_gravitation/comparison.png'), dpi=200)
+    plt.savefig(os.path.join(os.getcwd(), f'../../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/comparison.png'), dpi=200)
     plt.show()
     plt.close()
 
@@ -243,7 +239,7 @@ if __name__ == '__main__':
 
     # pivot to get indexed matrix
     matrix_counties = df_long.pivot(index='origin', columns='destination', values='trips')
-    matrix_counties.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/matrix_counties.csv'), index=True)
+    matrix_counties.to_csv(os.path.join(os.getcwd(), f'../../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/matrix_counties.csv'), index=True)
 
     # aggregate to state level
     df_long['state_o'] = df_long['origin'].apply(lambda x: f"{x[0:2]:02}")          # add origin state code
@@ -252,4 +248,4 @@ if __name__ == '__main__':
 
     # pivot into a matrix
     matrix_states = agg.pivot(index='state_o', columns='state_d', values='trips')
-    matrix_states.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/matrix_states.csv'), index=True)
+    matrix_states.to_csv(os.path.join(os.getcwd(), f'../../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/matrix_states.csv'), index=True)
