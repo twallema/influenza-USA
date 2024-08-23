@@ -130,3 +130,16 @@ dmypy.json
 
 # Macbook
 .DS_Store
+
+# Raw SaveGraph data
+Data/raw/mobility/mobilityFlowsCounty.csv
+
+# All intermediate long-format mobility data
+data/interim/mobility/intermediates
+
+# All county-to-county mobility matrices
+*_counties.csv
+
+# All county-to-county visualizations of mobility matrices
+*_county.png
+
