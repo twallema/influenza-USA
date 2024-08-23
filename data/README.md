@@ -38,8 +38,8 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### Contacts
 
-+ `locations-all_daytype-all_BE-2008.xlsx`: Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
-+ `locations-home_daytype-all_BE-2008.xlsx`: Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
++ `locations-all_daytype-all_BE-2008.xlsx`: Contains the number of social contacts stratified by duration from the 2008 Polymod study in Belgium. Includes both physical and non-physical contacts. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
++ `locations-home_daytype-all_BE-2008.xlsx`: Contains the number of social contacts at home stratified by duration from the 2008 Polymod study in Belgium. Includes both physical and non-physical contacts. Includes both physical and non-physical contact. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
 
 ## Interim
 
