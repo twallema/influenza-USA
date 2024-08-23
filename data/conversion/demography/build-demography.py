@@ -14,7 +14,7 @@ import pandas as pd
 #####################
 
 # define model's age groups
-desired_age_groups = pd.IntervalIndex.from_tuples([(0,5),(5,15),(15,65),(65,120)], closed='left')
+desired_age_groups = pd.IntervalIndex.from_tuples([(0,5),(5,18),(18,50),(50,65),(65,100)], closed='left')
 # exclude states
 state_FIPS_exclude = []
 
@@ -34,7 +34,7 @@ df_states = pd.DataFrame()
 # loop over datasets
 for fn in file_names:
     # load dataset
-    data = pd.read_csv(os.path.join(os.getcwd(), '../raw/demography/counties/'+fn))
+    data = pd.read_csv(os.path.join(os.getcwd(), '../../raw/demography/counties/'+fn))
     # verify state FIPS match
     state_FIPS = int(fn[-6:-4])
     assert len(data['STATE'].unique())==1
