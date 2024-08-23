@@ -131,7 +131,15 @@ dmypy.json
 # Macbook
 .DS_Store
 
-# US county level mobility data
-data/interim/mobility/mobility_2011_2015-longform.csv
-data/interim/mobility/mobility_2016_2020-longform.csv
-data/interim/mobility/matrix_radiation_2011_2015.csv
+# Raw SaveGraph data
+Data/raw/mobility/mobilityFlowsCounty.csv
+
+# All intermediate long-format mobility data
+data/interim/mobility/intermediates
+
+# All county-to-county mobility matrices
+*_counties.csv
+
+# All county-to-county visualizations of mobility matrices
+*_county.png
+
