@@ -65,7 +65,7 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ##### To county-level data
 
-The radiation (basic) and departure-diffusion radiation models were fitted with the script `fit-radiation-mobility-models.Rmd`. The departure-diffusion powerlaw gravitation model was fit using the script `fit-gravity-mobility-models.py`.
+The radiation (basic) and departure-diffusion radiation models were fitted with the script `fit-radiation-mobility-models-counties.Rmd`. The departure-diffusion powerlaw gravitation model was fit using the script `fit-gravity-mobility-models-counties.py`.
 
 ##### To state-level data
 
@@ -85,6 +85,6 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `compile-cellphone-mobility-data-states.py`: Idem but using the SafeGraph data.
 
-+ `fit-radiation-mobility-models.Rmd`: Script using the R Mobility package to fit the radiation mobility models to the commuter data at the US county level, and convert them to the US State level. Authored by Rita Verstraeten.
++ `fit-radiation-mobility-models-counties.Rmd`: Script using the R Mobility package to fit the radiation mobility models to the commuter data at the US county level, and convert them to the US State level. Authored by Rita Verstraeten.
 
-+ `fit-gravity-mobility-models.py`: Script containing an implementation of a departure-diffusion powerlaw gravitation model fitted to the US data using MCMC. Authored by Tijs Alleman.
++ `fit-gravity-mobility-models-counties.py`: Script containing an implementation of a departure-diffusion powerlaw gravitation model fitted to the US data using MCMC. Authored by Tijs Alleman.
