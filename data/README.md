@@ -36,6 +36,11 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `vacc_Flu_2024_R1_agexxtoxx_dose1_reported_2017.csv`: Contains the rate of flu vaccination reported during the 2017 season. Rate proportional to the remaining number of unvaccinated individuals in the age group and state. File originally provided by Shaun Truelove. The vaccination rate for Puerto Rico (FIPS: 72) was added by Tijs Alleman, and is defined as the USA average vaccination rate within the age group.
 
+### Contacts
+
++ `locations-all_daytype-all_BE-2008.xlsx`: Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
++ `locations-home_daytype-all_BE-2008.xlsx`: Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
+
 ## Interim
 
 ### Demography
