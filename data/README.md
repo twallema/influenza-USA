@@ -34,7 +34,7 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### Vaccination
 
-+ `vacc_Flu_2024_R1_agexxtoxx_dose1_reported_2017.csv`: Contains the rate of flu vaccination reported during the 2017 season. Rate proportional to the remaining number of unvaccinated individuals in the age group and state. File provided by Shaun Truelove.
++ `vacc_Flu_2024_R1_agexxtoxx_dose1_reported_2017.csv`: Contains the rate of flu vaccination reported during the 2017 season. Rate proportional to the remaining number of unvaccinated individuals in the age group and state. File originally provided by Shaun Truelove. The vaccination rate for Puerto Rico (FIPS: 72) was added by Tijs Alleman, and is defined as the USA average vaccination rate within the age group.
 
 ## Interim
 
@@ -72,6 +72,10 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 ##### To state-level data
 
+### Vaccination
+
++ `vaccination_rates_2017-2018.csv`: A script to aggregate the age-and space stratified vaccination rates for 2017-2018 into one dataframe.
+
 ## Conversion
 
 ### Demography
@@ -91,3 +95,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 + `fit-radiation-mobility-models-counties.Rmd`: Script using the R Mobility package to fit the radiation mobility models to the commuter data at the US county level, and convert them to the US State level. Authored by Rita Verstraeten.
 
 + `fit-gravity-mobility-models-counties.py`: Script containing an implementation of a departure-diffusion powerlaw gravitation model fitted to the US data using MCMC. Authored by Tijs Alleman.
+
+### Vaccination
+
++ `build-vaccination.py`: A script that aggregates the vaccination rates of the 2017-2018 season, whose age component was spread over multiple files, into one long-format .csv file. 
