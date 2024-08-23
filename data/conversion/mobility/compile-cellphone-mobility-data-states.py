@@ -5,13 +5,13 @@ columns:
 --------
 
 origin: str
-    Origin county FIPS code (post 2020)
+    Origin state FIPS code
 
 destination: str
-    Destination county FIPS code (post 2020). Of the 10M possible trips, about 6% were observed in the cellphone dataset, which is less sparse than the commuter survey (1%).
+    Destination state FIPS code.
 
 commuters: int
-    Number of trips from origin to destination county
+    Number of trips from origin to destination state
 
 population_origin: int
     Number of inhabitants in origin
@@ -20,32 +20,12 @@ population_destination: int
     Number of inhabitants in destination
 
 distance_km: float
-    Distance between the origin and destination county centroids
+    Distance between the origin and destination state centroids
 
 remarks:
 --------
 
-The cellphone data contain the number of trips from an origin county to a destination county.
-The number of counts outside any county (offdiagonal elements) may exceed the population size of that county, this is sensible, especially for more rural areas.
-This sadly makes the use of "trips" to build a county-to-county origin-destination matrix for use in an epidemiological model impossible.
-A better alternative is to have the "time spent" instead of the number of "trips" from an origin to a destination.
-However, this problem should not persist at the state level. A mobility model should be fit to the number of county-to-county trips and aggregated back up to the state level.
 
-The cellphone dataset uses the pre-2019 FIPS codes, the changes made to the FIPS codes in 2019 and 2020 are,
-- Connecticut (State 9) counties were completely redefined in 2020: https://www2.census.gov/geo/pdfs/reference/ct_county_equiv_change.pdf
-- Alaska (State 2) has split county 02261 into two new counties: 02063 and 02066: https://www.census.gov/programs-surveys/geography/technical-documentation/county-changes.2010.html#list-tab-957819518
-
-All post-2020 FIPS compatible trips are first added to the output dataframe. This is followed by filling out the pre-post-2020 FIPS conflicts.
-A departure-diffusion radiation mobility model uses only the ratio of within-county (on-diagonal) versus outside-county (off-diagonal) trips, simplifying the process of matching pre-2020 and post-2020 FIPS codes significantly.
-
-We make the following assumptions to fill in the missing data for Connecticut,
-- We use the pre-2020 FIPS cellphone dataset to compute the fraction of trips inside the origin county relative to the population size, and the fraction of trips outside the origin county (off-diagonal) relative to the population size.
-  We use the demography of the post-2020 FIPS counties to fill in the on-diagonal and off-diagonal elements on rows originating from Connecticut (filling out the row)
-  We then find the number of trips originating in counties outside Connecticut into Connecticut assign these uniformly over the post-2020 FIPS Connecticut counties to complete the columns.
-  This could alternatively be divided using the population size, but this would not make a difference for the outcome of the departure-diffusion radiation model. 
-
-For Alaska,
-- For pre-2020 FIPS county 02261, both rows and columns for post-2020 FIPS counties 02063 and 02066 are completed by dividing the data for 02661 proportionally with the population sizes of 02063 and 02066.
 """
 
 ############################
@@ -57,18 +37,12 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-###################################
-## Pre-allocate output dataframe ##
-###################################
-
-# load demography dataset & extract FIPS
-FIPS_2020 = pd.read_csv(os.path.join(os.getcwd(), '../interim/demography/demography_counties_2023.csv'), dtype={'county': str})['county'].unique() 
 
 ######################################
 ## Load & aggregate demography data ##
 ######################################
 
-demography = pd.read_csv(os.path.join(os.getcwd(), '../interim/demography/demography_counties_2023.csv'), dtype={'county': str}) # county, age, population
+demography = pd.read_csv(os.path.join(os.getcwd(), '../../interim/demography/demography_counties_2023.csv'), dtype={'county': str}) # county, age, population
 demography = demography.set_index(['county','age']).groupby(by='county').sum() # county, population
 FIPS_2020 = demography.index.unique().values
 
@@ -77,7 +51,7 @@ FIPS_2020 = demography.index.unique().values
 #############################
 
 # load shapefiles
-gdf = gpd.read_file(os.path.join(os.getcwd(),'../raw/geography/cb_2022_us_county_500k/cb_2022_us_county_500k.shp'))
+gdf = gpd.read_file(os.path.join(os.getcwd(),'../../raw/geography/cb_2022_us_county_500k/cb_2022_us_county_500k.shp'))
 # geodata contains 56 states, as opposed to 52 in the mobility and demography data
 # excess states as compared to demography and mobility are: FIPS 60 (Samoa), 66 (Guam), 69 (Mariana Islands), 78 (Virgin Islands)
 # after removal --> 3222 counties = same as demography data
@@ -101,7 +75,7 @@ gdf['distance_km'] = gdf.apply(
 ###############################################
 
 # step 1: load data & initial formatting
-data = pd.read_csv(os.path.join(os.getcwd(), '../raw/mobility/mobilityFlowsCounty.csv'), dtype={'date': str})       # load data
+data = pd.read_csv(os.path.join(os.getcwd(), '../../raw/mobility/mobilityFlowsCounty.csv'), dtype={'date': str})    # load data
 data = data[data['date'] == '2020-03-09']                                                                           # select Monday March 9, 2020 
 for col in ['o', 'd']:                                                                                              # make sure all FIPS codes are five digits and str
     data[f'county_{col}'] = data[f'county_{col}'].apply(lambda x: f"{x:05}") 
@@ -187,6 +161,6 @@ n_test = n.values / demography.values # there are
 
 # step 9: save results
 out = out.drop(columns = ['state_o', 'state_d'])
-out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_cellphone_09032020_counties_longform.csv'), index=False)
+out.to_csv(os.path.join(os.getcwd(), f'../../interim/mobility/intermediates/to_county_data/mobility_cellphone_09032020_counties_longform.csv'), index=False)
 
 

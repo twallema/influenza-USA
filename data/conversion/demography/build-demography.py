@@ -23,7 +23,7 @@ state_FIPS_exclude = []
 ###############################
 
 # load names of all demography files
-file_names = os.listdir(os.path.join(os.getcwd(), '../raw/demography/counties/'))
+file_names = os.listdir(os.path.join(os.getcwd(), '../../raw/demography/counties/'))
 # remove all hidden files (start with a .)
 file_names = [file for file in file_names if not file.startswith('.')]
 
@@ -64,5 +64,5 @@ df_states = df_states.set_index('state').sort_index()
 ## Save result ##
 #################
 
-df_counties.to_csv(os.path.join(os.getcwd(),'../interim/demography/demography_counties_2023.csv'))
-df_states.to_csv(os.path.join(os.getcwd(),'../interim/demography/demography_states_2023.csv'))
+df_counties.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_counties_2023.csv'))
+df_states.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_states_2023.csv'))

@@ -29,7 +29,7 @@ from pySODM.optimization.mcmc import perturbate_theta
 ## Load long-format mobility data and convert into model inputs ##
 ##################################################################
 
-data = pd.read_csv(os.path.join(os.getcwd(), f'../interim/mobility/intermediates/{dataset_name}'), dtype={'origin': str, 'destination': str})
+data = pd.read_csv(os.path.join(os.getcwd(), f'../../interim/mobility/intermediates/to_county_data/{dataset_name}'), dtype={'origin': str, 'destination': str})
 M = data.pivot(index='origin', columns='destination', values='commuters').values                    # mobility data
 D = data.pivot(index='origin', columns='destination', values='distance_km').values                  # distance matrix
 N = data.drop_duplicates(subset='origin')['origin_population'].reset_index(drop=True).values        # population vector
@@ -243,7 +243,7 @@ if __name__ == '__main__':
 
     # pivot to get indexed matrix
     matrix_counties = df_long.pivot(index='origin', columns='destination', values='trips')
-    matrix_counties.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/departure_diffusion_power_gravitation/matrix_counties.csv'), index=True)
+    matrix_counties.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/matrix_counties.csv'), index=True)
 
     # aggregate to state level
     df_long['state_o'] = df_long['origin'].apply(lambda x: f"{x[0:2]:02}")          # add origin state code
@@ -252,4 +252,4 @@ if __name__ == '__main__':
 
     # pivot into a matrix
     matrix_states = agg.pivot(index='state_o', columns='state_d', values='trips')
-    matrix_states.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/departure_diffusion_power_gravitation/matrix_states.csv'), index=True)
+    matrix_states.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/matrix_states.csv'), index=True)

@@ -51,18 +51,11 @@ import geopandas as gpd
 file_names = ['commuting_flows_county_2011_2015.xlsx', 'commuting_flows_county_2016_2020.xlsx']
 file_years = ['2011_2015', '2016_2020']
 
-###################################
-## Pre-allocate output dataframe ##
-###################################
-
-# load demography dataset & extract FIPS
-FIPS_2020 = pd.read_csv(os.path.join(os.getcwd(), '../interim/demography/demography_counties_2023.csv'), dtype={'county': str})['county'].unique() 
-
 ######################################
 ## Load & aggregate demography data ##
 ######################################
 
-demography = pd.read_csv(os.path.join(os.getcwd(), '../interim/demography/demography_counties_2023.csv'), dtype={'county': str}) # county, age, population
+demography = pd.read_csv(os.path.join(os.getcwd(), '../../interim/demography/demography_counties_2023.csv'), dtype={'county': str}) # county, age, population
 demography = demography.set_index(['county','age']).groupby(by='county').sum() # county, population
 FIPS_2020 = demography.index.unique().values
 
@@ -71,7 +64,7 @@ FIPS_2020 = demography.index.unique().values
 #############################
 
 # load shapefiles
-gdf = gpd.read_file(os.path.join(os.getcwd(),'../raw/geography/cb_2022_us_county_500k/cb_2022_us_county_500k.shp'))
+gdf = gpd.read_file(os.path.join(os.getcwd(),'../../raw/geography/cb_2022_us_county_500k/cb_2022_us_county_500k.shp'))
 # geodata contains 56 states, as opposed to 52 in the mobility and demography data
 # excess states as compared to demography and mobility are: FIPS 60 (Samoa), 66 (Guam), 69 (Mariana Islands), 78 (Virgin Islands)
 # after removal --> 3222 counties = same as demography data
@@ -97,7 +90,7 @@ gdf['distance_km'] = gdf.apply(
 # loop over datasets
 for fy,fn in zip(file_years,file_names):
     # load dataset
-    data = pd.read_excel(os.path.join(os.getcwd(), '../raw/mobility/'+fn), engine="openpyxl", skiprows=range(0,6))
+    data = pd.read_excel(os.path.join(os.getcwd(), '../../raw/mobility/'+fn), engine="openpyxl", skiprows=range(0,6))
     # filter out destination Canada/Mexico/other
     data = data.iloc[data['County FIPS Code.1'].dropna().index]
     # convert county FIPS codes to string of int
@@ -149,5 +142,5 @@ for fy,fn in zip(file_years,file_names):
     ##  this means that for counties highly connected to Alaska or Connecticut, the total number of off-diagonal trips will be underestimated, although this effect should be small.
     # step 8: save results
     out = out.drop(columns = ['state_d'])
-    out.to_csv(os.path.join(os.getcwd(), f'../interim/mobility/mobility_commuters_{fy}_counties_longform.csv'), index=False)
+    out.to_csv(os.path.join(os.getcwd(), f'../../interim/mobility/intermediates/to_county_data/mobility_commuters_{fy}_counties_longform.csv'), index=False)
 
