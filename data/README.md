@@ -55,6 +55,12 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ##### To state-level data
 
++ `mobility_commuters_2011_2015_states_longform.csv`: Long-format mobility data needed to calibrate a mobility model. Made from raw file `commuting_flows_county_2011_2015.xlsx` using `compile-commuter-mobility-data-states.py`.
+
++ `mobility_commuters_2016_2020_states_longform.csv`: Long-format mobility data needed to calibrate a mobility model. Made from raw file `commuting_flows_county_2016_2020.xlsx` using `compile-commuter-mobility-data-states.py`.
+
++ `mobility_cellphone_09032020_states_longform.csv`: Long-format mobility data needed to calibrate a mobility model. Made from raw file `mobilityFlowsCounty.csv` using `compile-cellphone-mobility-data-states.py`.
+
 #### Fitted models
 
 ##### To county-level data
@@ -73,7 +79,11 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `compile-commuter-mobility-data-counties.py`: Script used to compile the county-level demographic data, commuter survey, and geodata into a long-form dataset containing the origin and destination US county FIPS codes, the number of inhabitants in the origin and destination counties, the number of commuters from the origin to the destination county, and the distance between the centroids of the origin and destination counties. These data are the ideal format to build a mobility model. Build the demographic data before running this script. Large file: > 500 Mb.
 
-+ `compile-cellphone-mobility-data-counties.py`: Similar to the commuter survey 2016-2020 dataset, 9 trips from 01039 (Covington County, Alabama) to 48301 (Loving county, TX), situated on row 430 641 of the raw dataset resulted in an error during the inference of the departure-diffusion radiation model in `fit-mobility-models.Rmd`. There are 112 other counties with an influx into Loving county, which, given its 64 inhabitants, seems highly unlikely. All mobility to Loving county was removed, which shouldn't be too unrealistic. 
++ `compile-cellphone-mobility-data-counties.py`: Idem but using the SafeGraph data. Similar to the commuter survey 2016-2020 dataset, 9 trips from 01039 (Covington County, Alabama) to 48301 (Loving county, TX), situated on row 430 641 of the raw dataset resulted in an error during the inference of the departure-diffusion radiation model in `fit-mobility-models.Rmd`. There are 112 other counties with an influx into Loving county, which, given its 64 inhabitants, seems highly unlikely. All mobility to Loving county was removed, which shouldn't be too unrealistic. 
+
++ `compile-commuter-mobility-data-states.py`: Script used to compile the county-level demographic data, commuter survey, and geodata into a long-form dataset containing the origin and destination US state FIPS codes, the number of inhabitants in the origin and destination states, the number of commuters from the origin to the destination state, and the distance between the centroids of the origin and destination states. These data are the ideal format to build a mobility model. Build the demographic data before running this script. 
+
++ `compile-cellphone-mobility-data-states.py`: Idem but using the SafeGraph data.
 
 + `fit-radiation-mobility-models.Rmd`: Script using the R Mobility package to fit the radiation mobility models to the commuter data at the US county level, and convert them to the US State level. Authored by Rita Verstraeten.
 
