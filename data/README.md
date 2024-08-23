@@ -32,6 +32,9 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + Contains the shapefiles of the US counties at a 1:500k resolution. Downloaded from https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html 
 
+### Vaccination
+
++ `vacc_Flu_2024_R1_agexxtoxx_dose1_reported_2017.csv`: Contains the rate of flu vaccination reported during the 2017 season. Rate proportional to the remaining number of unvaccinated individuals in the age group and state. File provided by Shaun Truelove.
 
 ## Interim
 
