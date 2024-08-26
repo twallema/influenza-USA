@@ -6,7 +6,8 @@ A script to aggregate the age-and space stratified vaccination rates for 2017-20
 ## Load required packages ##
 ############################
 
-import sys,os
+import os
+import numpy as np
 import pandas as pd
 
 ###################################################
@@ -21,7 +22,7 @@ states = demography['state'].unique()
 vaccination = pd.read_csv(os.path.join(os.getcwd(), '../../raw/vaccination/vacc_Flu_2024_R1_age18to49_dose1_reported_2017.csv')) 
 dates = vaccination['date'].unique()
 # pre-allocate output (date, age, state)
-out = pd.Series(0, index=pd.MultiIndex.from_product([dates, ages, states], names=['date', 'age', 'state']), name='vaccination_rate')
+out = pd.Series(0, index=pd.MultiIndex.from_product([dates, ages, states], names=['date', 'age', 'state']), name='vaccination_rate', dtype=np.float64)
 
 ###############################
 ## Load & format county data ##

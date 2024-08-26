@@ -1,0 +1,3223 @@
+fips_state,fips_county,name_state,name_county
+01,001,alabama,autauga county
+01,003,alabama,baldwin county
+01,005,alabama,barbour county
+01,007,alabama,bibb county
+01,009,alabama,blount county
+01,011,alabama,bullock county
+01,013,alabama,butler county
+01,015,alabama,calhoun county
+01,017,alabama,chambers county
+01,019,alabama,cherokee county
+01,021,alabama,chilton county
+01,023,alabama,choctaw county
+01,025,alabama,clarke county
+01,027,alabama,clay county
+01,029,alabama,cleburne county
+01,031,alabama,coffee county
+01,033,alabama,colbert county
+01,035,alabama,conecuh county
+01,037,alabama,coosa county
+01,039,alabama,covington county
+01,041,alabama,crenshaw county
+01,043,alabama,cullman county
+01,045,alabama,dale county
+01,047,alabama,dallas county
+01,049,alabama,dekalb county
+01,051,alabama,elmore county
+01,053,alabama,escambia county
+01,055,alabama,etowah county
+01,057,alabama,fayette county
+01,059,alabama,franklin county
+01,061,alabama,geneva county
+01,063,alabama,greene county
+01,065,alabama,hale county
+01,067,alabama,henry county
+01,069,alabama,houston county
+01,071,alabama,jackson county
+01,073,alabama,jefferson county
+01,075,alabama,lamar county
+01,077,alabama,lauderdale county
+01,079,alabama,lawrence county
+01,081,alabama,lee county
+01,083,alabama,limestone county
+01,085,alabama,lowndes county
+01,087,alabama,macon county
+01,089,alabama,madison county
+01,091,alabama,marengo county
+01,093,alabama,marion county
+01,095,alabama,marshall county
+01,097,alabama,mobile county
+01,099,alabama,monroe county
+01,101,alabama,montgomery county
+01,103,alabama,morgan county
+01,105,alabama,perry county
+01,107,alabama,pickens county
+01,109,alabama,pike county
+01,111,alabama,randolph county
+01,113,alabama,russell county
+01,115,alabama,st. clair county
+01,117,alabama,shelby county
+01,119,alabama,sumter county
+01,121,alabama,talladega county
+01,123,alabama,tallapoosa county
+01,125,alabama,tuscaloosa county
+01,127,alabama,walker county
+01,129,alabama,washington county
+01,131,alabama,wilcox county
+01,133,alabama,winston county
+02,013,alaska,aleutians east borough
+02,016,alaska,aleutians west census area
+02,020,alaska,anchorage municipality
+02,050,alaska,bethel census area
+02,060,alaska,bristol bay borough
+02,063,alaska,chugach census area
+02,066,alaska,copper river census area
+02,068,alaska,denali borough
+02,070,alaska,dillingham census area
+02,090,alaska,fairbanks north star borough
+02,100,alaska,haines borough
+02,105,alaska,hoonah-angoon census area
+02,110,alaska,juneau city and borough
+02,122,alaska,kenai peninsula borough
+02,130,alaska,ketchikan gateway borough
+02,150,alaska,kodiak island borough
+02,158,alaska,kusilvak census area
+02,164,alaska,lake and peninsula borough
+02,170,alaska,matanuska-susitna borough
+02,180,alaska,nome census area
+02,185,alaska,north slope borough
+02,188,alaska,northwest arctic borough
+02,195,alaska,petersburg borough
+02,198,alaska,prince of wales-hyder census area
+02,220,alaska,sitka city and borough
+02,230,alaska,skagway municipality
+02,240,alaska,southeast fairbanks census area
+02,275,alaska,wrangell city and borough
+02,282,alaska,yakutat city and borough
+02,290,alaska,yukon-koyukuk census area
+04,001,arizona,apache county
+04,003,arizona,cochise county
+04,005,arizona,coconino county
+04,007,arizona,gila county
+04,009,arizona,graham county
+04,011,arizona,greenlee county
+04,012,arizona,la paz county
+04,013,arizona,maricopa county
+04,015,arizona,mohave county
+04,017,arizona,navajo county
+04,019,arizona,pima county
+04,021,arizona,pinal county
+04,023,arizona,santa cruz county
+04,025,arizona,yavapai county
+04,027,arizona,yuma county
+05,001,arkansas,arkansas county
+05,003,arkansas,ashley county
+05,005,arkansas,baxter county
+05,007,arkansas,benton county
+05,009,arkansas,boone county
+05,011,arkansas,bradley county
+05,013,arkansas,calhoun county
+05,015,arkansas,carroll county
+05,017,arkansas,chicot county
+05,019,arkansas,clark county
+05,021,arkansas,clay county
+05,023,arkansas,cleburne county
+05,025,arkansas,cleveland county
+05,027,arkansas,columbia county
+05,029,arkansas,conway county
+05,031,arkansas,craighead county
+05,033,arkansas,crawford county
+05,035,arkansas,crittenden county
+05,037,arkansas,cross county
+05,039,arkansas,dallas county
+05,041,arkansas,desha county
+05,043,arkansas,drew county
+05,045,arkansas,faulkner county
+05,047,arkansas,franklin county
+05,049,arkansas,fulton county
+05,051,arkansas,garland county
+05,053,arkansas,grant county
+05,055,arkansas,greene county
+05,057,arkansas,hempstead county
+05,059,arkansas,hot spring county
+05,061,arkansas,howard county
+05,063,arkansas,independence county
+05,065,arkansas,izard county
+05,067,arkansas,jackson county
+05,069,arkansas,jefferson county
+05,071,arkansas,johnson county
+05,073,arkansas,lafayette county
+05,075,arkansas,lawrence county
+05,077,arkansas,lee county
+05,079,arkansas,lincoln county
+05,081,arkansas,little river county
+05,083,arkansas,logan county
+05,085,arkansas,lonoke county
+05,087,arkansas,madison county
+05,089,arkansas,marion county
+05,091,arkansas,miller county
+05,093,arkansas,mississippi county
+05,095,arkansas,monroe county
+05,097,arkansas,montgomery county
+05,099,arkansas,nevada county
+05,101,arkansas,newton county
+05,103,arkansas,ouachita county
+05,105,arkansas,perry county
+05,107,arkansas,phillips county
+05,109,arkansas,pike county
+05,111,arkansas,poinsett county
+05,113,arkansas,polk county
+05,115,arkansas,pope county
+05,117,arkansas,prairie county
+05,119,arkansas,pulaski county
+05,121,arkansas,randolph county
+05,123,arkansas,st. francis county
+05,125,arkansas,saline county
+05,127,arkansas,scott county
+05,129,arkansas,searcy county
+05,131,arkansas,sebastian county
+05,133,arkansas,sevier county
+05,135,arkansas,sharp county
+05,137,arkansas,stone county
+05,139,arkansas,union county
+05,141,arkansas,van buren county
+05,143,arkansas,washington county
+05,145,arkansas,white county
+05,147,arkansas,woodruff county
+05,149,arkansas,yell county
+06,001,california,alameda county
+06,003,california,alpine county
+06,005,california,amador county
+06,007,california,butte county
+06,009,california,calaveras county
+06,011,california,colusa county
+06,013,california,contra costa county
+06,015,california,del norte county
+06,017,california,el dorado county
+06,019,california,fresno county
+06,021,california,glenn county
+06,023,california,humboldt county
+06,025,california,imperial county
+06,027,california,inyo county
+06,029,california,kern county
+06,031,california,kings county
+06,033,california,lake county
+06,035,california,lassen county
+06,037,california,los angeles county
+06,039,california,madera county
+06,041,california,marin county
+06,043,california,mariposa county
+06,045,california,mendocino county
+06,047,california,merced county
+06,049,california,modoc county
+06,051,california,mono county
+06,053,california,monterey county
+06,055,california,napa county
+06,057,california,nevada county
+06,059,california,orange county
+06,061,california,placer county
+06,063,california,plumas county
+06,065,california,riverside county
+06,067,california,sacramento county
+06,069,california,san benito county
+06,071,california,san bernardino county
+06,073,california,san diego county
+06,075,california,san francisco county
+06,077,california,san joaquin county
+06,079,california,san luis obispo county
+06,081,california,san mateo county
+06,083,california,santa barbara county
+06,085,california,santa clara county
+06,087,california,santa cruz county
+06,089,california,shasta county
+06,091,california,sierra county
+06,093,california,siskiyou county
+06,095,california,solano county
+06,097,california,sonoma county
+06,099,california,stanislaus county
+06,101,california,sutter county
+06,103,california,tehama county
+06,105,california,trinity county
+06,107,california,tulare county
+06,109,california,tuolumne county
+06,111,california,ventura county
+06,113,california,yolo county
+06,115,california,yuba county
+08,001,colorado,adams county
+08,003,colorado,alamosa county
+08,005,colorado,arapahoe county
+08,007,colorado,archuleta county
+08,009,colorado,baca county
+08,011,colorado,bent county
+08,013,colorado,boulder county
+08,014,colorado,broomfield county
+08,015,colorado,chaffee county
+08,017,colorado,cheyenne county
+08,019,colorado,clear creek county
+08,021,colorado,conejos county
+08,023,colorado,costilla county
+08,025,colorado,crowley county
+08,027,colorado,custer county
+08,029,colorado,delta county
+08,031,colorado,denver county
+08,033,colorado,dolores county
+08,035,colorado,douglas county
+08,037,colorado,eagle county
+08,039,colorado,elbert county
+08,041,colorado,el paso county
+08,043,colorado,fremont county
+08,045,colorado,garfield county
+08,047,colorado,gilpin county
+08,049,colorado,grand county
+08,051,colorado,gunnison county
+08,053,colorado,hinsdale county
+08,055,colorado,huerfano county
+08,057,colorado,jackson county
+08,059,colorado,jefferson county
+08,061,colorado,kiowa county
+08,063,colorado,kit carson county
+08,065,colorado,lake county
+08,067,colorado,la plata county
+08,069,colorado,larimer county
+08,071,colorado,las animas county
+08,073,colorado,lincoln county
+08,075,colorado,logan county
+08,077,colorado,mesa county
+08,079,colorado,mineral county
+08,081,colorado,moffat county
+08,083,colorado,montezuma county
+08,085,colorado,montrose county
+08,087,colorado,morgan county
+08,089,colorado,otero county
+08,091,colorado,ouray county
+08,093,colorado,park county
+08,095,colorado,phillips county
+08,097,colorado,pitkin county
+08,099,colorado,prowers county
+08,101,colorado,pueblo county
+08,103,colorado,rio blanco county
+08,105,colorado,rio grande county
+08,107,colorado,routt county
+08,109,colorado,saguache county
+08,111,colorado,san juan county
+08,113,colorado,san miguel county
+08,115,colorado,sedgwick county
+08,117,colorado,summit county
+08,119,colorado,teller county
+08,121,colorado,washington county
+08,123,colorado,weld county
+08,125,colorado,yuma county
+09,110,connecticut,capitol planning region
+09,120,connecticut,greater bridgeport planning region
+09,130,connecticut,lower connecticut river valley planning region
+09,140,connecticut,naugatuck valley planning region
+09,150,connecticut,northeastern connecticut planning region
+09,160,connecticut,northwest hills planning region
+09,170,connecticut,south central connecticut planning region
+09,180,connecticut,southeastern connecticut planning region
+09,190,connecticut,western connecticut planning region
+10,001,delaware,kent county
+10,003,delaware,new castle county
+10,005,delaware,sussex county
+11,001,district of columbia,district of columbia
+12,001,florida,alachua county
+12,003,florida,baker county
+12,005,florida,bay county
+12,007,florida,bradford county
+12,009,florida,brevard county
+12,011,florida,broward county
+12,013,florida,calhoun county
+12,015,florida,charlotte county
+12,017,florida,citrus county
+12,019,florida,clay county
+12,021,florida,collier county
+12,023,florida,columbia county
+12,027,florida,desoto county
+12,029,florida,dixie county
+12,031,florida,duval county
+12,033,florida,escambia county
+12,035,florida,flagler county
+12,037,florida,franklin county
+12,039,florida,gadsden county
+12,041,florida,gilchrist county
+12,043,florida,glades county
+12,045,florida,gulf county
+12,047,florida,hamilton county
+12,049,florida,hardee county
+12,051,florida,hendry county
+12,053,florida,hernando county
+12,055,florida,highlands county
+12,057,florida,hillsborough county
+12,059,florida,holmes county
+12,061,florida,indian river county
+12,063,florida,jackson county
+12,065,florida,jefferson county
+12,067,florida,lafayette county
+12,069,florida,lake county
+12,071,florida,lee county
+12,073,florida,leon county
+12,075,florida,levy county
+12,077,florida,liberty county
+12,079,florida,madison county
+12,081,florida,manatee county
+12,083,florida,marion county
+12,085,florida,martin county
+12,086,florida,miami-dade county
+12,087,florida,monroe county
+12,089,florida,nassau county
+12,091,florida,okaloosa county
+12,093,florida,okeechobee county
+12,095,florida,orange county
+12,097,florida,osceola county
+12,099,florida,palm beach county
+12,101,florida,pasco county
+12,103,florida,pinellas county
+12,105,florida,polk county
+12,107,florida,putnam county
+12,109,florida,st. johns county
+12,111,florida,st. lucie county
+12,113,florida,santa rosa county
+12,115,florida,sarasota county
+12,117,florida,seminole county
+12,119,florida,sumter county
+12,121,florida,suwannee county
+12,123,florida,taylor county
+12,125,florida,union county
+12,127,florida,volusia county
+12,129,florida,wakulla county
+12,131,florida,walton county
+12,133,florida,washington county
+13,001,georgia,appling county
+13,003,georgia,atkinson county
+13,005,georgia,bacon county
+13,007,georgia,baker county
+13,009,georgia,baldwin county
+13,011,georgia,banks county
+13,013,georgia,barrow county
+13,015,georgia,bartow county
+13,017,georgia,ben hill county
+13,019,georgia,berrien county
+13,021,georgia,bibb county
+13,023,georgia,bleckley county
+13,025,georgia,brantley county
+13,027,georgia,brooks county
+13,029,georgia,bryan county
+13,031,georgia,bulloch county
+13,033,georgia,burke county
+13,035,georgia,butts county
+13,037,georgia,calhoun county
+13,039,georgia,camden county
+13,043,georgia,candler county
+13,045,georgia,carroll county
+13,047,georgia,catoosa county
+13,049,georgia,charlton county
+13,051,georgia,chatham county
+13,053,georgia,chattahoochee county
+13,055,georgia,chattooga county
+13,057,georgia,cherokee county
+13,059,georgia,clarke county
+13,061,georgia,clay county
+13,063,georgia,clayton county
+13,065,georgia,clinch county
+13,067,georgia,cobb county
+13,069,georgia,coffee county
+13,071,georgia,colquitt county
+13,073,georgia,columbia county
+13,075,georgia,cook county
+13,077,georgia,coweta county
+13,079,georgia,crawford county
+13,081,georgia,crisp county
+13,083,georgia,dade county
+13,085,georgia,dawson county
+13,087,georgia,decatur county
+13,089,georgia,dekalb county
+13,091,georgia,dodge county
+13,093,georgia,dooly county
+13,095,georgia,dougherty county
+13,097,georgia,douglas county
+13,099,georgia,early county
+13,101,georgia,echols county
+13,103,georgia,effingham county
+13,105,georgia,elbert county
+13,107,georgia,emanuel county
+13,109,georgia,evans county
+13,111,georgia,fannin county
+13,113,georgia,fayette county
+13,115,georgia,floyd county
+13,117,georgia,forsyth county
+13,119,georgia,franklin county
+13,121,georgia,fulton county
+13,123,georgia,gilmer county
+13,125,georgia,glascock county
+13,127,georgia,glynn county
+13,129,georgia,gordon county
+13,131,georgia,grady county
+13,133,georgia,greene county
+13,135,georgia,gwinnett county
+13,137,georgia,habersham county
+13,139,georgia,hall county
+13,141,georgia,hancock county
+13,143,georgia,haralson county
+13,145,georgia,harris county
+13,147,georgia,hart county
+13,149,georgia,heard county
+13,151,georgia,henry county
+13,153,georgia,houston county
+13,155,georgia,irwin county
+13,157,georgia,jackson county
+13,159,georgia,jasper county
+13,161,georgia,jeff davis county
+13,163,georgia,jefferson county
+13,165,georgia,jenkins county
+13,167,georgia,johnson county
+13,169,georgia,jones county
+13,171,georgia,lamar county
+13,173,georgia,lanier county
+13,175,georgia,laurens county
+13,177,georgia,lee county
+13,179,georgia,liberty county
+13,181,georgia,lincoln county
+13,183,georgia,long county
+13,185,georgia,lowndes county
+13,187,georgia,lumpkin county
+13,189,georgia,mcduffie county
+13,191,georgia,mcintosh county
+13,193,georgia,macon county
+13,195,georgia,madison county
+13,197,georgia,marion county
+13,199,georgia,meriwether county
+13,201,georgia,miller county
+13,205,georgia,mitchell county
+13,207,georgia,monroe county
+13,209,georgia,montgomery county
+13,211,georgia,morgan county
+13,213,georgia,murray county
+13,215,georgia,muscogee county
+13,217,georgia,newton county
+13,219,georgia,oconee county
+13,221,georgia,oglethorpe county
+13,223,georgia,paulding county
+13,225,georgia,peach county
+13,227,georgia,pickens county
+13,229,georgia,pierce county
+13,231,georgia,pike county
+13,233,georgia,polk county
+13,235,georgia,pulaski county
+13,237,georgia,putnam county
+13,239,georgia,quitman county
+13,241,georgia,rabun county
+13,243,georgia,randolph county
+13,245,georgia,richmond county
+13,247,georgia,rockdale county
+13,249,georgia,schley county
+13,251,georgia,screven county
+13,253,georgia,seminole county
+13,255,georgia,spalding county
+13,257,georgia,stephens county
+13,259,georgia,stewart county
+13,261,georgia,sumter county
+13,263,georgia,talbot county
+13,265,georgia,taliaferro county
+13,267,georgia,tattnall county
+13,269,georgia,taylor county
+13,271,georgia,telfair county
+13,273,georgia,terrell county
+13,275,georgia,thomas county
+13,277,georgia,tift county
+13,279,georgia,toombs county
+13,281,georgia,towns county
+13,283,georgia,treutlen county
+13,285,georgia,troup county
+13,287,georgia,turner county
+13,289,georgia,twiggs county
+13,291,georgia,union county
+13,293,georgia,upson county
+13,295,georgia,walker county
+13,297,georgia,walton county
+13,299,georgia,ware county
+13,301,georgia,warren county
+13,303,georgia,washington county
+13,305,georgia,wayne county
+13,307,georgia,webster county
+13,309,georgia,wheeler county
+13,311,georgia,white county
+13,313,georgia,whitfield county
+13,315,georgia,wilcox county
+13,317,georgia,wilkes county
+13,319,georgia,wilkinson county
+13,321,georgia,worth county
+15,001,hawaii,hawaii county
+15,003,hawaii,honolulu county
+15,005,hawaii,kalawao county
+15,007,hawaii,kauai county
+15,009,hawaii,maui county
+16,001,idaho,ada county
+16,003,idaho,adams county
+16,005,idaho,bannock county
+16,007,idaho,bear lake county
+16,009,idaho,benewah county
+16,011,idaho,bingham county
+16,013,idaho,blaine county
+16,015,idaho,boise county
+16,017,idaho,bonner county
+16,019,idaho,bonneville county
+16,021,idaho,boundary county
+16,023,idaho,butte county
+16,025,idaho,camas county
+16,027,idaho,canyon county
+16,029,idaho,caribou county
+16,031,idaho,cassia county
+16,033,idaho,clark county
+16,035,idaho,clearwater county
+16,037,idaho,custer county
+16,039,idaho,elmore county
+16,041,idaho,franklin county
+16,043,idaho,fremont county
+16,045,idaho,gem county
+16,047,idaho,gooding county
+16,049,idaho,idaho county
+16,051,idaho,jefferson county
+16,053,idaho,jerome county
+16,055,idaho,kootenai county
+16,057,idaho,latah county
+16,059,idaho,lemhi county
+16,061,idaho,lewis county
+16,063,idaho,lincoln county
+16,065,idaho,madison county
+16,067,idaho,minidoka county
+16,069,idaho,nez perce county
+16,071,idaho,oneida county
+16,073,idaho,owyhee county
+16,075,idaho,payette county
+16,077,idaho,power county
+16,079,idaho,shoshone county
+16,081,idaho,teton county
+16,083,idaho,twin falls county
+16,085,idaho,valley county
+16,087,idaho,washington county
+17,001,illinois,adams county
+17,003,illinois,alexander county
+17,005,illinois,bond county
+17,007,illinois,boone county
+17,009,illinois,brown county
+17,011,illinois,bureau county
+17,013,illinois,calhoun county
+17,015,illinois,carroll county
+17,017,illinois,cass county
+17,019,illinois,champaign county
+17,021,illinois,christian county
+17,023,illinois,clark county
+17,025,illinois,clay county
+17,027,illinois,clinton county
+17,029,illinois,coles county
+17,031,illinois,cook county
+17,033,illinois,crawford county
+17,035,illinois,cumberland county
+17,037,illinois,dekalb county
+17,039,illinois,de witt county
+17,041,illinois,douglas county
+17,043,illinois,dupage county
+17,045,illinois,edgar county
+17,047,illinois,edwards county
+17,049,illinois,effingham county
+17,051,illinois,fayette county
+17,053,illinois,ford county
+17,055,illinois,franklin county
+17,057,illinois,fulton county
+17,059,illinois,gallatin county
+17,061,illinois,greene county
+17,063,illinois,grundy county
+17,065,illinois,hamilton county
+17,067,illinois,hancock county
+17,069,illinois,hardin county
+17,071,illinois,henderson county
+17,073,illinois,henry county
+17,075,illinois,iroquois county
+17,077,illinois,jackson county
+17,079,illinois,jasper county
+17,081,illinois,jefferson county
+17,083,illinois,jersey county
+17,085,illinois,jo daviess county
+17,087,illinois,johnson county
+17,089,illinois,kane county
+17,091,illinois,kankakee county
+17,093,illinois,kendall county
+17,095,illinois,knox county
+17,097,illinois,lake county
+17,099,illinois,lasalle county
+17,101,illinois,lawrence county
+17,103,illinois,lee county
+17,105,illinois,livingston county
+17,107,illinois,logan county
+17,109,illinois,mcdonough county
+17,111,illinois,mchenry county
+17,113,illinois,mclean county
+17,115,illinois,macon county
+17,117,illinois,macoupin county
+17,119,illinois,madison county
+17,121,illinois,marion county
+17,123,illinois,marshall county
+17,125,illinois,mason county
+17,127,illinois,massac county
+17,129,illinois,menard county
+17,131,illinois,mercer county
+17,133,illinois,monroe county
+17,135,illinois,montgomery county
+17,137,illinois,morgan county
+17,139,illinois,moultrie county
+17,141,illinois,ogle county
+17,143,illinois,peoria county
+17,145,illinois,perry county
+17,147,illinois,piatt county
+17,149,illinois,pike county
+17,151,illinois,pope county
+17,153,illinois,pulaski county
+17,155,illinois,putnam county
+17,157,illinois,randolph county
+17,159,illinois,richland county
+17,161,illinois,rock island county
+17,163,illinois,st. clair county
+17,165,illinois,saline county
+17,167,illinois,sangamon county
+17,169,illinois,schuyler county
+17,171,illinois,scott county
+17,173,illinois,shelby county
+17,175,illinois,stark county
+17,177,illinois,stephenson county
+17,179,illinois,tazewell county
+17,181,illinois,union county
+17,183,illinois,vermilion county
+17,185,illinois,wabash county
+17,187,illinois,warren county
+17,189,illinois,washington county
+17,191,illinois,wayne county
+17,193,illinois,white county
+17,195,illinois,whiteside county
+17,197,illinois,will county
+17,199,illinois,williamson county
+17,201,illinois,winnebago county
+17,203,illinois,woodford county
+18,001,indiana,adams county
+18,003,indiana,allen county
+18,005,indiana,bartholomew county
+18,007,indiana,benton county
+18,009,indiana,blackford county
+18,011,indiana,boone county
+18,013,indiana,brown county
+18,015,indiana,carroll county
+18,017,indiana,cass county
+18,019,indiana,clark county
+18,021,indiana,clay county
+18,023,indiana,clinton county
+18,025,indiana,crawford county
+18,027,indiana,daviess county
+18,029,indiana,dearborn county
+18,031,indiana,decatur county
+18,033,indiana,dekalb county
+18,035,indiana,delaware county
+18,037,indiana,dubois county
+18,039,indiana,elkhart county
+18,041,indiana,fayette county
+18,043,indiana,floyd county
+18,045,indiana,fountain county
+18,047,indiana,franklin county
+18,049,indiana,fulton county
+18,051,indiana,gibson county
+18,053,indiana,grant county
+18,055,indiana,greene county
+18,057,indiana,hamilton county
+18,059,indiana,hancock county
+18,061,indiana,harrison county
+18,063,indiana,hendricks county
+18,065,indiana,henry county
+18,067,indiana,howard county
+18,069,indiana,huntington county
+18,071,indiana,jackson county
+18,073,indiana,jasper county
+18,075,indiana,jay county
+18,077,indiana,jefferson county
+18,079,indiana,jennings county
+18,081,indiana,johnson county
+18,083,indiana,knox county
+18,085,indiana,kosciusko county
+18,087,indiana,lagrange county
+18,089,indiana,lake county
+18,091,indiana,laporte county
+18,093,indiana,lawrence county
+18,095,indiana,madison county
+18,097,indiana,marion county
+18,099,indiana,marshall county
+18,101,indiana,martin county
+18,103,indiana,miami county
+18,105,indiana,monroe county
+18,107,indiana,montgomery county
+18,109,indiana,morgan county
+18,111,indiana,newton county
+18,113,indiana,noble county
+18,115,indiana,ohio county
+18,117,indiana,orange county
+18,119,indiana,owen county
+18,121,indiana,parke county
+18,123,indiana,perry county
+18,125,indiana,pike county
+18,127,indiana,porter county
+18,129,indiana,posey county
+18,131,indiana,pulaski county
+18,133,indiana,putnam county
+18,135,indiana,randolph county
+18,137,indiana,ripley county
+18,139,indiana,rush county
+18,141,indiana,st. joseph county
+18,143,indiana,scott county
+18,145,indiana,shelby county
+18,147,indiana,spencer county
+18,149,indiana,starke county
+18,151,indiana,steuben county
+18,153,indiana,sullivan county
+18,155,indiana,switzerland county
+18,157,indiana,tippecanoe county
+18,159,indiana,tipton county
+18,161,indiana,union county
+18,163,indiana,vanderburgh county
+18,165,indiana,vermillion county
+18,167,indiana,vigo county
+18,169,indiana,wabash county
+18,171,indiana,warren county
+18,173,indiana,warrick county
+18,175,indiana,washington county
+18,177,indiana,wayne county
+18,179,indiana,wells county
+18,181,indiana,white county
+18,183,indiana,whitley county
+19,001,iowa,adair county
+19,003,iowa,adams county
+19,005,iowa,allamakee county
+19,007,iowa,appanoose county
+19,009,iowa,audubon county
+19,011,iowa,benton county
+19,013,iowa,black hawk county
+19,015,iowa,boone county
+19,017,iowa,bremer county
+19,019,iowa,buchanan county
+19,021,iowa,buena vista county
+19,023,iowa,butler county
+19,025,iowa,calhoun county
+19,027,iowa,carroll county
+19,029,iowa,cass county
+19,031,iowa,cedar county
+19,033,iowa,cerro gordo county
+19,035,iowa,cherokee county
+19,037,iowa,chickasaw county
+19,039,iowa,clarke county
+19,041,iowa,clay county
+19,043,iowa,clayton county
+19,045,iowa,clinton county
+19,047,iowa,crawford county
+19,049,iowa,dallas county
+19,051,iowa,davis county
+19,053,iowa,decatur county
+19,055,iowa,delaware county
+19,057,iowa,des moines county
+19,059,iowa,dickinson county
+19,061,iowa,dubuque county
+19,063,iowa,emmet county
+19,065,iowa,fayette county
+19,067,iowa,floyd county
+19,069,iowa,franklin county
+19,071,iowa,fremont county
+19,073,iowa,greene county
+19,075,iowa,grundy county
+19,077,iowa,guthrie county
+19,079,iowa,hamilton county
+19,081,iowa,hancock county
+19,083,iowa,hardin county
+19,085,iowa,harrison county
+19,087,iowa,henry county
+19,089,iowa,howard county
+19,091,iowa,humboldt county
+19,093,iowa,ida county
+19,095,iowa,iowa county
+19,097,iowa,jackson county
+19,099,iowa,jasper county
+19,101,iowa,jefferson county
+19,103,iowa,johnson county
+19,105,iowa,jones county
+19,107,iowa,keokuk county
+19,109,iowa,kossuth county
+19,111,iowa,lee county
+19,113,iowa,linn county
+19,115,iowa,louisa county
+19,117,iowa,lucas county
+19,119,iowa,lyon county
+19,121,iowa,madison county
+19,123,iowa,mahaska county
+19,125,iowa,marion county
+19,127,iowa,marshall county
+19,129,iowa,mills county
+19,131,iowa,mitchell county
+19,133,iowa,monona county
+19,135,iowa,monroe county
+19,137,iowa,montgomery county
+19,139,iowa,muscatine county
+19,141,iowa,o'brien county
+19,143,iowa,osceola county
+19,145,iowa,page county
+19,147,iowa,palo alto county
+19,149,iowa,plymouth county
+19,151,iowa,pocahontas county
+19,153,iowa,polk county
+19,155,iowa,pottawattamie county
+19,157,iowa,poweshiek county
+19,159,iowa,ringgold county
+19,161,iowa,sac county
+19,163,iowa,scott county
+19,165,iowa,shelby county
+19,167,iowa,sioux county
+19,169,iowa,story county
+19,171,iowa,tama county
+19,173,iowa,taylor county
+19,175,iowa,union county
+19,177,iowa,van buren county
+19,179,iowa,wapello county
+19,181,iowa,warren county
+19,183,iowa,washington county
+19,185,iowa,wayne county
+19,187,iowa,webster county
+19,189,iowa,winnebago county
+19,191,iowa,winneshiek county
+19,193,iowa,woodbury county
+19,195,iowa,worth county
+19,197,iowa,wright county
+20,001,kansas,allen county
+20,003,kansas,anderson county
+20,005,kansas,atchison county
+20,007,kansas,barber county
+20,009,kansas,barton county
+20,011,kansas,bourbon county
+20,013,kansas,brown county
+20,015,kansas,butler county
+20,017,kansas,chase county
+20,019,kansas,chautauqua county
+20,021,kansas,cherokee county
+20,023,kansas,cheyenne county
+20,025,kansas,clark county
+20,027,kansas,clay county
+20,029,kansas,cloud county
+20,031,kansas,coffey county
+20,033,kansas,comanche county
+20,035,kansas,cowley county
+20,037,kansas,crawford county
+20,039,kansas,decatur county
+20,041,kansas,dickinson county
+20,043,kansas,doniphan county
+20,045,kansas,douglas county
+20,047,kansas,edwards county
+20,049,kansas,elk county
+20,051,kansas,ellis county
+20,053,kansas,ellsworth county
+20,055,kansas,finney county
+20,057,kansas,ford county
+20,059,kansas,franklin county
+20,061,kansas,geary county
+20,063,kansas,gove county
+20,065,kansas,graham county
+20,067,kansas,grant county
+20,069,kansas,gray county
+20,071,kansas,greeley county
+20,073,kansas,greenwood county
+20,075,kansas,hamilton county
+20,077,kansas,harper county
+20,079,kansas,harvey county
+20,081,kansas,haskell county
+20,083,kansas,hodgeman county
+20,085,kansas,jackson county
+20,087,kansas,jefferson county
+20,089,kansas,jewell county
+20,091,kansas,johnson county
+20,093,kansas,kearny county
+20,095,kansas,kingman county
+20,097,kansas,kiowa county
+20,099,kansas,labette county
+20,101,kansas,lane county
+20,103,kansas,leavenworth county
+20,105,kansas,lincoln county
+20,107,kansas,linn county
+20,109,kansas,logan county
+20,111,kansas,lyon county
+20,113,kansas,mcpherson county
+20,115,kansas,marion county
+20,117,kansas,marshall county
+20,119,kansas,meade county
+20,121,kansas,miami county
+20,123,kansas,mitchell county
+20,125,kansas,montgomery county
+20,127,kansas,morris county
+20,129,kansas,morton county
+20,131,kansas,nemaha county
+20,133,kansas,neosho county
+20,135,kansas,ness county
+20,137,kansas,norton county
+20,139,kansas,osage county
+20,141,kansas,osborne county
+20,143,kansas,ottawa county
+20,145,kansas,pawnee county
+20,147,kansas,phillips county
+20,149,kansas,pottawatomie county
+20,151,kansas,pratt county
+20,153,kansas,rawlins county
+20,155,kansas,reno county
+20,157,kansas,republic county
+20,159,kansas,rice county
+20,161,kansas,riley county
+20,163,kansas,rooks county
+20,165,kansas,rush county
+20,167,kansas,russell county
+20,169,kansas,saline county
+20,171,kansas,scott county
+20,173,kansas,sedgwick county
+20,175,kansas,seward county
+20,177,kansas,shawnee county
+20,179,kansas,sheridan county
+20,181,kansas,sherman county
+20,183,kansas,smith county
+20,185,kansas,stafford county
+20,187,kansas,stanton county
+20,189,kansas,stevens county
+20,191,kansas,sumner county
+20,193,kansas,thomas county
+20,195,kansas,trego county
+20,197,kansas,wabaunsee county
+20,199,kansas,wallace county
+20,201,kansas,washington county
+20,203,kansas,wichita county
+20,205,kansas,wilson county
+20,207,kansas,woodson county
+20,209,kansas,wyandotte county
+21,001,kentucky,adair county
+21,003,kentucky,allen county
+21,005,kentucky,anderson county
+21,007,kentucky,ballard county
+21,009,kentucky,barren county
+21,011,kentucky,bath county
+21,013,kentucky,bell county
+21,015,kentucky,boone county
+21,017,kentucky,bourbon county
+21,019,kentucky,boyd county
+21,021,kentucky,boyle county
+21,023,kentucky,bracken county
+21,025,kentucky,breathitt county
+21,027,kentucky,breckinridge county
+21,029,kentucky,bullitt county
+21,031,kentucky,butler county
+21,033,kentucky,caldwell county
+21,035,kentucky,calloway county
+21,037,kentucky,campbell county
+21,039,kentucky,carlisle county
+21,041,kentucky,carroll county
+21,043,kentucky,carter county
+21,045,kentucky,casey county
+21,047,kentucky,christian county
+21,049,kentucky,clark county
+21,051,kentucky,clay county
+21,053,kentucky,clinton county
+21,055,kentucky,crittenden county
+21,057,kentucky,cumberland county
+21,059,kentucky,daviess county
+21,061,kentucky,edmonson county
+21,063,kentucky,elliott county
+21,065,kentucky,estill county
+21,067,kentucky,fayette county
+21,069,kentucky,fleming county
+21,071,kentucky,floyd county
+21,073,kentucky,franklin county
+21,075,kentucky,fulton county
+21,077,kentucky,gallatin county
+21,079,kentucky,garrard county
+21,081,kentucky,grant county
+21,083,kentucky,graves county
+21,085,kentucky,grayson county
+21,087,kentucky,green county
+21,089,kentucky,greenup county
+21,091,kentucky,hancock county
+21,093,kentucky,hardin county
+21,095,kentucky,harlan county
+21,097,kentucky,harrison county
+21,099,kentucky,hart county
+21,101,kentucky,henderson county
+21,103,kentucky,henry county
+21,105,kentucky,hickman county
+21,107,kentucky,hopkins county
+21,109,kentucky,jackson county
+21,111,kentucky,jefferson county
+21,113,kentucky,jessamine county
+21,115,kentucky,johnson county
+21,117,kentucky,kenton county
+21,119,kentucky,knott county
+21,121,kentucky,knox county
+21,123,kentucky,larue county
+21,125,kentucky,laurel county
+21,127,kentucky,lawrence county
+21,129,kentucky,lee county
+21,131,kentucky,leslie county
+21,133,kentucky,letcher county
+21,135,kentucky,lewis county
+21,137,kentucky,lincoln county
+21,139,kentucky,livingston county
+21,141,kentucky,logan county
+21,143,kentucky,lyon county
+21,145,kentucky,mccracken county
+21,147,kentucky,mccreary county
+21,149,kentucky,mclean county
+21,151,kentucky,madison county
+21,153,kentucky,magoffin county
+21,155,kentucky,marion county
+21,157,kentucky,marshall county
+21,159,kentucky,martin county
+21,161,kentucky,mason county
+21,163,kentucky,meade county
+21,165,kentucky,menifee county
+21,167,kentucky,mercer county
+21,169,kentucky,metcalfe county
+21,171,kentucky,monroe county
+21,173,kentucky,montgomery county
+21,175,kentucky,morgan county
+21,177,kentucky,muhlenberg county
+21,179,kentucky,nelson county
+21,181,kentucky,nicholas county
+21,183,kentucky,ohio county
+21,185,kentucky,oldham county
+21,187,kentucky,owen county
+21,189,kentucky,owsley county
+21,191,kentucky,pendleton county
+21,193,kentucky,perry county
+21,195,kentucky,pike county
+21,197,kentucky,powell county
+21,199,kentucky,pulaski county
+21,201,kentucky,robertson county
+21,203,kentucky,rockcastle county
+21,205,kentucky,rowan county
+21,207,kentucky,russell county
+21,209,kentucky,scott county
+21,211,kentucky,shelby county
+21,213,kentucky,simpson county
+21,215,kentucky,spencer county
+21,217,kentucky,taylor county
+21,219,kentucky,todd county
+21,221,kentucky,trigg county
+21,223,kentucky,trimble county
+21,225,kentucky,union county
+21,227,kentucky,warren county
+21,229,kentucky,washington county
+21,231,kentucky,wayne county
+21,233,kentucky,webster county
+21,235,kentucky,whitley county
+21,237,kentucky,wolfe county
+21,239,kentucky,woodford county
+22,001,louisiana,acadia parish
+22,003,louisiana,allen parish
+22,005,louisiana,ascension parish
+22,007,louisiana,assumption parish
+22,009,louisiana,avoyelles parish
+22,011,louisiana,beauregard parish
+22,013,louisiana,bienville parish
+22,015,louisiana,bossier parish
+22,017,louisiana,caddo parish
+22,019,louisiana,calcasieu parish
+22,021,louisiana,caldwell parish
+22,023,louisiana,cameron parish
+22,025,louisiana,catahoula parish
+22,027,louisiana,claiborne parish
+22,029,louisiana,concordia parish
+22,031,louisiana,de soto parish
+22,033,louisiana,east baton rouge parish
+22,035,louisiana,east carroll parish
+22,037,louisiana,east feliciana parish
+22,039,louisiana,evangeline parish
+22,041,louisiana,franklin parish
+22,043,louisiana,grant parish
+22,045,louisiana,iberia parish
+22,047,louisiana,iberville parish
+22,049,louisiana,jackson parish
+22,051,louisiana,jefferson parish
+22,053,louisiana,jefferson davis parish
+22,055,louisiana,lafayette parish
+22,057,louisiana,lafourche parish
+22,059,louisiana,lasalle parish
+22,061,louisiana,lincoln parish
+22,063,louisiana,livingston parish
+22,065,louisiana,madison parish
+22,067,louisiana,morehouse parish
+22,069,louisiana,natchitoches parish
+22,071,louisiana,orleans parish
+22,073,louisiana,ouachita parish
+22,075,louisiana,plaquemines parish
+22,077,louisiana,pointe coupee parish
+22,079,louisiana,rapides parish
+22,081,louisiana,red river parish
+22,083,louisiana,richland parish
+22,085,louisiana,sabine parish
+22,087,louisiana,st. bernard parish
+22,089,louisiana,st. charles parish
+22,091,louisiana,st. helena parish
+22,093,louisiana,st. james parish
+22,095,louisiana,st. john the baptist parish
+22,097,louisiana,st. landry parish
+22,099,louisiana,st. martin parish
+22,101,louisiana,st. mary parish
+22,103,louisiana,st. tammany parish
+22,105,louisiana,tangipahoa parish
+22,107,louisiana,tensas parish
+22,109,louisiana,terrebonne parish
+22,111,louisiana,union parish
+22,113,louisiana,vermilion parish
+22,115,louisiana,vernon parish
+22,117,louisiana,washington parish
+22,119,louisiana,webster parish
+22,121,louisiana,west baton rouge parish
+22,123,louisiana,west carroll parish
+22,125,louisiana,west feliciana parish
+22,127,louisiana,winn parish
+23,001,maine,androscoggin county
+23,003,maine,aroostook county
+23,005,maine,cumberland county
+23,007,maine,franklin county
+23,009,maine,hancock county
+23,011,maine,kennebec county
+23,013,maine,knox county
+23,015,maine,lincoln county
+23,017,maine,oxford county
+23,019,maine,penobscot county
+23,021,maine,piscataquis county
+23,023,maine,sagadahoc county
+23,025,maine,somerset county
+23,027,maine,waldo county
+23,029,maine,washington county
+23,031,maine,york county
+24,001,maryland,allegany county
+24,003,maryland,anne arundel county
+24,005,maryland,baltimore county
+24,009,maryland,calvert county
+24,011,maryland,caroline county
+24,013,maryland,carroll county
+24,015,maryland,cecil county
+24,017,maryland,charles county
+24,019,maryland,dorchester county
+24,021,maryland,frederick county
+24,023,maryland,garrett county
+24,025,maryland,harford county
+24,027,maryland,howard county
+24,029,maryland,kent county
+24,031,maryland,montgomery county
+24,033,maryland,prince george's county
+24,035,maryland,queen anne's county
+24,037,maryland,st. mary's county
+24,039,maryland,somerset county
+24,041,maryland,talbot county
+24,043,maryland,washington county
+24,045,maryland,wicomico county
+24,047,maryland,worcester county
+24,510,maryland,baltimore city
+25,001,massachusetts,barnstable county
+25,003,massachusetts,berkshire county
+25,005,massachusetts,bristol county
+25,007,massachusetts,dukes county
+25,009,massachusetts,essex county
+25,011,massachusetts,franklin county
+25,013,massachusetts,hampden county
+25,015,massachusetts,hampshire county
+25,017,massachusetts,middlesex county
+25,019,massachusetts,nantucket county
+25,021,massachusetts,norfolk county
+25,023,massachusetts,plymouth county
+25,025,massachusetts,suffolk county
+25,027,massachusetts,worcester county
+26,001,michigan,alcona county
+26,003,michigan,alger county
+26,005,michigan,allegan county
+26,007,michigan,alpena county
+26,009,michigan,antrim county
+26,011,michigan,arenac county
+26,013,michigan,baraga county
+26,015,michigan,barry county
+26,017,michigan,bay county
+26,019,michigan,benzie county
+26,021,michigan,berrien county
+26,023,michigan,branch county
+26,025,michigan,calhoun county
+26,027,michigan,cass county
+26,029,michigan,charlevoix county
+26,031,michigan,cheboygan county
+26,033,michigan,chippewa county
+26,035,michigan,clare county
+26,037,michigan,clinton county
+26,039,michigan,crawford county
+26,041,michigan,delta county
+26,043,michigan,dickinson county
+26,045,michigan,eaton county
+26,047,michigan,emmet county
+26,049,michigan,genesee county
+26,051,michigan,gladwin county
+26,053,michigan,gogebic county
+26,055,michigan,grand traverse county
+26,057,michigan,gratiot county
+26,059,michigan,hillsdale county
+26,061,michigan,houghton county
+26,063,michigan,huron county
+26,065,michigan,ingham county
+26,067,michigan,ionia county
+26,069,michigan,iosco county
+26,071,michigan,iron county
+26,073,michigan,isabella county
+26,075,michigan,jackson county
+26,077,michigan,kalamazoo county
+26,079,michigan,kalkaska county
+26,081,michigan,kent county
+26,083,michigan,keweenaw county
+26,085,michigan,lake county
+26,087,michigan,lapeer county
+26,089,michigan,leelanau county
+26,091,michigan,lenawee county
+26,093,michigan,livingston county
+26,095,michigan,luce county
+26,097,michigan,mackinac county
+26,099,michigan,macomb county
+26,101,michigan,manistee county
+26,103,michigan,marquette county
+26,105,michigan,mason county
+26,107,michigan,mecosta county
+26,109,michigan,menominee county
+26,111,michigan,midland county
+26,113,michigan,missaukee county
+26,115,michigan,monroe county
+26,117,michigan,montcalm county
+26,119,michigan,montmorency county
+26,121,michigan,muskegon county
+26,123,michigan,newaygo county
+26,125,michigan,oakland county
+26,127,michigan,oceana county
+26,129,michigan,ogemaw county
+26,131,michigan,ontonagon county
+26,133,michigan,osceola county
+26,135,michigan,oscoda county
+26,137,michigan,otsego county
+26,139,michigan,ottawa county
+26,141,michigan,presque isle county
+26,143,michigan,roscommon county
+26,145,michigan,saginaw county
+26,147,michigan,st. clair county
+26,149,michigan,st. joseph county
+26,151,michigan,sanilac county
+26,153,michigan,schoolcraft county
+26,155,michigan,shiawassee county
+26,157,michigan,tuscola county
+26,159,michigan,van buren county
+26,161,michigan,washtenaw county
+26,163,michigan,wayne county
+26,165,michigan,wexford county
+27,001,minnesota,aitkin county
+27,003,minnesota,anoka county
+27,005,minnesota,becker county
+27,007,minnesota,beltrami county
+27,009,minnesota,benton county
+27,011,minnesota,big stone county
+27,013,minnesota,blue earth county
+27,015,minnesota,brown county
+27,017,minnesota,carlton county
+27,019,minnesota,carver county
+27,021,minnesota,cass county
+27,023,minnesota,chippewa county
+27,025,minnesota,chisago county
+27,027,minnesota,clay county
+27,029,minnesota,clearwater county
+27,031,minnesota,cook county
+27,033,minnesota,cottonwood county
+27,035,minnesota,crow wing county
+27,037,minnesota,dakota county
+27,039,minnesota,dodge county
+27,041,minnesota,douglas county
+27,043,minnesota,faribault county
+27,045,minnesota,fillmore county
+27,047,minnesota,freeborn county
+27,049,minnesota,goodhue county
+27,051,minnesota,grant county
+27,053,minnesota,hennepin county
+27,055,minnesota,houston county
+27,057,minnesota,hubbard county
+27,059,minnesota,isanti county
+27,061,minnesota,itasca county
+27,063,minnesota,jackson county
+27,065,minnesota,kanabec county
+27,067,minnesota,kandiyohi county
+27,069,minnesota,kittson county
+27,071,minnesota,koochiching county
+27,073,minnesota,lac qui parle county
+27,075,minnesota,lake county
+27,077,minnesota,lake of the woods county
+27,079,minnesota,le sueur county
+27,081,minnesota,lincoln county
+27,083,minnesota,lyon county
+27,085,minnesota,mcleod county
+27,087,minnesota,mahnomen county
+27,089,minnesota,marshall county
+27,091,minnesota,martin county
+27,093,minnesota,meeker county
+27,095,minnesota,mille lacs county
+27,097,minnesota,morrison county
+27,099,minnesota,mower county
+27,101,minnesota,murray county
+27,103,minnesota,nicollet county
+27,105,minnesota,nobles county
+27,107,minnesota,norman county
+27,109,minnesota,olmsted county
+27,111,minnesota,otter tail county
+27,113,minnesota,pennington county
+27,115,minnesota,pine county
+27,117,minnesota,pipestone county
+27,119,minnesota,polk county
+27,121,minnesota,pope county
+27,123,minnesota,ramsey county
+27,125,minnesota,red lake county
+27,127,minnesota,redwood county
+27,129,minnesota,renville county
+27,131,minnesota,rice county
+27,133,minnesota,rock county
+27,135,minnesota,roseau county
+27,137,minnesota,st. louis county
+27,139,minnesota,scott county
+27,141,minnesota,sherburne county
+27,143,minnesota,sibley county
+27,145,minnesota,stearns county
+27,147,minnesota,steele county
+27,149,minnesota,stevens county
+27,151,minnesota,swift county
+27,153,minnesota,todd county
+27,155,minnesota,traverse county
+27,157,minnesota,wabasha county
+27,159,minnesota,wadena county
+27,161,minnesota,waseca county
+27,163,minnesota,washington county
+27,165,minnesota,watonwan county
+27,167,minnesota,wilkin county
+27,169,minnesota,winona county
+27,171,minnesota,wright county
+27,173,minnesota,yellow medicine county
+28,001,mississippi,adams county
+28,003,mississippi,alcorn county
+28,005,mississippi,amite county
+28,007,mississippi,attala county
+28,009,mississippi,benton county
+28,011,mississippi,bolivar county
+28,013,mississippi,calhoun county
+28,015,mississippi,carroll county
+28,017,mississippi,chickasaw county
+28,019,mississippi,choctaw county
+28,021,mississippi,claiborne county
+28,023,mississippi,clarke county
+28,025,mississippi,clay county
+28,027,mississippi,coahoma county
+28,029,mississippi,copiah county
+28,031,mississippi,covington county
+28,033,mississippi,desoto county
+28,035,mississippi,forrest county
+28,037,mississippi,franklin county
+28,039,mississippi,george county
+28,041,mississippi,greene county
+28,043,mississippi,grenada county
+28,045,mississippi,hancock county
+28,047,mississippi,harrison county
+28,049,mississippi,hinds county
+28,051,mississippi,holmes county
+28,053,mississippi,humphreys county
+28,055,mississippi,issaquena county
+28,057,mississippi,itawamba county
+28,059,mississippi,jackson county
+28,061,mississippi,jasper county
+28,063,mississippi,jefferson county
+28,065,mississippi,jefferson davis county
+28,067,mississippi,jones county
+28,069,mississippi,kemper county
+28,071,mississippi,lafayette county
+28,073,mississippi,lamar county
+28,075,mississippi,lauderdale county
+28,077,mississippi,lawrence county
+28,079,mississippi,leake county
+28,081,mississippi,lee county
+28,083,mississippi,leflore county
+28,085,mississippi,lincoln county
+28,087,mississippi,lowndes county
+28,089,mississippi,madison county
+28,091,mississippi,marion county
+28,093,mississippi,marshall county
+28,095,mississippi,monroe county
+28,097,mississippi,montgomery county
+28,099,mississippi,neshoba county
+28,101,mississippi,newton county
+28,103,mississippi,noxubee county
+28,105,mississippi,oktibbeha county
+28,107,mississippi,panola county
+28,109,mississippi,pearl river county
+28,111,mississippi,perry county
+28,113,mississippi,pike county
+28,115,mississippi,pontotoc county
+28,117,mississippi,prentiss county
+28,119,mississippi,quitman county
+28,121,mississippi,rankin county
+28,123,mississippi,scott county
+28,125,mississippi,sharkey county
+28,127,mississippi,simpson county
+28,129,mississippi,smith county
+28,131,mississippi,stone county
+28,133,mississippi,sunflower county
+28,135,mississippi,tallahatchie county
+28,137,mississippi,tate county
+28,139,mississippi,tippah county
+28,141,mississippi,tishomingo county
+28,143,mississippi,tunica county
+28,145,mississippi,union county
+28,147,mississippi,walthall county
+28,149,mississippi,warren county
+28,151,mississippi,washington county
+28,153,mississippi,wayne county
+28,155,mississippi,webster county
+28,157,mississippi,wilkinson county
+28,159,mississippi,winston county
+28,161,mississippi,yalobusha county
+28,163,mississippi,yazoo county
+29,001,missouri,adair county
+29,003,missouri,andrew county
+29,005,missouri,atchison county
+29,007,missouri,audrain county
+29,009,missouri,barry county
+29,011,missouri,barton county
+29,013,missouri,bates county
+29,015,missouri,benton county
+29,017,missouri,bollinger county
+29,019,missouri,boone county
+29,021,missouri,buchanan county
+29,023,missouri,butler county
+29,025,missouri,caldwell county
+29,027,missouri,callaway county
+29,029,missouri,camden county
+29,031,missouri,cape girardeau county
+29,033,missouri,carroll county
+29,035,missouri,carter county
+29,037,missouri,cass county
+29,039,missouri,cedar county
+29,041,missouri,chariton county
+29,043,missouri,christian county
+29,045,missouri,clark county
+29,047,missouri,clay county
+29,049,missouri,clinton county
+29,051,missouri,cole county
+29,053,missouri,cooper county
+29,055,missouri,crawford county
+29,057,missouri,dade county
+29,059,missouri,dallas county
+29,061,missouri,daviess county
+29,063,missouri,dekalb county
+29,065,missouri,dent county
+29,067,missouri,douglas county
+29,069,missouri,dunklin county
+29,071,missouri,franklin county
+29,073,missouri,gasconade county
+29,075,missouri,gentry county
+29,077,missouri,greene county
+29,079,missouri,grundy county
+29,081,missouri,harrison county
+29,083,missouri,henry county
+29,085,missouri,hickory county
+29,087,missouri,holt county
+29,089,missouri,howard county
+29,091,missouri,howell county
+29,093,missouri,iron county
+29,095,missouri,jackson county
+29,097,missouri,jasper county
+29,099,missouri,jefferson county
+29,101,missouri,johnson county
+29,103,missouri,knox county
+29,105,missouri,laclede county
+29,107,missouri,lafayette county
+29,109,missouri,lawrence county
+29,111,missouri,lewis county
+29,113,missouri,lincoln county
+29,115,missouri,linn county
+29,117,missouri,livingston county
+29,119,missouri,mcdonald county
+29,121,missouri,macon county
+29,123,missouri,madison county
+29,125,missouri,maries county
+29,127,missouri,marion county
+29,129,missouri,mercer county
+29,131,missouri,miller county
+29,133,missouri,mississippi county
+29,135,missouri,moniteau county
+29,137,missouri,monroe county
+29,139,missouri,montgomery county
+29,141,missouri,morgan county
+29,143,missouri,new madrid county
+29,145,missouri,newton county
+29,147,missouri,nodaway county
+29,149,missouri,oregon county
+29,151,missouri,osage county
+29,153,missouri,ozark county
+29,155,missouri,pemiscot county
+29,157,missouri,perry county
+29,159,missouri,pettis county
+29,161,missouri,phelps county
+29,163,missouri,pike county
+29,165,missouri,platte county
+29,167,missouri,polk county
+29,169,missouri,pulaski county
+29,171,missouri,putnam county
+29,173,missouri,ralls county
+29,175,missouri,randolph county
+29,177,missouri,ray county
+29,179,missouri,reynolds county
+29,181,missouri,ripley county
+29,183,missouri,st. charles county
+29,185,missouri,st. clair county
+29,186,missouri,ste. genevieve county
+29,187,missouri,st. francois county
+29,189,missouri,st. louis county
+29,195,missouri,saline county
+29,197,missouri,schuyler county
+29,199,missouri,scotland county
+29,201,missouri,scott county
+29,203,missouri,shannon county
+29,205,missouri,shelby county
+29,207,missouri,stoddard county
+29,209,missouri,stone county
+29,211,missouri,sullivan county
+29,213,missouri,taney county
+29,215,missouri,texas county
+29,217,missouri,vernon county
+29,219,missouri,warren county
+29,221,missouri,washington county
+29,223,missouri,wayne county
+29,225,missouri,webster county
+29,227,missouri,worth county
+29,229,missouri,wright county
+29,510,missouri,st. louis city
+30,001,montana,beaverhead county
+30,003,montana,big horn county
+30,005,montana,blaine county
+30,007,montana,broadwater county
+30,009,montana,carbon county
+30,011,montana,carter county
+30,013,montana,cascade county
+30,015,montana,chouteau county
+30,017,montana,custer county
+30,019,montana,daniels county
+30,021,montana,dawson county
+30,023,montana,deer lodge county
+30,025,montana,fallon county
+30,027,montana,fergus county
+30,029,montana,flathead county
+30,031,montana,gallatin county
+30,033,montana,garfield county
+30,035,montana,glacier county
+30,037,montana,golden valley county
+30,039,montana,granite county
+30,041,montana,hill county
+30,043,montana,jefferson county
+30,045,montana,judith basin county
+30,047,montana,lake county
+30,049,montana,lewis and clark county
+30,051,montana,liberty county
+30,053,montana,lincoln county
+30,055,montana,mccone county
+30,057,montana,madison county
+30,059,montana,meagher county
+30,061,montana,mineral county
+30,063,montana,missoula county
+30,065,montana,musselshell county
+30,067,montana,park county
+30,069,montana,petroleum county
+30,071,montana,phillips county
+30,073,montana,pondera county
+30,075,montana,powder river county
+30,077,montana,powell county
+30,079,montana,prairie county
+30,081,montana,ravalli county
+30,083,montana,richland county
+30,085,montana,roosevelt county
+30,087,montana,rosebud county
+30,089,montana,sanders county
+30,091,montana,sheridan county
+30,093,montana,silver bow county
+30,095,montana,stillwater county
+30,097,montana,sweet grass county
+30,099,montana,teton county
+30,101,montana,toole county
+30,103,montana,treasure county
+30,105,montana,valley county
+30,107,montana,wheatland county
+30,109,montana,wibaux county
+30,111,montana,yellowstone county
+31,001,nebraska,adams county
+31,003,nebraska,antelope county
+31,005,nebraska,arthur county
+31,007,nebraska,banner county
+31,009,nebraska,blaine county
+31,011,nebraska,boone county
+31,013,nebraska,box butte county
+31,015,nebraska,boyd county
+31,017,nebraska,brown county
+31,019,nebraska,buffalo county
+31,021,nebraska,burt county
+31,023,nebraska,butler county
+31,025,nebraska,cass county
+31,027,nebraska,cedar county
+31,029,nebraska,chase county
+31,031,nebraska,cherry county
+31,033,nebraska,cheyenne county
+31,035,nebraska,clay county
+31,037,nebraska,colfax county
+31,039,nebraska,cuming county
+31,041,nebraska,custer county
+31,043,nebraska,dakota county
+31,045,nebraska,dawes county
+31,047,nebraska,dawson county
+31,049,nebraska,deuel county
+31,051,nebraska,dixon county
+31,053,nebraska,dodge county
+31,055,nebraska,douglas county
+31,057,nebraska,dundy county
+31,059,nebraska,fillmore county
+31,061,nebraska,franklin county
+31,063,nebraska,frontier county
+31,065,nebraska,furnas county
+31,067,nebraska,gage county
+31,069,nebraska,garden county
+31,071,nebraska,garfield county
+31,073,nebraska,gosper county
+31,075,nebraska,grant county
+31,077,nebraska,greeley county
+31,079,nebraska,hall county
+31,081,nebraska,hamilton county
+31,083,nebraska,harlan county
+31,085,nebraska,hayes county
+31,087,nebraska,hitchcock county
+31,089,nebraska,holt county
+31,091,nebraska,hooker county
+31,093,nebraska,howard county
+31,095,nebraska,jefferson county
+31,097,nebraska,johnson county
+31,099,nebraska,kearney county
+31,101,nebraska,keith county
+31,103,nebraska,keya paha county
+31,105,nebraska,kimball county
+31,107,nebraska,knox county
+31,109,nebraska,lancaster county
+31,111,nebraska,lincoln county
+31,113,nebraska,logan county
+31,115,nebraska,loup county
+31,117,nebraska,mcpherson county
+31,119,nebraska,madison county
+31,121,nebraska,merrick county
+31,123,nebraska,morrill county
+31,125,nebraska,nance county
+31,127,nebraska,nemaha county
+31,129,nebraska,nuckolls county
+31,131,nebraska,otoe county
+31,133,nebraska,pawnee county
+31,135,nebraska,perkins county
+31,137,nebraska,phelps county
+31,139,nebraska,pierce county
+31,141,nebraska,platte county
+31,143,nebraska,polk county
+31,145,nebraska,red willow county
+31,147,nebraska,richardson county
+31,149,nebraska,rock county
+31,151,nebraska,saline county
+31,153,nebraska,sarpy county
+31,155,nebraska,saunders county
+31,157,nebraska,scotts bluff county
+31,159,nebraska,seward county
+31,161,nebraska,sheridan county
+31,163,nebraska,sherman county
+31,165,nebraska,sioux county
+31,167,nebraska,stanton county
+31,169,nebraska,thayer county
+31,171,nebraska,thomas county
+31,173,nebraska,thurston county
+31,175,nebraska,valley county
+31,177,nebraska,washington county
+31,179,nebraska,wayne county
+31,181,nebraska,webster county
+31,183,nebraska,wheeler county
+31,185,nebraska,york county
+32,001,nevada,churchill county
+32,003,nevada,clark county
+32,005,nevada,douglas county
+32,007,nevada,elko county
+32,009,nevada,esmeralda county
+32,011,nevada,eureka county
+32,013,nevada,humboldt county
+32,015,nevada,lander county
+32,017,nevada,lincoln county
+32,019,nevada,lyon county
+32,021,nevada,mineral county
+32,023,nevada,nye county
+32,027,nevada,pershing county
+32,029,nevada,storey county
+32,031,nevada,washoe county
+32,033,nevada,white pine county
+32,510,nevada,carson city
+33,001,new hampshire,belknap county
+33,003,new hampshire,carroll county
+33,005,new hampshire,cheshire county
+33,007,new hampshire,coos county
+33,009,new hampshire,grafton county
+33,011,new hampshire,hillsborough county
+33,013,new hampshire,merrimack county
+33,015,new hampshire,rockingham county
+33,017,new hampshire,strafford county
+33,019,new hampshire,sullivan county
+34,001,new jersey,atlantic county
+34,003,new jersey,bergen county
+34,005,new jersey,burlington county
+34,007,new jersey,camden county
+34,009,new jersey,cape may county
+34,011,new jersey,cumberland county
+34,013,new jersey,essex county
+34,015,new jersey,gloucester county
+34,017,new jersey,hudson county
+34,019,new jersey,hunterdon county
+34,021,new jersey,mercer county
+34,023,new jersey,middlesex county
+34,025,new jersey,monmouth county
+34,027,new jersey,morris county
+34,029,new jersey,ocean county
+34,031,new jersey,passaic county
+34,033,new jersey,salem county
+34,035,new jersey,somerset county
+34,037,new jersey,sussex county
+34,039,new jersey,union county
+34,041,new jersey,warren county
+35,001,new mexico,bernalillo county
+35,003,new mexico,catron county
+35,005,new mexico,chaves county
+35,006,new mexico,cibola county
+35,007,new mexico,colfax county
+35,009,new mexico,curry county
+35,011,new mexico,de baca county
+35,013,new mexico,doña ana county
+35,015,new mexico,eddy county
+35,017,new mexico,grant county
+35,019,new mexico,guadalupe county
+35,021,new mexico,harding county
+35,023,new mexico,hidalgo county
+35,025,new mexico,lea county
+35,027,new mexico,lincoln county
+35,028,new mexico,los alamos county
+35,029,new mexico,luna county
+35,031,new mexico,mckinley county
+35,033,new mexico,mora county
+35,035,new mexico,otero county
+35,037,new mexico,quay county
+35,039,new mexico,rio arriba county
+35,041,new mexico,roosevelt county
+35,043,new mexico,sandoval county
+35,045,new mexico,san juan county
+35,047,new mexico,san miguel county
+35,049,new mexico,santa fe county
+35,051,new mexico,sierra county
+35,053,new mexico,socorro county
+35,055,new mexico,taos county
+35,057,new mexico,torrance county
+35,059,new mexico,union county
+35,061,new mexico,valencia county
+36,001,new york,albany county
+36,003,new york,allegany county
+36,005,new york,bronx county
+36,007,new york,broome county
+36,009,new york,cattaraugus county
+36,011,new york,cayuga county
+36,013,new york,chautauqua county
+36,015,new york,chemung county
+36,017,new york,chenango county
+36,019,new york,clinton county
+36,021,new york,columbia county
+36,023,new york,cortland county
+36,025,new york,delaware county
+36,027,new york,dutchess county
+36,029,new york,erie county
+36,031,new york,essex county
+36,033,new york,franklin county
+36,035,new york,fulton county
+36,037,new york,genesee county
+36,039,new york,greene county
+36,041,new york,hamilton county
+36,043,new york,herkimer county
+36,045,new york,jefferson county
+36,047,new york,kings county
+36,049,new york,lewis county
+36,051,new york,livingston county
+36,053,new york,madison county
+36,055,new york,monroe county
+36,057,new york,montgomery county
+36,059,new york,nassau county
+36,061,new york,new york county
+36,063,new york,niagara county
+36,065,new york,oneida county
+36,067,new york,onondaga county
+36,069,new york,ontario county
+36,071,new york,orange county
+36,073,new york,orleans county
+36,075,new york,oswego county
+36,077,new york,otsego county
+36,079,new york,putnam county
+36,081,new york,queens county
+36,083,new york,rensselaer county
+36,085,new york,richmond county
+36,087,new york,rockland county
+36,089,new york,st. lawrence county
+36,091,new york,saratoga county
+36,093,new york,schenectady county
+36,095,new york,schoharie county
+36,097,new york,schuyler county
+36,099,new york,seneca county
+36,101,new york,steuben county
+36,103,new york,suffolk county
+36,105,new york,sullivan county
+36,107,new york,tioga county
+36,109,new york,tompkins county
+36,111,new york,ulster county
+36,113,new york,warren county
+36,115,new york,washington county
+36,117,new york,wayne county
+36,119,new york,westchester county
+36,121,new york,wyoming county
+36,123,new york,yates county
+37,001,north carolina,alamance county
+37,003,north carolina,alexander county
+37,005,north carolina,alleghany county
+37,007,north carolina,anson county
+37,009,north carolina,ashe county
+37,011,north carolina,avery county
+37,013,north carolina,beaufort county
+37,015,north carolina,bertie county
+37,017,north carolina,bladen county
+37,019,north carolina,brunswick county
+37,021,north carolina,buncombe county
+37,023,north carolina,burke county
+37,025,north carolina,cabarrus county
+37,027,north carolina,caldwell county
+37,029,north carolina,camden county
+37,031,north carolina,carteret county
+37,033,north carolina,caswell county
+37,035,north carolina,catawba county
+37,037,north carolina,chatham county
+37,039,north carolina,cherokee county
+37,041,north carolina,chowan county
+37,043,north carolina,clay county
+37,045,north carolina,cleveland county
+37,047,north carolina,columbus county
+37,049,north carolina,craven county
+37,051,north carolina,cumberland county
+37,053,north carolina,currituck county
+37,055,north carolina,dare county
+37,057,north carolina,davidson county
+37,059,north carolina,davie county
+37,061,north carolina,duplin county
+37,063,north carolina,durham county
+37,065,north carolina,edgecombe county
+37,067,north carolina,forsyth county
+37,069,north carolina,franklin county
+37,071,north carolina,gaston county
+37,073,north carolina,gates county
+37,075,north carolina,graham county
+37,077,north carolina,granville county
+37,079,north carolina,greene county
+37,081,north carolina,guilford county
+37,083,north carolina,halifax county
+37,085,north carolina,harnett county
+37,087,north carolina,haywood county
+37,089,north carolina,henderson county
+37,091,north carolina,hertford county
+37,093,north carolina,hoke county
+37,095,north carolina,hyde county
+37,097,north carolina,iredell county
+37,099,north carolina,jackson county
+37,101,north carolina,johnston county
+37,103,north carolina,jones county
+37,105,north carolina,lee county
+37,107,north carolina,lenoir county
+37,109,north carolina,lincoln county
+37,111,north carolina,mcdowell county
+37,113,north carolina,macon county
+37,115,north carolina,madison county
+37,117,north carolina,martin county
+37,119,north carolina,mecklenburg county
+37,121,north carolina,mitchell county
+37,123,north carolina,montgomery county
+37,125,north carolina,moore county
+37,127,north carolina,nash county
+37,129,north carolina,new hanover county
+37,131,north carolina,northampton county
+37,133,north carolina,onslow county
+37,135,north carolina,orange county
+37,137,north carolina,pamlico county
+37,139,north carolina,pasquotank county
+37,141,north carolina,pender county
+37,143,north carolina,perquimans county
+37,145,north carolina,person county
+37,147,north carolina,pitt county
+37,149,north carolina,polk county
+37,151,north carolina,randolph county
+37,153,north carolina,richmond county
+37,155,north carolina,robeson county
+37,157,north carolina,rockingham county
+37,159,north carolina,rowan county
+37,161,north carolina,rutherford county
+37,163,north carolina,sampson county
+37,165,north carolina,scotland county
+37,167,north carolina,stanly county
+37,169,north carolina,stokes county
+37,171,north carolina,surry county
+37,173,north carolina,swain county
+37,175,north carolina,transylvania county
+37,177,north carolina,tyrrell county
+37,179,north carolina,union county
+37,181,north carolina,vance county
+37,183,north carolina,wake county
+37,185,north carolina,warren county
+37,187,north carolina,washington county
+37,189,north carolina,watauga county
+37,191,north carolina,wayne county
+37,193,north carolina,wilkes county
+37,195,north carolina,wilson county
+37,197,north carolina,yadkin county
+37,199,north carolina,yancey county
+38,001,north dakota,adams county
+38,003,north dakota,barnes county
+38,005,north dakota,benson county
+38,007,north dakota,billings county
+38,009,north dakota,bottineau county
+38,011,north dakota,bowman county
+38,013,north dakota,burke county
+38,015,north dakota,burleigh county
+38,017,north dakota,cass county
+38,019,north dakota,cavalier county
+38,021,north dakota,dickey county
+38,023,north dakota,divide county
+38,025,north dakota,dunn county
+38,027,north dakota,eddy county
+38,029,north dakota,emmons county
+38,031,north dakota,foster county
+38,033,north dakota,golden valley county
+38,035,north dakota,grand forks county
+38,037,north dakota,grant county
+38,039,north dakota,griggs county
+38,041,north dakota,hettinger county
+38,043,north dakota,kidder county
+38,045,north dakota,lamoure county
+38,047,north dakota,logan county
+38,049,north dakota,mchenry county
+38,051,north dakota,mcintosh county
+38,053,north dakota,mckenzie county
+38,055,north dakota,mclean county
+38,057,north dakota,mercer county
+38,059,north dakota,morton county
+38,061,north dakota,mountrail county
+38,063,north dakota,nelson county
+38,065,north dakota,oliver county
+38,067,north dakota,pembina county
+38,069,north dakota,pierce county
+38,071,north dakota,ramsey county
+38,073,north dakota,ransom county
+38,075,north dakota,renville county
+38,077,north dakota,richland county
+38,079,north dakota,rolette county
+38,081,north dakota,sargent county
+38,083,north dakota,sheridan county
+38,085,north dakota,sioux county
+38,087,north dakota,slope county
+38,089,north dakota,stark county
+38,091,north dakota,steele county
+38,093,north dakota,stutsman county
+38,095,north dakota,towner county
+38,097,north dakota,traill county
+38,099,north dakota,walsh county
+38,101,north dakota,ward county
+38,103,north dakota,wells county
+38,105,north dakota,williams county
+39,001,ohio,adams county
+39,003,ohio,allen county
+39,005,ohio,ashland county
+39,007,ohio,ashtabula county
+39,009,ohio,athens county
+39,011,ohio,auglaize county
+39,013,ohio,belmont county
+39,015,ohio,brown county
+39,017,ohio,butler county
+39,019,ohio,carroll county
+39,021,ohio,champaign county
+39,023,ohio,clark county
+39,025,ohio,clermont county
+39,027,ohio,clinton county
+39,029,ohio,columbiana county
+39,031,ohio,coshocton county
+39,033,ohio,crawford county
+39,035,ohio,cuyahoga county
+39,037,ohio,darke county
+39,039,ohio,defiance county
+39,041,ohio,delaware county
+39,043,ohio,erie county
+39,045,ohio,fairfield county
+39,047,ohio,fayette county
+39,049,ohio,franklin county
+39,051,ohio,fulton county
+39,053,ohio,gallia county
+39,055,ohio,geauga county
+39,057,ohio,greene county
+39,059,ohio,guernsey county
+39,061,ohio,hamilton county
+39,063,ohio,hancock county
+39,065,ohio,hardin county
+39,067,ohio,harrison county
+39,069,ohio,henry county
+39,071,ohio,highland county
+39,073,ohio,hocking county
+39,075,ohio,holmes county
+39,077,ohio,huron county
+39,079,ohio,jackson county
+39,081,ohio,jefferson county
+39,083,ohio,knox county
+39,085,ohio,lake county
+39,087,ohio,lawrence county
+39,089,ohio,licking county
+39,091,ohio,logan county
+39,093,ohio,lorain county
+39,095,ohio,lucas county
+39,097,ohio,madison county
+39,099,ohio,mahoning county
+39,101,ohio,marion county
+39,103,ohio,medina county
+39,105,ohio,meigs county
+39,107,ohio,mercer county
+39,109,ohio,miami county
+39,111,ohio,monroe county
+39,113,ohio,montgomery county
+39,115,ohio,morgan county
+39,117,ohio,morrow county
+39,119,ohio,muskingum county
+39,121,ohio,noble county
+39,123,ohio,ottawa county
+39,125,ohio,paulding county
+39,127,ohio,perry county
+39,129,ohio,pickaway county
+39,131,ohio,pike county
+39,133,ohio,portage county
+39,135,ohio,preble county
+39,137,ohio,putnam county
+39,139,ohio,richland county
+39,141,ohio,ross county
+39,143,ohio,sandusky county
+39,145,ohio,scioto county
+39,147,ohio,seneca county
+39,149,ohio,shelby county
+39,151,ohio,stark county
+39,153,ohio,summit county
+39,155,ohio,trumbull county
+39,157,ohio,tuscarawas county
+39,159,ohio,union county
+39,161,ohio,van wert county
+39,163,ohio,vinton county
+39,165,ohio,warren county
+39,167,ohio,washington county
+39,169,ohio,wayne county
+39,171,ohio,williams county
+39,173,ohio,wood county
+39,175,ohio,wyandot county
+40,001,oklahoma,adair county
+40,003,oklahoma,alfalfa county
+40,005,oklahoma,atoka county
+40,007,oklahoma,beaver county
+40,009,oklahoma,beckham county
+40,011,oklahoma,blaine county
+40,013,oklahoma,bryan county
+40,015,oklahoma,caddo county
+40,017,oklahoma,canadian county
+40,019,oklahoma,carter county
+40,021,oklahoma,cherokee county
+40,023,oklahoma,choctaw county
+40,025,oklahoma,cimarron county
+40,027,oklahoma,cleveland county
+40,029,oklahoma,coal county
+40,031,oklahoma,comanche county
+40,033,oklahoma,cotton county
+40,035,oklahoma,craig county
+40,037,oklahoma,creek county
+40,039,oklahoma,custer county
+40,041,oklahoma,delaware county
+40,043,oklahoma,dewey county
+40,045,oklahoma,ellis county
+40,047,oklahoma,garfield county
+40,049,oklahoma,garvin county
+40,051,oklahoma,grady county
+40,053,oklahoma,grant county
+40,055,oklahoma,greer county
+40,057,oklahoma,harmon county
+40,059,oklahoma,harper county
+40,061,oklahoma,haskell county
+40,063,oklahoma,hughes county
+40,065,oklahoma,jackson county
+40,067,oklahoma,jefferson county
+40,069,oklahoma,johnston county
+40,071,oklahoma,kay county
+40,073,oklahoma,kingfisher county
+40,075,oklahoma,kiowa county
+40,077,oklahoma,latimer county
+40,079,oklahoma,le flore county
+40,081,oklahoma,lincoln county
+40,083,oklahoma,logan county
+40,085,oklahoma,love county
+40,087,oklahoma,mcclain county
+40,089,oklahoma,mccurtain county
+40,091,oklahoma,mcintosh county
+40,093,oklahoma,major county
+40,095,oklahoma,marshall county
+40,097,oklahoma,mayes county
+40,099,oklahoma,murray county
+40,101,oklahoma,muskogee county
+40,103,oklahoma,noble county
+40,105,oklahoma,nowata county
+40,107,oklahoma,okfuskee county
+40,109,oklahoma,oklahoma county
+40,111,oklahoma,okmulgee county
+40,113,oklahoma,osage county
+40,115,oklahoma,ottawa county
+40,117,oklahoma,pawnee county
+40,119,oklahoma,payne county
+40,121,oklahoma,pittsburg county
+40,123,oklahoma,pontotoc county
+40,125,oklahoma,pottawatomie county
+40,127,oklahoma,pushmataha county
+40,129,oklahoma,roger mills county
+40,131,oklahoma,rogers county
+40,133,oklahoma,seminole county
+40,135,oklahoma,sequoyah county
+40,137,oklahoma,stephens county
+40,139,oklahoma,texas county
+40,141,oklahoma,tillman county
+40,143,oklahoma,tulsa county
+40,145,oklahoma,wagoner county
+40,147,oklahoma,washington county
+40,149,oklahoma,washita county
+40,151,oklahoma,woods county
+40,153,oklahoma,woodward county
+41,001,oregon,baker county
+41,003,oregon,benton county
+41,005,oregon,clackamas county
+41,007,oregon,clatsop county
+41,009,oregon,columbia county
+41,011,oregon,coos county
+41,013,oregon,crook county
+41,015,oregon,curry county
+41,017,oregon,deschutes county
+41,019,oregon,douglas county
+41,021,oregon,gilliam county
+41,023,oregon,grant county
+41,025,oregon,harney county
+41,027,oregon,hood river county
+41,029,oregon,jackson county
+41,031,oregon,jefferson county
+41,033,oregon,josephine county
+41,035,oregon,klamath county
+41,037,oregon,lake county
+41,039,oregon,lane county
+41,041,oregon,lincoln county
+41,043,oregon,linn county
+41,045,oregon,malheur county
+41,047,oregon,marion county
+41,049,oregon,morrow county
+41,051,oregon,multnomah county
+41,053,oregon,polk county
+41,055,oregon,sherman county
+41,057,oregon,tillamook county
+41,059,oregon,umatilla county
+41,061,oregon,union county
+41,063,oregon,wallowa county
+41,065,oregon,wasco county
+41,067,oregon,washington county
+41,069,oregon,wheeler county
+41,071,oregon,yamhill county
+42,001,pennsylvania,adams county
+42,003,pennsylvania,allegheny county
+42,005,pennsylvania,armstrong county
+42,007,pennsylvania,beaver county
+42,009,pennsylvania,bedford county
+42,011,pennsylvania,berks county
+42,013,pennsylvania,blair county
+42,015,pennsylvania,bradford county
+42,017,pennsylvania,bucks county
+42,019,pennsylvania,butler county
+42,021,pennsylvania,cambria county
+42,023,pennsylvania,cameron county
+42,025,pennsylvania,carbon county
+42,027,pennsylvania,centre county
+42,029,pennsylvania,chester county
+42,031,pennsylvania,clarion county
+42,033,pennsylvania,clearfield county
+42,035,pennsylvania,clinton county
+42,037,pennsylvania,columbia county
+42,039,pennsylvania,crawford county
+42,041,pennsylvania,cumberland county
+42,043,pennsylvania,dauphin county
+42,045,pennsylvania,delaware county
+42,047,pennsylvania,elk county
+42,049,pennsylvania,erie county
+42,051,pennsylvania,fayette county
+42,053,pennsylvania,forest county
+42,055,pennsylvania,franklin county
+42,057,pennsylvania,fulton county
+42,059,pennsylvania,greene county
+42,061,pennsylvania,huntingdon county
+42,063,pennsylvania,indiana county
+42,065,pennsylvania,jefferson county
+42,067,pennsylvania,juniata county
+42,069,pennsylvania,lackawanna county
+42,071,pennsylvania,lancaster county
+42,073,pennsylvania,lawrence county
+42,075,pennsylvania,lebanon county
+42,077,pennsylvania,lehigh county
+42,079,pennsylvania,luzerne county
+42,081,pennsylvania,lycoming county
+42,083,pennsylvania,mckean county
+42,085,pennsylvania,mercer county
+42,087,pennsylvania,mifflin county
+42,089,pennsylvania,monroe county
+42,091,pennsylvania,montgomery county
+42,093,pennsylvania,montour county
+42,095,pennsylvania,northampton county
+42,097,pennsylvania,northumberland county
+42,099,pennsylvania,perry county
+42,101,pennsylvania,philadelphia county
+42,103,pennsylvania,pike county
+42,105,pennsylvania,potter county
+42,107,pennsylvania,schuylkill county
+42,109,pennsylvania,snyder county
+42,111,pennsylvania,somerset county
+42,113,pennsylvania,sullivan county
+42,115,pennsylvania,susquehanna county
+42,117,pennsylvania,tioga county
+42,119,pennsylvania,union county
+42,121,pennsylvania,venango county
+42,123,pennsylvania,warren county
+42,125,pennsylvania,washington county
+42,127,pennsylvania,wayne county
+42,129,pennsylvania,westmoreland county
+42,131,pennsylvania,wyoming county
+42,133,pennsylvania,york county
+44,001,rhode island,bristol county
+44,003,rhode island,kent county
+44,005,rhode island,newport county
+44,007,rhode island,providence county
+44,009,rhode island,washington county
+45,001,south carolina,abbeville county
+45,003,south carolina,aiken county
+45,005,south carolina,allendale county
+45,007,south carolina,anderson county
+45,009,south carolina,bamberg county
+45,011,south carolina,barnwell county
+45,013,south carolina,beaufort county
+45,015,south carolina,berkeley county
+45,017,south carolina,calhoun county
+45,019,south carolina,charleston county
+45,021,south carolina,cherokee county
+45,023,south carolina,chester county
+45,025,south carolina,chesterfield county
+45,027,south carolina,clarendon county
+45,029,south carolina,colleton county
+45,031,south carolina,darlington county
+45,033,south carolina,dillon county
+45,035,south carolina,dorchester county
+45,037,south carolina,edgefield county
+45,039,south carolina,fairfield county
+45,041,south carolina,florence county
+45,043,south carolina,georgetown county
+45,045,south carolina,greenville county
+45,047,south carolina,greenwood county
+45,049,south carolina,hampton county
+45,051,south carolina,horry county
+45,053,south carolina,jasper county
+45,055,south carolina,kershaw county
+45,057,south carolina,lancaster county
+45,059,south carolina,laurens county
+45,061,south carolina,lee county
+45,063,south carolina,lexington county
+45,065,south carolina,mccormick county
+45,067,south carolina,marion county
+45,069,south carolina,marlboro county
+45,071,south carolina,newberry county
+45,073,south carolina,oconee county
+45,075,south carolina,orangeburg county
+45,077,south carolina,pickens county
+45,079,south carolina,richland county
+45,081,south carolina,saluda county
+45,083,south carolina,spartanburg county
+45,085,south carolina,sumter county
+45,087,south carolina,union county
+45,089,south carolina,williamsburg county
+45,091,south carolina,york county
+46,003,south dakota,aurora county
+46,005,south dakota,beadle county
+46,007,south dakota,bennett county
+46,009,south dakota,bon homme county
+46,011,south dakota,brookings county
+46,013,south dakota,brown county
+46,015,south dakota,brule county
+46,017,south dakota,buffalo county
+46,019,south dakota,butte county
+46,021,south dakota,campbell county
+46,023,south dakota,charles mix county
+46,025,south dakota,clark county
+46,027,south dakota,clay county
+46,029,south dakota,codington county
+46,031,south dakota,corson county
+46,033,south dakota,custer county
+46,035,south dakota,davison county
+46,037,south dakota,day county
+46,039,south dakota,deuel county
+46,041,south dakota,dewey county
+46,043,south dakota,douglas county
+46,045,south dakota,edmunds county
+46,047,south dakota,fall river county
+46,049,south dakota,faulk county
+46,051,south dakota,grant county
+46,053,south dakota,gregory county
+46,055,south dakota,haakon county
+46,057,south dakota,hamlin county
+46,059,south dakota,hand county
+46,061,south dakota,hanson county
+46,063,south dakota,harding county
+46,065,south dakota,hughes county
+46,067,south dakota,hutchinson county
+46,069,south dakota,hyde county
+46,071,south dakota,jackson county
+46,073,south dakota,jerauld county
+46,075,south dakota,jones county
+46,077,south dakota,kingsbury county
+46,079,south dakota,lake county
+46,081,south dakota,lawrence county
+46,083,south dakota,lincoln county
+46,085,south dakota,lyman county
+46,087,south dakota,mccook county
+46,089,south dakota,mcpherson county
+46,091,south dakota,marshall county
+46,093,south dakota,meade county
+46,095,south dakota,mellette county
+46,097,south dakota,miner county
+46,099,south dakota,minnehaha county
+46,101,south dakota,moody county
+46,102,south dakota,oglala lakota county
+46,103,south dakota,pennington county
+46,105,south dakota,perkins county
+46,107,south dakota,potter county
+46,109,south dakota,roberts county
+46,111,south dakota,sanborn county
+46,115,south dakota,spink county
+46,117,south dakota,stanley county
+46,119,south dakota,sully county
+46,121,south dakota,todd county
+46,123,south dakota,tripp county
+46,125,south dakota,turner county
+46,127,south dakota,union county
+46,129,south dakota,walworth county
+46,135,south dakota,yankton county
+46,137,south dakota,ziebach county
+47,001,tennessee,anderson county
+47,003,tennessee,bedford county
+47,005,tennessee,benton county
+47,007,tennessee,bledsoe county
+47,009,tennessee,blount county
+47,011,tennessee,bradley county
+47,013,tennessee,campbell county
+47,015,tennessee,cannon county
+47,017,tennessee,carroll county
+47,019,tennessee,carter county
+47,021,tennessee,cheatham county
+47,023,tennessee,chester county
+47,025,tennessee,claiborne county
+47,027,tennessee,clay county
+47,029,tennessee,cocke county
+47,031,tennessee,coffee county
+47,033,tennessee,crockett county
+47,035,tennessee,cumberland county
+47,037,tennessee,davidson county
+47,039,tennessee,decatur county
+47,041,tennessee,dekalb county
+47,043,tennessee,dickson county
+47,045,tennessee,dyer county
+47,047,tennessee,fayette county
+47,049,tennessee,fentress county
+47,051,tennessee,franklin county
+47,053,tennessee,gibson county
+47,055,tennessee,giles county
+47,057,tennessee,grainger county
+47,059,tennessee,greene county
+47,061,tennessee,grundy county
+47,063,tennessee,hamblen county
+47,065,tennessee,hamilton county
+47,067,tennessee,hancock county
+47,069,tennessee,hardeman county
+47,071,tennessee,hardin county
+47,073,tennessee,hawkins county
+47,075,tennessee,haywood county
+47,077,tennessee,henderson county
+47,079,tennessee,henry county
+47,081,tennessee,hickman county
+47,083,tennessee,houston county
+47,085,tennessee,humphreys county
+47,087,tennessee,jackson county
+47,089,tennessee,jefferson county
+47,091,tennessee,johnson county
+47,093,tennessee,knox county
+47,095,tennessee,lake county
+47,097,tennessee,lauderdale county
+47,099,tennessee,lawrence county
+47,101,tennessee,lewis county
+47,103,tennessee,lincoln county
+47,105,tennessee,loudon county
+47,107,tennessee,mcminn county
+47,109,tennessee,mcnairy county
+47,111,tennessee,macon county
+47,113,tennessee,madison county
+47,115,tennessee,marion county
+47,117,tennessee,marshall county
+47,119,tennessee,maury county
+47,121,tennessee,meigs county
+47,123,tennessee,monroe county
+47,125,tennessee,montgomery county
+47,127,tennessee,moore county
+47,129,tennessee,morgan county
+47,131,tennessee,obion county
+47,133,tennessee,overton county
+47,135,tennessee,perry county
+47,137,tennessee,pickett county
+47,139,tennessee,polk county
+47,141,tennessee,putnam county
+47,143,tennessee,rhea county
+47,145,tennessee,roane county
+47,147,tennessee,robertson county
+47,149,tennessee,rutherford county
+47,151,tennessee,scott county
+47,153,tennessee,sequatchie county
+47,155,tennessee,sevier county
+47,157,tennessee,shelby county
+47,159,tennessee,smith county
+47,161,tennessee,stewart county
+47,163,tennessee,sullivan county
+47,165,tennessee,sumner county
+47,167,tennessee,tipton county
+47,169,tennessee,trousdale county
+47,171,tennessee,unicoi county
+47,173,tennessee,union county
+47,175,tennessee,van buren county
+47,177,tennessee,warren county
+47,179,tennessee,washington county
+47,181,tennessee,wayne county
+47,183,tennessee,weakley county
+47,185,tennessee,white county
+47,187,tennessee,williamson county
+47,189,tennessee,wilson county
+48,001,texas,anderson county
+48,003,texas,andrews county
+48,005,texas,angelina county
+48,007,texas,aransas county
+48,009,texas,archer county
+48,011,texas,armstrong county
+48,013,texas,atascosa county
+48,015,texas,austin county
+48,017,texas,bailey county
+48,019,texas,bandera county
+48,021,texas,bastrop county
+48,023,texas,baylor county
+48,025,texas,bee county
+48,027,texas,bell county
+48,029,texas,bexar county
+48,031,texas,blanco county
+48,033,texas,borden county
+48,035,texas,bosque county
+48,037,texas,bowie county
+48,039,texas,brazoria county
+48,041,texas,brazos county
+48,043,texas,brewster county
+48,045,texas,briscoe county
+48,047,texas,brooks county
+48,049,texas,brown county
+48,051,texas,burleson county
+48,053,texas,burnet county
+48,055,texas,caldwell county
+48,057,texas,calhoun county
+48,059,texas,callahan county
+48,061,texas,cameron county
+48,063,texas,camp county
+48,065,texas,carson county
+48,067,texas,cass county
+48,069,texas,castro county
+48,071,texas,chambers county
+48,073,texas,cherokee county
+48,075,texas,childress county
+48,077,texas,clay county
+48,079,texas,cochran county
+48,081,texas,coke county
+48,083,texas,coleman county
+48,085,texas,collin county
+48,087,texas,collingsworth county
+48,089,texas,colorado county
+48,091,texas,comal county
+48,093,texas,comanche county
+48,095,texas,concho county
+48,097,texas,cooke county
+48,099,texas,coryell county
+48,101,texas,cottle county
+48,103,texas,crane county
+48,105,texas,crockett county
+48,107,texas,crosby county
+48,109,texas,culberson county
+48,111,texas,dallam county
+48,113,texas,dallas county
+48,115,texas,dawson county
+48,117,texas,deaf smith county
+48,119,texas,delta county
+48,121,texas,denton county
+48,123,texas,dewitt county
+48,125,texas,dickens county
+48,127,texas,dimmit county
+48,129,texas,donley county
+48,131,texas,duval county
+48,133,texas,eastland county
+48,135,texas,ector county
+48,137,texas,edwards county
+48,139,texas,ellis county
+48,141,texas,el paso county
+48,143,texas,erath county
+48,145,texas,falls county
+48,147,texas,fannin county
+48,149,texas,fayette county
+48,151,texas,fisher county
+48,153,texas,floyd county
+48,155,texas,foard county
+48,157,texas,fort bend county
+48,159,texas,franklin county
+48,161,texas,freestone county
+48,163,texas,frio county
+48,165,texas,gaines county
+48,167,texas,galveston county
+48,169,texas,garza county
+48,171,texas,gillespie county
+48,173,texas,glasscock county
+48,175,texas,goliad county
+48,177,texas,gonzales county
+48,179,texas,gray county
+48,181,texas,grayson county
+48,183,texas,gregg county
+48,185,texas,grimes county
+48,187,texas,guadalupe county
+48,189,texas,hale county
+48,191,texas,hall county
+48,193,texas,hamilton county
+48,195,texas,hansford county
+48,197,texas,hardeman county
+48,199,texas,hardin county
+48,201,texas,harris county
+48,203,texas,harrison county
+48,205,texas,hartley county
+48,207,texas,haskell county
+48,209,texas,hays county
+48,211,texas,hemphill county
+48,213,texas,henderson county
+48,215,texas,hidalgo county
+48,217,texas,hill county
+48,219,texas,hockley county
+48,221,texas,hood county
+48,223,texas,hopkins county
+48,225,texas,houston county
+48,227,texas,howard county
+48,229,texas,hudspeth county
+48,231,texas,hunt county
+48,233,texas,hutchinson county
+48,235,texas,irion county
+48,237,texas,jack county
+48,239,texas,jackson county
+48,241,texas,jasper county
+48,243,texas,jeff davis county
+48,245,texas,jefferson county
+48,247,texas,jim hogg county
+48,249,texas,jim wells county
+48,251,texas,johnson county
+48,253,texas,jones county
+48,255,texas,karnes county
+48,257,texas,kaufman county
+48,259,texas,kendall county
+48,261,texas,kenedy county
+48,263,texas,kent county
+48,265,texas,kerr county
+48,267,texas,kimble county
+48,269,texas,king county
+48,271,texas,kinney county
+48,273,texas,kleberg county
+48,275,texas,knox county
+48,277,texas,lamar county
+48,279,texas,lamb county
+48,281,texas,lampasas county
+48,283,texas,la salle county
+48,285,texas,lavaca county
+48,287,texas,lee county
+48,289,texas,leon county
+48,291,texas,liberty county
+48,293,texas,limestone county
+48,295,texas,lipscomb county
+48,297,texas,live oak county
+48,299,texas,llano county
+48,301,texas,loving county
+48,303,texas,lubbock county
+48,305,texas,lynn county
+48,307,texas,mcculloch county
+48,309,texas,mclennan county
+48,311,texas,mcmullen county
+48,313,texas,madison county
+48,315,texas,marion county
+48,317,texas,martin county
+48,319,texas,mason county
+48,321,texas,matagorda county
+48,323,texas,maverick county
+48,325,texas,medina county
+48,327,texas,menard county
+48,329,texas,midland county
+48,331,texas,milam county
+48,333,texas,mills county
+48,335,texas,mitchell county
+48,337,texas,montague county
+48,339,texas,montgomery county
+48,341,texas,moore county
+48,343,texas,morris county
+48,345,texas,motley county
+48,347,texas,nacogdoches county
+48,349,texas,navarro county
+48,351,texas,newton county
+48,353,texas,nolan county
+48,355,texas,nueces county
+48,357,texas,ochiltree county
+48,359,texas,oldham county
+48,361,texas,orange county
+48,363,texas,palo pinto county
+48,365,texas,panola county
+48,367,texas,parker county
+48,369,texas,parmer county
+48,371,texas,pecos county
+48,373,texas,polk county
+48,375,texas,potter county
+48,377,texas,presidio county
+48,379,texas,rains county
+48,381,texas,randall county
+48,383,texas,reagan county
+48,385,texas,real county
+48,387,texas,red river county
+48,389,texas,reeves county
+48,391,texas,refugio county
+48,393,texas,roberts county
+48,395,texas,robertson county
+48,397,texas,rockwall county
+48,399,texas,runnels county
+48,401,texas,rusk county
+48,403,texas,sabine county
+48,405,texas,san augustine county
+48,407,texas,san jacinto county
+48,409,texas,san patricio county
+48,411,texas,san saba county
+48,413,texas,schleicher county
+48,415,texas,scurry county
+48,417,texas,shackelford county
+48,419,texas,shelby county
+48,421,texas,sherman county
+48,423,texas,smith county
+48,425,texas,somervell county
+48,427,texas,starr county
+48,429,texas,stephens county
+48,431,texas,sterling county
+48,433,texas,stonewall county
+48,435,texas,sutton county
+48,437,texas,swisher county
+48,439,texas,tarrant county
+48,441,texas,taylor county
+48,443,texas,terrell county
+48,445,texas,terry county
+48,447,texas,throckmorton county
+48,449,texas,titus county
+48,451,texas,tom green county
+48,453,texas,travis county
+48,455,texas,trinity county
+48,457,texas,tyler county
+48,459,texas,upshur county
+48,461,texas,upton county
+48,463,texas,uvalde county
+48,465,texas,val verde county
+48,467,texas,van zandt county
+48,469,texas,victoria county
+48,471,texas,walker county
+48,473,texas,waller county
+48,475,texas,ward county
+48,477,texas,washington county
+48,479,texas,webb county
+48,481,texas,wharton county
+48,483,texas,wheeler county
+48,485,texas,wichita county
+48,487,texas,wilbarger county
+48,489,texas,willacy county
+48,491,texas,williamson county
+48,493,texas,wilson county
+48,495,texas,winkler county
+48,497,texas,wise county
+48,499,texas,wood county
+48,501,texas,yoakum county
+48,503,texas,young county
+48,505,texas,zapata county
+48,507,texas,zavala county
+49,001,utah,beaver county
+49,003,utah,box elder county
+49,005,utah,cache county
+49,007,utah,carbon county
+49,009,utah,daggett county
+49,011,utah,davis county
+49,013,utah,duchesne county
+49,015,utah,emery county
+49,017,utah,garfield county
+49,019,utah,grand county
+49,021,utah,iron county
+49,023,utah,juab county
+49,025,utah,kane county
+49,027,utah,millard county
+49,029,utah,morgan county
+49,031,utah,piute county
+49,033,utah,rich county
+49,035,utah,salt lake county
+49,037,utah,san juan county
+49,039,utah,sanpete county
+49,041,utah,sevier county
+49,043,utah,summit county
+49,045,utah,tooele county
+49,047,utah,uintah county
+49,049,utah,utah county
+49,051,utah,wasatch county
+49,053,utah,washington county
+49,055,utah,wayne county
+49,057,utah,weber county
+50,001,vermont,addison county
+50,003,vermont,bennington county
+50,005,vermont,caledonia county
+50,007,vermont,chittenden county
+50,009,vermont,essex county
+50,011,vermont,franklin county
+50,013,vermont,grand isle county
+50,015,vermont,lamoille county
+50,017,vermont,orange county
+50,019,vermont,orleans county
+50,021,vermont,rutland county
+50,023,vermont,washington county
+50,025,vermont,windham county
+50,027,vermont,windsor county
+51,001,virginia,accomack county
+51,003,virginia,albemarle county
+51,005,virginia,alleghany county
+51,007,virginia,amelia county
+51,009,virginia,amherst county
+51,011,virginia,appomattox county
+51,013,virginia,arlington county
+51,015,virginia,augusta county
+51,017,virginia,bath county
+51,019,virginia,bedford county
+51,021,virginia,bland county
+51,023,virginia,botetourt county
+51,025,virginia,brunswick county
+51,027,virginia,buchanan county
+51,029,virginia,buckingham county
+51,031,virginia,campbell county
+51,033,virginia,caroline county
+51,035,virginia,carroll county
+51,036,virginia,charles city county
+51,037,virginia,charlotte county
+51,041,virginia,chesterfield county
+51,043,virginia,clarke county
+51,045,virginia,craig county
+51,047,virginia,culpeper county
+51,049,virginia,cumberland county
+51,051,virginia,dickenson county
+51,053,virginia,dinwiddie county
+51,057,virginia,essex county
+51,059,virginia,fairfax county
+51,061,virginia,fauquier county
+51,063,virginia,floyd county
+51,065,virginia,fluvanna county
+51,067,virginia,franklin county
+51,069,virginia,frederick county
+51,071,virginia,giles county
+51,073,virginia,gloucester county
+51,075,virginia,goochland county
+51,077,virginia,grayson county
+51,079,virginia,greene county
+51,081,virginia,greensville county
+51,083,virginia,halifax county
+51,085,virginia,hanover county
+51,087,virginia,henrico county
+51,089,virginia,henry county
+51,091,virginia,highland county
+51,093,virginia,isle of wight county
+51,095,virginia,james city county
+51,097,virginia,king and queen county
+51,099,virginia,king george county
+51,101,virginia,king william county
+51,103,virginia,lancaster county
+51,105,virginia,lee county
+51,107,virginia,loudoun county
+51,109,virginia,louisa county
+51,111,virginia,lunenburg county
+51,113,virginia,madison county
+51,115,virginia,mathews county
+51,117,virginia,mecklenburg county
+51,119,virginia,middlesex county
+51,121,virginia,montgomery county
+51,125,virginia,nelson county
+51,127,virginia,new kent county
+51,131,virginia,northampton county
+51,133,virginia,northumberland county
+51,135,virginia,nottoway county
+51,137,virginia,orange county
+51,139,virginia,page county
+51,141,virginia,patrick county
+51,143,virginia,pittsylvania county
+51,145,virginia,powhatan county
+51,147,virginia,prince edward county
+51,149,virginia,prince george county
+51,153,virginia,prince william county
+51,155,virginia,pulaski county
+51,157,virginia,rappahannock county
+51,159,virginia,richmond county
+51,161,virginia,roanoke county
+51,163,virginia,rockbridge county
+51,165,virginia,rockingham county
+51,167,virginia,russell county
+51,169,virginia,scott county
+51,171,virginia,shenandoah county
+51,173,virginia,smyth county
+51,175,virginia,southampton county
+51,177,virginia,spotsylvania county
+51,179,virginia,stafford county
+51,181,virginia,surry county
+51,183,virginia,sussex county
+51,185,virginia,tazewell county
+51,187,virginia,warren county
+51,191,virginia,washington county
+51,193,virginia,westmoreland county
+51,195,virginia,wise county
+51,197,virginia,wythe county
+51,199,virginia,york county
+51,510,virginia,alexandria city
+51,520,virginia,bristol city
+51,530,virginia,buena vista city
+51,540,virginia,charlottesville city
+51,550,virginia,chesapeake city
+51,570,virginia,colonial heights city
+51,580,virginia,covington city
+51,590,virginia,danville city
+51,595,virginia,emporia city
+51,600,virginia,fairfax city
+51,610,virginia,falls church city
+51,620,virginia,franklin city
+51,630,virginia,fredericksburg city
+51,640,virginia,galax city
+51,650,virginia,hampton city
+51,660,virginia,harrisonburg city
+51,670,virginia,hopewell city
+51,678,virginia,lexington city
+51,680,virginia,lynchburg city
+51,683,virginia,manassas city
+51,685,virginia,manassas park city
+51,690,virginia,martinsville city
+51,700,virginia,newport news city
+51,710,virginia,norfolk city
+51,720,virginia,norton city
+51,730,virginia,petersburg city
+51,735,virginia,poquoson city
+51,740,virginia,portsmouth city
+51,750,virginia,radford city
+51,760,virginia,richmond city
+51,770,virginia,roanoke city
+51,775,virginia,salem city
+51,790,virginia,staunton city
+51,800,virginia,suffolk city
+51,810,virginia,virginia beach city
+51,820,virginia,waynesboro city
+51,830,virginia,williamsburg city
+51,840,virginia,winchester city
+53,001,washington,adams county
+53,003,washington,asotin county
+53,005,washington,benton county
+53,007,washington,chelan county
+53,009,washington,clallam county
+53,011,washington,clark county
+53,013,washington,columbia county
+53,015,washington,cowlitz county
+53,017,washington,douglas county
+53,019,washington,ferry county
+53,021,washington,franklin county
+53,023,washington,garfield county
+53,025,washington,grant county
+53,027,washington,grays harbor county
+53,029,washington,island county
+53,031,washington,jefferson county
+53,033,washington,king county
+53,035,washington,kitsap county
+53,037,washington,kittitas county
+53,039,washington,klickitat county
+53,041,washington,lewis county
+53,043,washington,lincoln county
+53,045,washington,mason county
+53,047,washington,okanogan county
+53,049,washington,pacific county
+53,051,washington,pend oreille county
+53,053,washington,pierce county
+53,055,washington,san juan county
+53,057,washington,skagit county
+53,059,washington,skamania county
+53,061,washington,snohomish county
+53,063,washington,spokane county
+53,065,washington,stevens county
+53,067,washington,thurston county
+53,069,washington,wahkiakum county
+53,071,washington,walla walla county
+53,073,washington,whatcom county
+53,075,washington,whitman county
+53,077,washington,yakima county
+54,001,west virginia,barbour county
+54,003,west virginia,berkeley county
+54,005,west virginia,boone county
+54,007,west virginia,braxton county
+54,009,west virginia,brooke county
+54,011,west virginia,cabell county
+54,013,west virginia,calhoun county
+54,015,west virginia,clay county
+54,017,west virginia,doddridge county
+54,019,west virginia,fayette county
+54,021,west virginia,gilmer county
+54,023,west virginia,grant county
+54,025,west virginia,greenbrier county
+54,027,west virginia,hampshire county
+54,029,west virginia,hancock county
+54,031,west virginia,hardy county
+54,033,west virginia,harrison county
+54,035,west virginia,jackson county
+54,037,west virginia,jefferson county
+54,039,west virginia,kanawha county
+54,041,west virginia,lewis county
+54,043,west virginia,lincoln county
+54,045,west virginia,logan county
+54,047,west virginia,mcdowell county
+54,049,west virginia,marion county
+54,051,west virginia,marshall county
+54,053,west virginia,mason county
+54,055,west virginia,mercer county
+54,057,west virginia,mineral county
+54,059,west virginia,mingo county
+54,061,west virginia,monongalia county
+54,063,west virginia,monroe county
+54,065,west virginia,morgan county
+54,067,west virginia,nicholas county
+54,069,west virginia,ohio county
+54,071,west virginia,pendleton county
+54,073,west virginia,pleasants county
+54,075,west virginia,pocahontas county
+54,077,west virginia,preston county
+54,079,west virginia,putnam county
+54,081,west virginia,raleigh county
+54,083,west virginia,randolph county
+54,085,west virginia,ritchie county
+54,087,west virginia,roane county
+54,089,west virginia,summers county
+54,091,west virginia,taylor county
+54,093,west virginia,tucker county
+54,095,west virginia,tyler county
+54,097,west virginia,upshur county
+54,099,west virginia,wayne county
+54,101,west virginia,webster county
+54,103,west virginia,wetzel county
+54,105,west virginia,wirt county
+54,107,west virginia,wood county
+54,109,west virginia,wyoming county
+55,001,wisconsin,adams county
+55,003,wisconsin,ashland county
+55,005,wisconsin,barron county
+55,007,wisconsin,bayfield county
+55,009,wisconsin,brown county
+55,011,wisconsin,buffalo county
+55,013,wisconsin,burnett county
+55,015,wisconsin,calumet county
+55,017,wisconsin,chippewa county
+55,019,wisconsin,clark county
+55,021,wisconsin,columbia county
+55,023,wisconsin,crawford county
+55,025,wisconsin,dane county
+55,027,wisconsin,dodge county
+55,029,wisconsin,door county
+55,031,wisconsin,douglas county
+55,033,wisconsin,dunn county
+55,035,wisconsin,eau claire county
+55,037,wisconsin,florence county
+55,039,wisconsin,fond du lac county
+55,041,wisconsin,forest county
+55,043,wisconsin,grant county
+55,045,wisconsin,green county
+55,047,wisconsin,green lake county
+55,049,wisconsin,iowa county
+55,051,wisconsin,iron county
+55,053,wisconsin,jackson county
+55,055,wisconsin,jefferson county
+55,057,wisconsin,juneau county
+55,059,wisconsin,kenosha county
+55,061,wisconsin,kewaunee county
+55,063,wisconsin,la crosse county
+55,065,wisconsin,lafayette county
+55,067,wisconsin,langlade county
+55,069,wisconsin,lincoln county
+55,071,wisconsin,manitowoc county
+55,073,wisconsin,marathon county
+55,075,wisconsin,marinette county
+55,077,wisconsin,marquette county
+55,078,wisconsin,menominee county
+55,079,wisconsin,milwaukee county
+55,081,wisconsin,monroe county
+55,083,wisconsin,oconto county
+55,085,wisconsin,oneida county
+55,087,wisconsin,outagamie county
+55,089,wisconsin,ozaukee county
+55,091,wisconsin,pepin county
+55,093,wisconsin,pierce county
+55,095,wisconsin,polk county
+55,097,wisconsin,portage county
+55,099,wisconsin,price county
+55,101,wisconsin,racine county
+55,103,wisconsin,richland county
+55,105,wisconsin,rock county
+55,107,wisconsin,rusk county
+55,109,wisconsin,st. croix county
+55,111,wisconsin,sauk county
+55,113,wisconsin,sawyer county
+55,115,wisconsin,shawano county
+55,117,wisconsin,sheboygan county
+55,119,wisconsin,taylor county
+55,121,wisconsin,trempealeau county
+55,123,wisconsin,vernon county
+55,125,wisconsin,vilas county
+55,127,wisconsin,walworth county
+55,129,wisconsin,washburn county
+55,131,wisconsin,washington county
+55,133,wisconsin,waukesha county
+55,135,wisconsin,waupaca county
+55,137,wisconsin,waushara county
+55,139,wisconsin,winnebago county
+55,141,wisconsin,wood county
+56,001,wyoming,albany county
+56,003,wyoming,big horn county
+56,005,wyoming,campbell county
+56,007,wyoming,carbon county
+56,009,wyoming,converse county
+56,011,wyoming,crook county
+56,013,wyoming,fremont county
+56,015,wyoming,goshen county
+56,017,wyoming,hot springs county
+56,019,wyoming,johnson county
+56,021,wyoming,laramie county
+56,023,wyoming,lincoln county
+56,025,wyoming,natrona county
+56,027,wyoming,niobrara county
+56,029,wyoming,park county
+56,031,wyoming,platte county
+56,033,wyoming,sheridan county
+56,035,wyoming,sublette county
+56,037,wyoming,sweetwater county
+56,039,wyoming,teton county
+56,041,wyoming,uinta county
+56,043,wyoming,washakie county
+56,045,wyoming,weston county
+72,001,puerto rico,adjuntas municipio
+72,003,puerto rico,aguada municipio
+72,005,puerto rico,aguadilla municipio
+72,007,puerto rico,aguas buenas municipio
+72,009,puerto rico,aibonito municipio
+72,011,puerto rico,añasco municipio
+72,013,puerto rico,arecibo municipio
+72,015,puerto rico,arroyo municipio
+72,017,puerto rico,barceloneta municipio
+72,019,puerto rico,barranquitas municipio
+72,021,puerto rico,bayamón municipio
+72,023,puerto rico,cabo rojo municipio
+72,025,puerto rico,caguas municipio
+72,027,puerto rico,camuy municipio
+72,029,puerto rico,canóvanas municipio
+72,031,puerto rico,carolina municipio
+72,033,puerto rico,cataño municipio
+72,035,puerto rico,cayey municipio
+72,037,puerto rico,ceiba municipio
+72,039,puerto rico,ciales municipio
+72,041,puerto rico,cidra municipio
+72,043,puerto rico,coamo municipio
+72,045,puerto rico,comerío municipio
+72,047,puerto rico,corozal municipio
+72,049,puerto rico,culebra municipio
+72,051,puerto rico,dorado municipio
+72,053,puerto rico,fajardo municipio
+72,054,puerto rico,florida municipio
+72,055,puerto rico,guánica municipio
+72,057,puerto rico,guayama municipio
+72,059,puerto rico,guayanilla municipio
+72,061,puerto rico,guaynabo municipio
+72,063,puerto rico,gurabo municipio
+72,065,puerto rico,hatillo municipio
+72,067,puerto rico,hormigueros municipio
+72,069,puerto rico,humacao municipio
+72,071,puerto rico,isabela municipio
+72,073,puerto rico,jayuya municipio
+72,075,puerto rico,juana díaz municipio
+72,077,puerto rico,juncos municipio
+72,079,puerto rico,lajas municipio
+72,081,puerto rico,lares municipio
+72,083,puerto rico,las marías municipio
+72,085,puerto rico,las piedras municipio
+72,087,puerto rico,loíza municipio
+72,089,puerto rico,luquillo municipio
+72,091,puerto rico,manatí municipio
+72,093,puerto rico,maricao municipio
+72,095,puerto rico,maunabo municipio
+72,097,puerto rico,mayagüez municipio
+72,099,puerto rico,moca municipio
+72,101,puerto rico,morovis municipio
+72,103,puerto rico,naguabo municipio
+72,105,puerto rico,naranjito municipio
+72,107,puerto rico,orocovis municipio
+72,109,puerto rico,patillas municipio
+72,111,puerto rico,peñuelas municipio
+72,113,puerto rico,ponce municipio
+72,115,puerto rico,quebradillas municipio
+72,117,puerto rico,rincón municipio
+72,119,puerto rico,río grande municipio
+72,121,puerto rico,sabana grande municipio
+72,123,puerto rico,salinas municipio
+72,125,puerto rico,san germán municipio
+72,127,puerto rico,san juan municipio
+72,129,puerto rico,san lorenzo municipio
+72,131,puerto rico,san sebastián municipio
+72,133,puerto rico,santa isabel municipio
+72,135,puerto rico,toa alta municipio
+72,137,puerto rico,toa baja municipio
+72,139,puerto rico,trujillo alto municipio
+72,141,puerto rico,utuado municipio
+72,143,puerto rico,vega alta municipio
+72,145,puerto rico,vega baja municipio
+72,147,puerto rico,vieques municipio
+72,149,puerto rico,villalba municipio
+72,151,puerto rico,yabucoa municipio
+72,153,puerto rico,yauco municipio

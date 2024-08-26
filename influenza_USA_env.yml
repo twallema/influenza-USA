@@ -9,3 +9,5 @@ dependencies:
   - xarray
   - matplotlib
   - corner
+  - openpyxl
+  - jupyter

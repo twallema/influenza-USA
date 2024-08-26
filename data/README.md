@@ -41,6 +41,12 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 + `locations-all_daytype-all_BE-2008.xlsx`: Contains the number of social contacts stratified by duration from the 2008 Polymod study in Belgium. Includes both physical and non-physical contacts. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
 + `locations-home_daytype-all_BE-2008.xlsx`: Contains the number of social contacts at home stratified by duration from the 2008 Polymod study in Belgium. Includes both physical and non-physical contacts. Includes both physical and non-physical contact. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
 
+### fips codes
+
++ `national_state2020.txt`: Contains the 2020 US state names and corresponding two-digit FIPS. Downloaded from https://www.census.gov/library/reference/code-lists/ansi.html
+
++ `national_county2020.txt`: Contains the 2020 US county names, and the corresponding two-digit state FIPS and three-digit county FIPS. Does not include the 2020 Connecticut county changes. Downloaded from https://www.census.gov/library/reference/code-lists/ansi.html
+
 ## Interim
 
 ### Demography
@@ -81,6 +87,10 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `vaccination_rates_2017-2018.csv`: A script to aggregate the age-and space stratified vaccination rates for 2017-2018 into one dataframe.
 
+### FIPS codes
+
++ `fips_state_county.csv`: Contains for a five-digit FIPS code for every US state and county. The first two numbers represent the state, the last three numbers represent the county. Post-2020 FIPS codes, contains the reshuffled Connecticut counties. Made using `build-FIPS-list.py`.
+
 ## Conversion
 
 ### Demography
@@ -104,3 +114,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 ### Vaccination
 
 + `build-vaccination.py`: A script that aggregates the vaccination rates of the 2017-2018 season, whose age component was spread over multiple files, into one long-format .csv file. 
+
+### FIPS codes
+
++ `build-FIPS-list.py`: A script formatting and merging the raw US state and county FIPS codes found in `national_state2020.txt` and `national_county2020.txt`. Corrects the Connecticut counties to the post 2020 counties and FIPS codes using the crosswalk file `ct_cou_to_cousub_crosswalk.xlsx`. Resulting file in interim folder contains a five-digit FIPS codes for both states and counties. State FIPS codes are assumed to have an 'xx000' format.
