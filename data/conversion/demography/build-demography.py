@@ -56,6 +56,9 @@ for fn in file_names:
         agg['state'] = agg['state'].apply(lambda x: f"{x:02}")
         df_states = pd.concat([df_states, agg], ignore_index=True)
 
+# make sure state fips code is five digits
+df_states['state'] = df_states['state'] + '000'
+
 # sort codes
 df_counties = df_counties.set_index('county').sort_index()
 df_states = df_states.set_index('state').sort_index()

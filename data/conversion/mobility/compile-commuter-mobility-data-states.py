@@ -61,19 +61,21 @@ gdf = gpd.read_file(os.path.join(os.getcwd(),'../../raw/geography/cb_2022_us_sta
 # excess states as compared to demography and mobility are: FIPS 60 (Samoa), 66 (Guam), 69 (Mariana Islands), 78 (Virgin Islands)
 # after removal --> 3222 counties = same as demography data
 gdf = gdf[((gdf['STATEFP'] != '60') & (gdf['STATEFP'] != '66') & (gdf['STATEFP'] != '69') & (gdf['STATEFP'] != '78'))]
-gdf = gdf.sort_values(by='GEOID')
+gdf['STATEFP'] = gdf['STATEFP'] + '000'
+gdf = gdf.sort_values(by='STATEFP')
 # assert demography and geodata FIPS codes are identical
-assert all(a == b for a, b in zip(gdf['GEOID'].values, FIPS_2020)), "the state FIPS codes on the geodataset and demography are not equal"
+assert all(a == b for a, b in zip(gdf['STATEFP'].values, FIPS_2020)), "the state FIPS codes on the geodataset and demography are not equal"
 # reproject to a projection that allows for distance comptuation
 gdf = gdf.to_crs(epsg=5070) # Conus Albers
 # compute centroids
 gdf['centroid'] = gdf.centroid
 # compute a cross join operation to get the pairs
-gdf = gdf[['GEOID', 'centroid']].merge(gdf[['GEOID', 'centroid']], how='cross', suffixes=('_origin', '_destination'))
+gdf = gdf[['STATEFP', 'centroid']].merge(gdf[['STATEFP', 'centroid']], how='cross', suffixes=('_origin', '_destination'))
 # compute distances
 gdf['distance_km'] = gdf.apply(
     lambda row: row['centroid_origin'].distance(row['centroid_destination']) / 1000, axis=1
 )
+
 
 ###############################################
 ## Load & build county level mobility matrix ##
@@ -90,8 +92,8 @@ for fy,fn in zip(file_years,file_names):
     
     # step 2: aggregate to the state level
     ## step 2a: attach an origin_state and destination_state label
-    data['origin'] = data['county_o'].apply(lambda x: f"{x[0:2]:02}")               # add origin state code
-    data['destination'] = data['county_d'].apply(lambda x: f"{x[0:2]:02}")          # add destination state code
+    data['origin'] = data['county_o'].apply(lambda x: f"{x[0:2]:02}" + "000")               # add origin state code
+    data['destination'] = data['county_d'].apply(lambda x: f"{x[0:2]:02}" + "000")          # add destination state code
     ## step 2b: perform the aggregation
     out = data.groupby(by=['origin', 'destination'])['Workers in Commuting Flow'].sum().reset_index()
     ## step 2c: align with format of county-level long-format data
