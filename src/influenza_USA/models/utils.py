@@ -9,6 +9,10 @@ import os
 import numpy as np
 import pandas as pd
 
+# TODO: input checks on spatial_resolution and mobility dataset in a higher-level function
+# TODO: add the option to collapse the age structure and collapse the spatial structure
+# TODO: add an initialisation function for the SIR
+
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
@@ -117,9 +121,6 @@ def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states
     assert np.all(mobility_matrix >= 0)
 
     return mobility_matrix
-
-# TODO: input checks on spatial_resolution and mobility dataset in a higher-level function
-# TODO: add the option to collapse the age structure and collapse the spatial structure
 
 def construct_initial_susceptible(*subtract_states, spatial_resolution='states'):
     """
