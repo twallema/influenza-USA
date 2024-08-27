@@ -33,7 +33,7 @@ def name2fips(name_state, name_county=None):
     """
 
     # load FIPS-name list (fips_state (2 digits), fips_county (3 digits), name_state, name_county)
-    df = pd.read_csv(os.path.join(abs_dir,'../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
+    df = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
 
     # state name only
     if not isinstance(name_state, str):
@@ -88,7 +88,7 @@ def fips2name(fips_code):
     fips_county = fips_code[2:]
 
     # load FIPS-name list
-    df = pd.read_csv(os.path.join(abs_dir,'../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
+    df = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
 
     # look up name
     if fips_county == '000':
@@ -198,4 +198,166 @@ def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states
     # diagonal elements smaller than one?
     assert np.all(rowsum <= 1), f"there are {spatial_resolution} where the number of people traveling is higher than the population"
 
+    # negative elements?
+    assert np.all(mobility_matrix >= 0)
+
     return mobility_matrix
+
+# TODO: input checks on spatial_resolution and mobility dataset in a higher-level function
+# TODO: add the option to collapse the age structure and collapse the spatial structure
+
+def construct_initial_susceptible(*subtract_states, spatial_resolution='states'):
+    """
+    A function to construct the initial number of susceptible individuals, computed as the number of susceptibles 'S' derived from the demographic data, minus any individiduals present in `subtract_states`
+
+    input
+    -----
+
+    *subtract_states: np.ndarray
+        Other states that contain individuals at the start of the simulation.
+        Must must be substracted from the demographic data to compute the number of initial susceptible individuals
+
+    spatial_resolution: str
+        US 'states' or 'counties'
+
+    output
+    ------
+
+    S0: np.ndarray
+        Initial number of susceptible. Shape n_age x n_loc. 
+    """
+
+    # load demography
+    if spatial_resolution == 'states':
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    elif spatial_resolution == 'counties':
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    else:
+        raise ValueError("valid 'spatial_resolution' is 'states' or 'counties'")
+    
+    # derive shape model states
+    n_age = len(demography['age'].unique())
+    n_loc = len(demography['fips'].unique())
+
+    # convert to numpy array
+    S0 = demography.set_index(['fips', 'age'])
+    S0 = np.transpose(S0.values.reshape(n_loc, n_age))
+
+    # subtract other states
+    for ss in subtract_states:
+        # input checks
+        if not isinstance(ss, np.ndarray):
+            raise TypeError("input `subtract_states` should be of type np.ndarray")
+        if ss.shape != (n_age, n_loc):
+            raise ValueError(f"input `subtract_states` should be an {n_age}x{n_loc} np.ndarray")
+        # subtraction
+        S0 = S0 - ss
+
+    return S0
+
+import sys
+import random
+import warnings
+def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spatial_resolution='states'):
+    """
+    A function to seed an initial number of infected
+
+    input
+    -----
+    seed_loc: tuple containing two strings
+        Location of initial infected. First string represents the name of the state. Second string represents the name of the county.
+
+        Behavior:
+        ---------
+
+        Spatial resolution 'states':
+            - seed_loc=('',''): seed in random state
+            - seed_loc=('state_name',''): seed in state 'state_name'
+
+        Spatial resolution 'states':
+            - seed_loc=('',''): seed in random state, random county
+            - seed_loc=('state_name',''): seed in state 'state_name', random county
+            - seed_loc=('state_name','county_name'): seed in state 'state_name', county 'county_name'
+
+    n: int/float
+        The number of infected dividuals present in the select location. 
+    
+    agedist: str
+        The distribution of the initial number of infected over the model's age groups. Either 'uniform', 'random' or 'demographic'.
+    
+    output
+    ------
+    I0: np.ndarray
+        Initial number of susceptible. Shape n_age x n_loc. 
+    """
+
+    # load demography
+    if spatial_resolution == 'states':
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    elif spatial_resolution == 'counties':
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    else:
+        raise ValueError("valid 'spatial_resolution' is 'states' or 'counties'")
+    
+    # load fips codes
+    fips_codes = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
+
+    # input checks on seed location
+    assert isinstance(seed_loc, tuple), "`seed_loc` must be of type 'tpl'"
+    assert all(isinstance(item, str) for item in seed_loc), "entries in `seed_loc` must be of type 'str'"
+
+    # interpret the seed location and get the right fips code
+    if spatial_resolution == 'states':
+        # random 
+        if ((seed_loc[0] == '') & (seed_loc[1] == '')):
+            seed_fips = random.choice(list(fips_codes['fips_state'].unique())) + '000'
+        # specified
+        elif ((seed_loc[0] != '') & (seed_loc[1] == '')):
+            seed_fips = name2fips(seed_loc[0])
+        # specified
+        elif ((seed_loc[0] != '') & (seed_loc[1] != '')):
+            seed_fips = name2fips(seed_loc[0])
+            warnings.warn("\nusing the first entry in `seed_loc` to specify the seed state", stacklevel=2)
+        elif ((seed_loc[0] == '') & (seed_loc[1] != '')):
+            seed_fips = random.choice(list(fips_codes['fips_state'].unique())) + '000'
+            warnings.warn("\nthe first entry in `seed_loc` is empty. sampling a random seed state.", stacklevel=2)
+    elif spatial_resolution == 'counties':
+        # fully random
+        if ((seed_loc[0] == '') & (seed_loc[1] == '')):
+            seed_fips = random.choice(list(demography['fips'].unique()))
+        # fully specified 
+        elif ((seed_loc[0] != '') & (seed_loc[1] != '')):
+            seed_fips = name2fips(seed_loc[0], seed_loc[1])
+        # state specified, county random
+        elif ((seed_loc[0] != '') & (seed_loc[1] == '')):
+            seed_fips = name2fips(seed_loc[0])[0:2] + random.choice(list(fips_codes[fips_codes['fips_state'] == name2fips(seed_loc[0])[0:2]]['fips_county'].unique()))
+        # invalid
+        elif ((seed_loc[0] == '') & (seed_loc[1] != '')):
+            raise ValueError("input argument `seed_loc`. specifying only a county name is not valid.")
+    else:
+        raise ValueError("valid 'spatial_resolution' is 'states' or 'counties'")
+
+    # distribute over age groups
+    demography_fips = demography[demography['fips'] == seed_fips]['population'].values
+    if agedist == 'demographic':
+        agedist_n = np.random.multinomial(n, demography_fips / sum(demography_fips))
+    elif agedist == 'uniform':
+        agedist_n = n/len(demography_fips) * np.ones(len(demography_fips))
+    elif agedist == 'random':
+        agedist_n = np.zeros(len(demography_fips))
+        agedist_n[random.randint(0, len(demography_fips)-1)] = n
+    else:
+        raise ValueError(
+            f"invalid input {agedist} for input argument 'agedist'. valid options are 'random', 'uniform', 'demographic'"
+        )
+
+    # build initial infected
+    I0 = demography.set_index(['age', 'fips'])
+    I0['population'] = 0.0
+    I0.loc[(slice(None), seed_fips), 'population'] = agedist_n
+
+    # convert to numpy array
+    n_age = len(demography['age'].unique())
+    n_fips = len(demography['fips'].unique())
+
+    return np.transpose(I0.values.reshape(n_fips, n_age))

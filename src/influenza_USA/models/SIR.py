@@ -12,7 +12,7 @@ from pySODM.models.base import ODE
 ## Deterministic ##
 ###################
 
-class spatial_ODE_SIR(ODE):
+class ODE_SIR(ODE):
     """
     SIR model with age and spatial stratification
     """
