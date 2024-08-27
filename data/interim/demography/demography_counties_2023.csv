@@ -1,4 +1,4 @@
-county,age,population
+fips,age,population
 01001,"[0, 5)",3617
 01001,"[5, 18)",10472
 01001,"[18, 50)",24144
