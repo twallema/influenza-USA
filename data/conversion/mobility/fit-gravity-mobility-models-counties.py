@@ -242,8 +242,8 @@ if __name__ == '__main__':
     matrix_counties.to_csv(os.path.join(os.getcwd(), f'../../interim/mobility/fitted_models/to_county_data/departure_diffusion_power_gravitation/matrix_counties.csv'), index=True)
 
     # aggregate to state level
-    df_long['state_o'] = df_long['origin'].apply(lambda x: f"{x[0:2]:02}")          # add origin state code
-    df_long['state_d'] = df_long['destination'].apply(lambda x: f"{x[0:2]:02}")     # add destination state code
+    df_long['state_o'] = df_long['origin'].apply(lambda x: f"{x[0:2]:02}" + "000")          # add origin state code
+    df_long['state_d'] = df_long['destination'].apply(lambda x: f"{x[0:2]:02}" + "000")     # add destination state code
     agg = df_long.groupby(by=['state_o', 'state_d'])['trips'].sum().reset_index()
 
     # pivot into a matrix

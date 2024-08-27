@@ -1,5 +1,5 @@
 """
-This script contains usefull functions for the pySODM-based US Influenza model
+This script contains usefull functions for the pySODM US Influenza model
 """
 
 __author__      = "Tijs Alleman"
@@ -11,8 +11,8 @@ import pandas as pd
 
 def name2fips(name_state, name_county=None):
     """
-    A function to convert a US state or US county name into a FIPS code
-    US FIPS codes can be broken down into two parts: SSCCC 1) The first two digits represent the state, 2) the last three digits represent the county.
+    A function to convert a US state, or US state and county name into a FIPS code
+    US FIPS codes have the following format: SSCCC 1) The first two digits represent the state, 2) the last three digits represent the county. A state is assigned the county code '000'.
 
     input:
     ------
@@ -20,7 +20,7 @@ def name2fips(name_state, name_county=None):
     name_state: str
         Name of the US state
     name_county: None/str
-        Name of the US county. Defaults to 'None' (trying to get a state name).
+        Name of the US county. (Default: 'None').
 
     output:
     -------
@@ -29,12 +29,12 @@ def name2fips(name_state, name_county=None):
         Five digit US FIPS code. If name_county=None, the fips code of the US state is returned in the format 'xx000'.
     """
 
-    # load FIPS-name list
+    # load FIPS-name list (fips_state (2 digits), fips_county (3 digits), name_state, name_county)
     df = pd.read_csv(os.path.join(os.getcwd(),'../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
 
     # state name only
     if not isinstance(name_state, str):
-        raise TypeError('provided state name should be strings')
+        raise TypeError('provided state name should be a string')
     if name_state.lower() not in df['name_state'].values:
         raise ValueError(
             f"name '{name_state}' is not a valid US state name"
@@ -45,18 +45,18 @@ def name2fips(name_state, name_county=None):
     # state and county
     else:
         if not isinstance(name_county, str):
-            raise TypeError('provided county name should be strings')
+            raise TypeError('provided county name should be a string')
         if name_county.lower() not in df['name_county'].values:
             raise ValueError(
-                f"name '{name_county}' is not a valid US county name"
+                f"name '{name_county}' is not a valid US county name;\ndon't forget a suffix like 'county'/'parish'/'planning region'"
             )
         fips_county = df[((df['name_state'] == name_state.lower()) & (df['name_county'] == name_county.lower()))]['fips_county'].unique()[0]
         return fips_state + fips_county
 
 def fips2name(fips_code):
     """
-    A function to convert a US state or US county FIPS code into a name
-    US FIPS codes can be broken down into two parts: SSCCC 1) The first two digits represent the state, 2) the last three digits represent the county.
+    A function to convert a five digit US state or US county FIPS code into a name
+    US FIPS codes have the following format: SSCCC 1) The first two digits represent the state, 2) the last three digits represent the county. A state is assigned the county code '000'.
 
     input:
     ------
