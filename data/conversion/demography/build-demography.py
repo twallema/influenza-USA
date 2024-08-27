@@ -57,8 +57,8 @@ for fn in file_names:
         df_states = pd.concat([df_states, agg], ignore_index=True)
 
 # sort codes
-df_counties = df_counties.set_index('fips').sort_index()
-df_states = df_states.set_index('fips').sort_index()
+df_counties = df_counties.set_index(['fips', 'age']).sort_index()
+df_states = df_states.set_index(['fips', 'age']).sort_index()
 
 #################
 ## Save result ##
