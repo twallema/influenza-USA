@@ -243,6 +243,9 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states')
     S0 = demography.set_index(['fips', 'age'])
     S0 = np.transpose(S0.values.reshape(n_loc, n_age))
 
+    # there exist subpopulations with no susceptibles at the US county level
+    S0 = np.where(S0 == 0, 1e-3, S0)
+
     # subtract other states
     for ss in subtract_states:
         # input checks
@@ -253,9 +256,11 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states')
         # subtraction
         S0 = S0 - ss
 
+    # assert if there are negative susceptibles
+    assert np.all(S0 >= 0), "the number of susceptibles is negative."
+
     return S0
 
-import sys
 import random
 import warnings
 def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spatial_resolution='states'):
