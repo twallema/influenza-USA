@@ -12,7 +12,6 @@ import pandas as pd
 # TODO: input checks on spatial_resolution and mobility dataset in a higher-level function
 # TODO: add the option to collapse the age structure and collapse the spatial structure
 # TODO: add an initialisation function for the SIR
-# TODO: Average over multiple POLYMOD countries
 # TODO: Retrieve and return weekend, weekday and holiday matrices to build a more realistic contact function
 
 # all paths relative to the location of this file
