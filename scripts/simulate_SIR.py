@@ -20,7 +20,7 @@ from influenza_USA.models.utils import name2fips, \
 #################
 
 # spatial resolution
-sr = 'states'
+sr = 'counties'
 
 # coordinates
 coordinates = construct_coordinates_dictionary(spatial_resolution=sr)
@@ -34,14 +34,14 @@ params = {'beta': 0.03,                                                         
           }
 
 # initial states
-I0 = construct_initial_infected(seed_loc=('alabama',''), n=1, agedist='demographic', spatial_resolution=sr)
+I0 = construct_initial_infected(seed_loc=('alabama',''), n=5, agedist='demographic', spatial_resolution=sr)
 S0 = construct_initial_susceptible(I0, spatial_resolution=sr)
 init_states = {'S': tf.convert_to_tensor(S0, dtype=float),
                'I': tf.convert_to_tensor(I0, dtype=float)
                }
 
 # initialize model
-model = ODE_SIR(states=init_states, parameters=params, coordinates=coordinates)
+model = TL_SIR(states=init_states, parameters=params, coordinates=coordinates)
 
 import time
 
@@ -50,7 +50,7 @@ import time
 ####################
 
 t0 = time.time()
-out = model.sim(120, method='RK45', rtol=1e-3)
+out = model.sim(120, method='tau_leap', tau=1.0)
 t1 = time.time()
 print(f'elapsed: {t1-t0} s')
 

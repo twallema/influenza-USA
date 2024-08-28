@@ -38,8 +38,14 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### Contacts
 
-+ `locations-all_daytype-all_BE-2008.xlsx`: Contains the number of social contacts stratified by duration from the 2008 Polymod study in Belgium. Includes both physical and non-physical contacts. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
-+ `locations-home_daytype-all_BE-2008.xlsx`: Contains the number of social contacts at home stratified by duration from the 2008 Polymod study in Belgium. Includes both physical and non-physical contacts. Includes both physical and non-physical contact. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
+`locations-all_daytype-all_XX_polymod-2008.xlsx`: Contains social contact matrices for age groups 0-5, 5-18, 18-50, 50-65, 65+ in country XX from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and averaged over all daytypes (week, weekend, holiday). Physical and non-physical contacts. Available countries: UK, Germany and Finland. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
+
+`locations-all_daytype-week_holiday_XX_polymod-2008.xlsx`: Contains social contact matrices for age groups 0-5, 5-18, 18-50, 50-65, 65+ in country XX from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weeks during a holiday. Physical and non-physical contacts. Available countries: UK, Germany and Finland. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
+
+`locations-all_daytype-week_no-holiday_XX_polymod-2008.xlsx`: Contains social contact matrices for age groups 0-5, 5-18, 18-50, 50-65, 65+ in country XX from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for non-holiday weeks. Physical and non-physical contacts. Available countries: UK, Germany and Finland. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
+
+
+`locations-all_daytype-weekend_XX_polymod-2008.xlsx`: Contains social contact matrices for age groups 0-5, 5-18, 18-50, 50-65, 65+ in country XX from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weekends. Physical and non-physical contacts. Available countries: UK, Germany and Finland. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
 
 ### fips codes
 
@@ -90,6 +96,16 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 ### FIPS codes
 
 + `fips_state_county.csv`: Contains for a five-digit FIPS code for every US state and county. The first two numbers represent the state, the last three numbers represent the county. Post-2020 FIPS codes, contains the reshuffled Connecticut counties. Made using `build-FIPS-list.py`.
+
+### Contacts
+
++ `locations-all_daytype-all_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of contacts in all locations (home, work, school, leisure, others) and averaged over all daytypes (week, weekend, holiday). Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
+
++ `locations-all_daytype-week_holiday_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weeks during a holiday. Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
+
++ `locations-all_daytype-week_no-holiday_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for non-holiday weeks. Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
+
++ `locations-all_daytype-weekend_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weekends. Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
 
 ## Conversion
 
