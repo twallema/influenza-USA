@@ -29,16 +29,33 @@ def check_spatial_resolution(spatial_resolution):
     assert isinstance(spatial_resolution, str), "'spatial_resolution' must have type str"
     assert spatial_resolution in ['collapsed', 'states', 'counties'], f"invalid 'spatial_resolution' {spatial_resolution}. valid options are: 'collapsed', 'states', 'counties'"
 
-def construct_coordinates_dictionary(spatial_resolution='states'):
+def check_age_resolution(age_resolution):
     """
-    A function returning the model's coordinates for the dimension 'age_group' and 'location'. Coordinates derived from the interim demography dataset.
+    A function to check the validity of the age resolution
+
+    input
+    -----
+
+    age_resolution: str
+        Valid arguments are: 'collapsed', 'full'
+    """
+
+    assert isinstance(age_resolution, str), "'age_resolution' must have type str"
+    assert age_resolution in ['collapsed', 'full'], f"invalid 'age_resolution' {age_resolution}. valid options are: 'collapsed', 'full'"
+
+def construct_coordinates_dictionary(spatial_resolution='states', age_resolution='full'):
+    """
+    A function returning the model's coordinates for the dimension 'age_group' and 'location'.
 
     input
     -----
 
     spatial_resolution: str
         USA 'collapsed', 'states' or 'counties'
-    
+
+    age_resolution: str
+        'collapsed', 'full' (0-5, 5-18, 18-50, 50-65, 65+)
+
     output
     ------
 
@@ -47,22 +64,39 @@ def construct_coordinates_dictionary(spatial_resolution='states'):
     """
 
     check_spatial_resolution(spatial_resolution)
+    check_age_resolution(age_resolution)
+    # space
     if spatial_resolution == 'collapsed':
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_collapsed_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
     elif spatial_resolution == 'states':
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
     else:
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    # age
+    if age_resolution == 'collapsed':
+        age_groups = ['[0, 100)']
+    else:
+        age_groups = list(demography['age'].unique())
 
-    return {'age_group': list(demography['age'].unique()), 'location': list(demography['fips'].unique())}
+    return {'age_group': age_groups, 'location': list(demography['fips'].unique())}
 
-def get_contact_matrix():
+def get_contact_matrix(age_resolution='full'):
     """
     A function to retrieve the total contact matrix, averaged for the UK, DE and FI and used as a proxy for American contacts
     """
+
+    # get contacts
     rel_dir = '../../../data/interim/contacts/locations-all_daytype-all_avg-UK-DE-FI_polymod-2008.csv'
     contacts = pd.read_csv(os.path.join(abs_dir,rel_dir), index_col=0, header=0)
-    return contacts.values
+
+    # get overall demography
+    demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_collapsed_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})['population']
+
+    # aggregate contact matrix with demography
+    if age_resolution == 'collapsed':
+        return np.ones(shape=(1,1)) * np.sum(np.sum(contacts.values, axis=1) * demography.values / np.sum(demography.values))
+    else:
+        return contacts.values
 
 def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states'):
     """
@@ -133,7 +167,7 @@ def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states
 
     return mobility_matrix
 
-def construct_initial_susceptible(*subtract_states, spatial_resolution='states'):
+def construct_initial_susceptible(*subtract_states, spatial_resolution='states', age_resolution='full'):
     """
     A function to construct the initial number of susceptible individuals, computed as the number of susceptibles 'S' derived from the demographic data, minus any individiduals present in `subtract_states`
 
@@ -146,6 +180,9 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states')
 
     spatial_resolution: str
         US 'states' or 'counties'
+
+    age_resolution: str
+        'collapsed', 'full' (0-5, 5-18, 18-50, 50-65, 65+)
 
     output
     ------
@@ -169,8 +206,12 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states')
 
     # convert to numpy array
     S0 = demography.set_index(['fips', 'age'])
-
     S0 = np.transpose(S0.values.reshape(n_loc, n_age))
+
+    # collapse age groups if necessary
+    if age_resolution == 'collapsed':
+        n_age = 1
+        S0 = np.sum(S0, axis=0)[np.newaxis,:]
 
     # there exist subpopulations with no susceptibles at the US county level
     S0 = np.where(S0 == 0, 1e-3, S0)
@@ -192,7 +233,7 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states')
 
 import random
 import warnings
-def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spatial_resolution='states'):
+def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spatial_resolution='states', age_resolution='full'):
     """
     A function to seed an initial number of infected
 
@@ -218,7 +259,13 @@ def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spa
     
     agedist: str
         The distribution of the initial number of infected over the model's age groups. Either 'uniform', 'random' or 'demographic'.
-    
+
+    spatial_resolution: str
+        US 'states' or 'counties'
+
+    age_resolution: str
+        'collapsed', 'full': (0-5, 5-18, 18-50, 50-65, 65+)
+
     output
     ------
     I0: np.ndarray
@@ -294,8 +341,13 @@ def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spa
     # convert to numpy array
     n_age = len(demography['age'].unique())
     n_fips = len(demography['fips'].unique())
+    I0 = np.transpose(I0.values.reshape(n_fips, n_age))
 
-    return np.transpose(I0.values.reshape(n_fips, n_age))
+    # collapse age groups if necessary
+    if age_resolution == 'collapsed':
+        I0 = np.sum(I0, axis=0)[np.newaxis,:]
+
+    return I0 
 
 def name2fips(name_state, name_county=None):
     """

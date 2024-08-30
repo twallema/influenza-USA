@@ -20,38 +20,37 @@ from influenza_USA.models.utils import name2fips, \
 #################
 
 # spatial resolution
-sr = 'counties'
+sr = 'collapsed'
+ar = 'collapsed'
 
 # coordinates
-coordinates = construct_coordinates_dictionary(spatial_resolution=sr)
+coordinates = construct_coordinates_dictionary(spatial_resolution=sr, age_resolution=ar)
 
 # parameters
 params = {'beta': 0.025,                                                                                                        # infectivity (-)
           'gamma': 5,                                                                                                           # duration of infection (d)
           'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
-          'N': tf.convert_to_tensor(get_contact_matrix(), dtype=float),                                                         # contact matrix (17.4 contact * hr / person)
+          'N': tf.convert_to_tensor(get_contact_matrix(age_resolution=ar), dtype=float),                                        # contact matrix (17.4 contact * hr / person)
           'M': tf.convert_to_tensor(get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution=sr), dtype=float)      # origin-destination mobility matrix
           }
 
 # initial states
-I0 = construct_initial_infected(seed_loc=('alabama',''), n=5, agedist='demographic', spatial_resolution=sr)
-S0 = construct_initial_susceptible(I0, spatial_resolution=sr)
-
+I0 = construct_initial_infected(seed_loc=('alabama',''), n=5, agedist='demographic', spatial_resolution=sr, age_resolution=ar)
+S0 = construct_initial_susceptible(I0, spatial_resolution=sr, age_resolution=ar)
 init_states = {'S': tf.convert_to_tensor(S0, dtype=float),
                'I': tf.convert_to_tensor(I0, dtype=float)
                }
 
 # initialize model
-model = TL_SIR(states=init_states, parameters=params, coordinates=coordinates)
-
-import time
+model = ODE_SIR(states=init_states, parameters=params, coordinates=coordinates)
 
 ####################
 ## simulate model ##
 ####################
 
+import time
 t0 = time.time()
-out = model.sim(120, method='tau_leap', tau=1)
+out = model.sim(120)
 t1 = time.time()
 print(f'elapsed: {t1-t0} s')
 
