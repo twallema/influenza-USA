@@ -26,8 +26,6 @@ class ODE_SIR(ODE):
     @staticmethod
     def integrate(t, S, I, R, beta, gamma, f_v, N, M):
 
-        print(t)
-
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
 
@@ -56,8 +54,6 @@ class TL_SIR(JumpProcess):
 
     @staticmethod
     def compute_rates(t, S, I, R, beta, gamma, f_v, N, M):
-
-        print(t)
 
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
