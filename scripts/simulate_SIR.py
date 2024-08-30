@@ -26,16 +26,17 @@ sr = 'counties'
 coordinates = construct_coordinates_dictionary(spatial_resolution=sr)
 
 # parameters
-params = {'beta': 0.03,                                                                                                         # infectivity (-)
+params = {'beta': 0.025,                                                                                                        # infectivity (-)
           'gamma': 5,                                                                                                           # duration of infection (d)
           'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
-          'N': tf.convert_to_tensor(get_contact_matrix(), dtype=float),                                                         # contact matrix
+          'N': tf.convert_to_tensor(get_contact_matrix(), dtype=float),                                                         # contact matrix (17.4 contact * hr / person)
           'M': tf.convert_to_tensor(get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution=sr), dtype=float)      # origin-destination mobility matrix
           }
 
 # initial states
 I0 = construct_initial_infected(seed_loc=('alabama',''), n=5, agedist='demographic', spatial_resolution=sr)
 S0 = construct_initial_susceptible(I0, spatial_resolution=sr)
+
 init_states = {'S': tf.convert_to_tensor(S0, dtype=float),
                'I': tf.convert_to_tensor(I0, dtype=float)
                }
@@ -50,7 +51,7 @@ import time
 ####################
 
 t0 = time.time()
-out = model.sim(120, method='tau_leap', tau=1.0)
+out = model.sim(120, method='tau_leap', tau=1)
 t1 = time.time()
 print(f'elapsed: {t1-t0} s')
 
@@ -58,7 +59,20 @@ print(f'elapsed: {t1-t0} s')
 ## visualise results ##
 #######################
 
-if sr == 'states':
+if sr == 'collapsed':
+    fig,ax=plt.subplots(figsize=(8.3,11.7/6))
+
+    ax.set_title('Overall')
+    ax.plot(out['time'], out['S'].sum(dim=['age_group', 'location']), color='green', alpha=0.8, label='S')
+    ax.plot(out['time'], out['I'].sum(dim=['age_group', 'location']), color='red', alpha=0.8, label='I')
+    ax.plot(out['time'], out['R'].sum(dim=['age_group', 'location']), color='black', alpha=0.8, label='R')
+    ax.legend(loc=1, framealpha=1)
+
+    plt.tight_layout()
+    plt.show()
+    plt.close()
+
+elif sr == 'states':
 
     fig,ax=plt.subplots(nrows=3, figsize=(8.3,11.7/2))
 
