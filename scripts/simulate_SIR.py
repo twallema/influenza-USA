@@ -20,7 +20,7 @@ from influenza_USA.models.utils import name2fips, \
 #################
 
 # spatial resolution
-sr = 'counties'
+sr = 'states'
 ar = 'full'
 
 # coordinates
@@ -50,7 +50,7 @@ model = TL_SIR(states=init_states, parameters=params, coordinates=coordinates)
 
 import time
 t0 = time.time()
-out = model.sim(120, N=2, processes=2, tau=1)
+out = model.sim(120, method='tau_leap', tau=1)
 t1 = time.time()
 print(f'elapsed: {t1-t0} s')
 
