@@ -55,10 +55,10 @@ def construct_coordinates_dictionary(spatial_resolution='states'):
 
 def get_contact_matrix():
     """
-    A function to retrieve the total contact matrix for Belgium. Used as a proxy for American contacts
+    A function to retrieve the total contact matrix, averaged for the UK, DE and FI and used as a proxy for American contacts
     """
-    rel_dir = '../../../data/raw/contacts/locations-all_daytype-all_BE-2008.xlsx'
-    contacts = pd.read_excel(os.path.join(abs_dir,rel_dir), sheet_name='time_integrated', index_col=0, header=0)
+    rel_dir = '../../../data/interim/contacts/locations-all_daytype-all_avg-UK-DE-FI_polymod-2008.csv'
+    contacts = pd.read_csv(os.path.join(abs_dir,rel_dir), index_col=0, header=0)
     return contacts.values
 
 def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states'):
