@@ -24,10 +24,10 @@ def check_spatial_resolution(spatial_resolution):
     -----
 
     spatial_resolution: str
-        Valid arguments are: 'states' or 'counties'
+        Valid arguments are: 'collapsed', 'states' or 'counties'
     """
     assert isinstance(spatial_resolution, str), "'spatial_resolution' must have type str"
-    assert spatial_resolution in ['states', 'counties'], f"invalid 'spatial_resolution' {spatial_resolution}. valid options are: 'states', 'counties'"
+    assert spatial_resolution in ['collapsed', 'states', 'counties'], f"invalid 'spatial_resolution' {spatial_resolution}. valid options are: 'collapsed', 'states', 'counties'"
 
 def construct_coordinates_dictionary(spatial_resolution='states'):
     """
@@ -37,7 +37,7 @@ def construct_coordinates_dictionary(spatial_resolution='states'):
     -----
 
     spatial_resolution: str
-        US 'states' or 'counties'
+        USA 'collapsed', 'states' or 'counties'
     
     output
     ------
@@ -47,10 +47,13 @@ def construct_coordinates_dictionary(spatial_resolution='states'):
     """
 
     check_spatial_resolution(spatial_resolution)
-    if spatial_resolution == 'states':
+    if spatial_resolution == 'collapsed':
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_collapsed_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    elif spatial_resolution == 'states':
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
     else:
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+
     return {'age_group': list(demography['age'].unique()), 'location': list(demography['fips'].unique())}
 
 def get_contact_matrix():
@@ -72,7 +75,7 @@ def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states
         'cellphone_03092020', 'commuters_2011-2015', or 'commuters_2016-2020'
     
     spatial_resolution: str
-        US 'states' or 'counties'
+        USA 'collapsed', 'states' or 'counties'
 
     output
     ------
@@ -89,7 +92,9 @@ def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states
 
     # retrieve appropriate demography and mobility matrix
     check_spatial_resolution(spatial_resolution)
-    if spatial_resolution == 'states':
+    if spatial_resolution == 'collapsed':
+        return np.array([[1]])
+    elif spatial_resolution == 'states':
         # retrieve demography & aggregate age groups & return as numpy array
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int}).groupby(by='fips').sum()['population'].values
         # retrieve mobility matrix & return as numpy array
@@ -151,7 +156,9 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states')
 
     # load demography
     check_spatial_resolution(spatial_resolution)
-    if spatial_resolution == 'states':
+    if spatial_resolution == 'collapsed':
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_collapsed_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    elif spatial_resolution == 'states':
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
     else:
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
@@ -162,6 +169,7 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states')
 
     # convert to numpy array
     S0 = demography.set_index(['fips', 'age'])
+
     S0 = np.transpose(S0.values.reshape(n_loc, n_age))
 
     # there exist subpopulations with no susceptibles at the US county level
@@ -219,7 +227,9 @@ def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spa
 
     # load demography
     check_spatial_resolution(spatial_resolution)
-    if spatial_resolution == 'states':
+    if spatial_resolution == 'collapsed':
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_collapsed_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+    elif spatial_resolution == 'states':
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
     else:
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
@@ -232,7 +242,9 @@ def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spa
     assert all(isinstance(item, str) for item in seed_loc), "entries in `seed_loc` must be of type 'str'"
 
     # interpret the seed location and get the right fips code
-    if spatial_resolution == 'states':
+    if spatial_resolution == 'collapsed':
+        seed_fips = '00000'
+    elif spatial_resolution == 'states':
         # random 
         if ((seed_loc[0] == '') & (seed_loc[1] == '')):
             seed_fips = random.choice(list(fips_codes['fips_state'].unique())) + '000'
