@@ -60,9 +60,15 @@ for fn in file_names:
 df_counties = df_counties.set_index(['fips', 'age']).sort_index()
 df_states = df_states.set_index(['fips', 'age']).sort_index()
 
+# make a USA total demography file
+df_overall = df_states.groupby(by='age').sum().reset_index()
+df_overall['fips'] = '00000'
+df_overall = df_overall.set_index(['fips', 'age']).sort_index()
+
 #################
 ## Save result ##
 #################
 
 df_counties.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_counties_2023.csv'))
 df_states.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_states_2023.csv'))
+df_overall.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_overall_2023.csv'))
