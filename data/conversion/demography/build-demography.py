@@ -71,4 +71,4 @@ df_overall = df_overall.set_index(['fips', 'age']).sort_index()
 
 df_counties.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_counties_2023.csv'))
 df_states.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_states_2023.csv'))
-df_overall.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_overall_2023.csv'))
+df_overall.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_collapsed_2023.csv'))
