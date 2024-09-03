@@ -10,5 +10,6 @@ setup(
     license='CC-BY-NC-SA',
     install_requires=[
         'pySODM',
+        'tensorflow'
     ],
 )

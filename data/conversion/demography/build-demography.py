@@ -48,20 +48,22 @@ for fn in file_names:
         data['full_code'] = data['STATE'].apply(lambda x: f"{x:02}") + data['COUNTY'].apply(lambda x: f"{x:03}")
         # county level data
         agg = data.groupby(['full_code', 'age_group'], observed=False)['TOT_POP'].sum().reset_index()
-        agg.columns = ['county', 'age', 'population']
+        agg.columns = ['fips', 'age', 'population']
         df_counties = pd.concat([df_counties, agg], ignore_index=True)
         # state level data
         agg = data.groupby(['STATE', 'age_group'], observed=False)['TOT_POP'].sum().reset_index()
-        agg.columns = ['state', 'age', 'population']
-        agg['state'] = agg['state'].apply(lambda x: f"{x:02}")
+        agg.columns = ['fips', 'age', 'population']
+        agg['fips'] = agg['fips'].apply(lambda x: f"{x:02}" + "000")
         df_states = pd.concat([df_states, agg], ignore_index=True)
 
-# make sure state fips code is five digits
-df_states['state'] = df_states['state'] + '000'
-
 # sort codes
-df_counties = df_counties.set_index('county').sort_index()
-df_states = df_states.set_index('state').sort_index()
+df_counties = df_counties.set_index(['fips', 'age']).sort_index()
+df_states = df_states.set_index(['fips', 'age']).sort_index()
+
+# make a USA total demography file
+df_overall = df_states.groupby(by='age').sum().reset_index()
+df_overall['fips'] = '00000'
+df_overall = df_overall.set_index(['fips', 'age']).sort_index()
 
 #################
 ## Save result ##
@@ -69,3 +71,4 @@ df_states = df_states.set_index('state').sort_index()
 
 df_counties.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_counties_2023.csv'))
 df_states.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_states_2023.csv'))
+df_overall.to_csv(os.path.join(os.getcwd(),'../../interim/demography/demography_collapsed_2023.csv'))
