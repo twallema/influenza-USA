@@ -7,7 +7,7 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from influenza_USA.models.utils import name2fips, \
+from influenza_USA.SIR.utils import name2fips, \
                                             construct_coordinates_dictionary, \
                                                 get_contact_matrix, \
                                                     get_mobility_matrix, \
@@ -19,7 +19,7 @@ from influenza_USA.models.utils import name2fips, \
 #################
 
 # settings
-sr = 'counties'                     # spatial resolution: 'collapsed', 'states' or 'counties'
+sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 distinguish_daytype = True          # vary contact matrix by daytype
 stochastic = True                   # ODE vs. tau-leap
@@ -27,9 +27,9 @@ N = 30
 
 # model
 if stochastic:
-    from influenza_USA.models.SIR import TL_SIR as SIR
+    from influenza_USA.SIR.model import TL_SIR as SIR
 else:
-    from influenza_USA.models.SIR import ODE_SIR as SIR
+    from influenza_USA.SIR.model import ODE_SIR as SIR
 
 # coordinates
 coordinates = construct_coordinates_dictionary(spatial_resolution=sr, age_resolution=ar)
@@ -51,7 +51,7 @@ init_states = {'S': tf.convert_to_tensor(S0, dtype=float),
 
 # time-dependencies
 if distinguish_daytype:
-    from influenza_USA.models.TDPF import make_contact_function
+    from influenza_USA.SIR.TDPF import make_contact_function
     contact_function = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=ar),
                                              get_contact_matrix(daytype='week_holiday', age_resolution=ar),
                                              get_contact_matrix(daytype='weekend', age_resolution=ar)).contact_function
