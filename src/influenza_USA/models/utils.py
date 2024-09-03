@@ -9,39 +9,10 @@ import os
 import numpy as np
 import pandas as pd
 
-# TODO: add the option to collapse the age structure and collapse the spatial structure
 # TODO: add an initialisation function for the SIR
-# TODO: Retrieve and return weekend, weekday and holiday matrices to build a more realistic contact function
 
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
-
-def check_spatial_resolution(spatial_resolution):
-    """
-    A function to check the validity of the spatial resolution
-
-    input
-    -----
-
-    spatial_resolution: str
-        Valid arguments are: 'collapsed', 'states' or 'counties'
-    """
-    assert isinstance(spatial_resolution, str), "'spatial_resolution' must have type str"
-    assert spatial_resolution in ['collapsed', 'states', 'counties'], f"invalid 'spatial_resolution' {spatial_resolution}. valid options are: 'collapsed', 'states', 'counties'"
-
-def check_age_resolution(age_resolution):
-    """
-    A function to check the validity of the age resolution
-
-    input
-    -----
-
-    age_resolution: str
-        Valid arguments are: 'collapsed', 'full'
-    """
-
-    assert isinstance(age_resolution, str), "'age_resolution' must have type str"
-    assert age_resolution in ['collapsed', 'full'], f"invalid 'age_resolution' {age_resolution}. valid options are: 'collapsed', 'full'"
 
 def construct_coordinates_dictionary(spatial_resolution='states', age_resolution='full'):
     """
@@ -80,13 +51,32 @@ def construct_coordinates_dictionary(spatial_resolution='states', age_resolution
 
     return {'age_group': age_groups, 'location': list(demography['fips'].unique())}
 
-def get_contact_matrix(age_resolution='full'):
+def get_contact_matrix(daytype='all', age_resolution='full'):
     """
-    A function to retrieve the total contact matrix, averaged for the UK, DE and FI and used as a proxy for American contacts
+    A function to retrieve a Polymod 2008 contact matrix, averaged for the UK, DE and FI and used as a proxy for American contacts
+
+    input
+    -----
+
+    daytype: str
+        Valid arguments are: 'all', 'week_holiday', 'week_no-holiday', 'weekend'
+    
+    age_resolution: str
+        'collapsed', 'full' (0-5, 5-18, 18-50, 50-65, 65+)
+
+    output
+    ------
+
+    contacts: np.ndarray
+        'age_resolution' == 'full': shape = (5,5)
+        'age_resolution' == 'collapsed': shape = (1,1)
     """
 
+    check_age_resolution(age_resolution)
+    check_contact_daytype(daytype)
+
     # get contacts
-    rel_dir = '../../../data/interim/contacts/locations-all_daytype-all_avg-UK-DE-FI_polymod-2008.csv'
+    rel_dir = f'../../../data/interim/contacts/locations-all_daytype-{daytype}_avg-UK-DE-FI_polymod-2008.csv'
     contacts = pd.read_csv(os.path.join(abs_dir,rel_dir), index_col=0, header=0)
 
     # get overall demography
@@ -94,7 +84,7 @@ def get_contact_matrix(age_resolution='full'):
 
     # aggregate contact matrix with demography
     if age_resolution == 'collapsed':
-        return np.ones(shape=(1,1)) * np.sum(np.sum(contacts.values, axis=1) * demography.values / np.sum(demography.values))
+        return np.ones(shape=(1,1)) * np.sum(np.sum(contacts.values, axis=0) * demography.values / np.sum(demography.values))
     else:
         return contacts.values
 
@@ -348,6 +338,47 @@ def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spa
         I0 = np.sum(I0, axis=0)[np.newaxis,:]
 
     return I0 
+
+def check_spatial_resolution(spatial_resolution):
+    """
+    A function to check the validity of the spatial resolution
+
+    input
+    -----
+
+    spatial_resolution: str
+        Valid arguments are: 'collapsed', 'states' or 'counties'
+    """
+    assert isinstance(spatial_resolution, str), "spatial_resolution must be a str"
+    assert spatial_resolution in ['collapsed', 'states', 'counties'], f"invalid 'spatial_resolution' {spatial_resolution}. valid options are: 'collapsed', 'states', 'counties'"
+
+def check_age_resolution(age_resolution):
+    """
+    A function to check the validity of the age resolution
+
+    input
+    -----
+
+    age_resolution: str
+        Valid arguments are: 'collapsed', 'full'
+    """
+
+    assert isinstance(age_resolution, str), "age_resolution must be a str"
+    assert age_resolution in ['collapsed', 'full'], f"invalid age_resolution '{age_resolution}'. valid options are: 'collapsed', 'full'"
+
+def check_contact_daytype(daytype):
+    """
+    A function to check the validity of the daytype
+
+    input
+    -----
+
+    daytype: str
+        Valid arguments are: 'all', 'week_holiday', 'week_no-holiday', 'weekend'
+    """
+
+    assert isinstance(daytype, str), "daytype must be a str"
+    assert daytype in ['all', 'week_holiday', 'week_no-holiday', 'weekend'], f"invalid daytype '{daytype}'. valid options are: 'all', 'week_holiday', 'week_no-holiday', 'weekend'"
 
 def name2fips(name_state, name_county=None):
     """
