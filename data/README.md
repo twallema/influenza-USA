@@ -55,7 +55,7 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### cases
 
-+ `2017_2018_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2017-2018 Flu season.
++ `2017_2018_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2017-2018 Flu season. Obtained from Josh (#TODO: where did he get it from?).
 
 ## Interim
 
