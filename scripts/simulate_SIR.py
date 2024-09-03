@@ -19,7 +19,7 @@ from influenza_USA.SIR.utils import name2fips, \
 #################
 
 # settings
-sr = 'counties'                     # spatial resolution: 'collapsed', 'states' or 'counties'
+sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 distinguish_daytype = True          # vary contact matrix by daytype
 stochastic = True                   # ODE vs. tau-leap
