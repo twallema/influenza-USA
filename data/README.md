@@ -53,6 +53,10 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `national_county2020.txt`: Contains the 2020 US county names, and the corresponding two-digit state FIPS and three-digit county FIPS. Does not include the 2020 Connecticut county changes. Downloaded from https://www.census.gov/library/reference/code-lists/ansi.html
 
+### cases
+
++ `2017_2018_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2017-2018 Flu season.
+
 ## Interim
 
 ### Demography
