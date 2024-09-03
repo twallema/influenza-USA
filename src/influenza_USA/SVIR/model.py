@@ -30,7 +30,7 @@ class ODE_SVIR(ODE):
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
 
         # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, (I+V)/(S+V+I+R))
+        l = beta * tf.einsum ('abcd,bd->ac', C, I/(S+V+I+R))
 
         # calculate differentials
         dS = - r_vacc * S - l * S
@@ -60,12 +60,12 @@ class TL_SVIR(JumpProcess):
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
 
         # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, (I+V)/(S+V+I+R))
+        l = beta * tf.einsum ('abcd,bd->ac', C, I/(S+V+I+R))
 
         rates = {
-            'S': [r_vacc, l.numpy()], 
+            'S': [l.numpy(), r_vacc], 
             'V': [(1-e_vacc) * l.numpy(), ],
-            'I': [np.ones(S.shape, np.float64)*(1/gamma)], 
+            'I': [np.ones(S.shape, np.float64)*(1/gamma)],
             }
         
         return rates
@@ -73,9 +73,9 @@ class TL_SVIR(JumpProcess):
     @ staticmethod
     def apply_transitionings(t, tau, transitionings, S, V, I, R, beta, f_v, gamma, N, M, r_vacc, e_vacc):
         
-        S_new = S - transitionings['S'][0] - transitionings['S'][1]
-        V_new = V + transitionings['S'][0] - transitionings['V'][0]
-        I_new = I + transitionings['S'][1] + transitionings['V'][0] - transitionings['I'][0]
+        S_new = S - transitionings['S'][1] - transitionings['S'][0]
+        V_new = V + transitionings['S'][1] - transitionings['V'][0]
+        I_new = I + transitionings['S'][0] + transitionings['V'][0] - transitionings['I'][0]
         R_new = R + transitionings['I'][0]
         
         return(S_new, V_new, I_new, R_new)
