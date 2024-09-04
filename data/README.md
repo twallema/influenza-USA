@@ -44,7 +44,6 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 `locations-all_daytype-week_no-holiday_XX_polymod-2008.xlsx`: Contains social contact matrices for age groups 0-5, 5-18, 18-50, 50-65, 65+ in country XX from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for non-holiday weeks. Physical and non-physical contacts. Available countries: UK, Germany and Finland. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
 
-
 `locations-all_daytype-weekend_XX_polymod-2008.xlsx`: Contains social contact matrices for age groups 0-5, 5-18, 18-50, 50-65, 65+ in country XX from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weekends. Physical and non-physical contacts. Available countries: UK, Germany and Finland. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
 
 ### fips codes
@@ -56,6 +55,13 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 ### cases
 
 + `2017_2018_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2017-2018 Flu season. Obtained from Josh (#TODO: where did he get it from?).
+
+
++ `weekly_flu_incid_complete.csv`: Obtained from Shaun (#TODO: where did he get it from?).
+
+### initial condition
+
++ `initial_condition_17-18.csv`: Contains the initial condition and model parameters of Josh' reference model, obtained by calibrating the model (no age groups or spatial patches) to the 2017-2018 Influenza season.
 
 ## Interim
 
