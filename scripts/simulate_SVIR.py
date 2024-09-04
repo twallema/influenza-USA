@@ -33,9 +33,9 @@ end_sim = '2025-07-01'              # simulation end
 
 # model
 if stochastic:
-    from influenza_USA.SVIR.model import TL_SVIR as SVIR
+    from influenza_USA.SVIR.model import TL_SVI2RHD as SVI2RHD
 else:
-    from influenza_USA.SVIR.model import ODE_SVIR as SVIR
+    from influenza_USA.SVIR.model import ODE_SVI2RHD as SVI2RHD
 
 # coordinates
 coordinates = construct_coordinates_dictionary(spatial_resolution=sr, age_resolution=ar)
@@ -75,7 +75,7 @@ from influenza_USA.SVIR.TDPF import make_vaccination_function
 TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
 
 # initialise model
-model = SVIR(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
+model = SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 ####################
 ## simulate model ##

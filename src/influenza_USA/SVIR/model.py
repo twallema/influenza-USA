@@ -14,7 +14,7 @@ from pySODM.models.base import ODE, JumpProcess
 ## Deterministic ##
 ###################
 
-class ODE_SVIR(ODE):
+class ODE_SVI2RHD(ODE):
     """
     SIR model with vaccines and age/spatial stratification
     """
@@ -44,7 +44,7 @@ class ODE_SVIR(ODE):
 ## Stochastic ##
 ################
 
-class TL_SVIR(JumpProcess):
+class TL_SVI2RHD(JumpProcess):
     """
     Stochastic SIR model with vaccines and age/spatial stratification
     """
