@@ -6,7 +6,6 @@ __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
 import numpy as np
-import pandas as pd
 from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
@@ -14,15 +13,21 @@ from datetime import datetime, timedelta
 class make_vaccination_function():
 
     def __init__(self, vaccination_data):
+        """ Load the vaccination data and store them in class
+        """
+        # add week number for temporal indexing
         vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week
         vaccination_data = vaccination_data[['week', 'age', 'state', 'vaccination_rate']]
-        self. vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()    # make sure it's ordered
+        self.vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()    # make sure it's ordered
+        # state sizes
         self.n_age = len(self.vaccination_data['age'].unique())
         self.n_loc = len(self.vaccination_data['state'].unique())
         pass
 
     @lru_cache() # avoid heavy IO while simulating
     def get_vaccination_rate(self, t):
+        """ Returns the vaccination rates in a given week as an np.ndarray of shape (n_age, n_loc)
+        """
         week_number = t.isocalendar().week
         try:
             return np.array(self.vaccination_data[self.vaccination_data['week'] == week_number]['vaccination_rate'].values, np.float64).reshape(self.n_age, self.n_loc) 
@@ -30,21 +35,25 @@ class make_vaccination_function():
             return np.zeros([self.n_age, self.n_loc], np.float64)
     
     def vaccination_function(self, t, states, param, vaccine_rate_modifier):
+        """ pySODM compatible wrapper
+        """
         return vaccine_rate_modifier * self.get_vaccination_rate(t)
 
 class make_contact_function():
 
     def __init__(self, contact_matrix_week_noholiday, contact_matrix_week_holiday, contact_matrix_weekend):
-
+        """ Load the contact matrices and stores them in class
+        """
         self.contact_matrix_week_noholiday = contact_matrix_week_noholiday
         self.contact_matrix_week_holiday = contact_matrix_week_holiday
         self.contact_matrix_weekend = contact_matrix_weekend
 
         pass
 
-    @lru_cache() # avoid heavy IO while simulating
+    @lru_cache()
     def __call__(self, t):
-
+        """ Returns the right contact matrix depending on daytype; cached to avoid heavy IO referencing during simulation
+        """
         if t.weekday() >= 5:
             return self.contact_matrix_weekend
         else:
@@ -54,6 +63,8 @@ class make_contact_function():
                 return self.contact_matrix_week_noholiday
             
     def contact_function(self, t, states, param):
+        """ pySODM compatible wrapper
+        """
         return self.__call__(t)
 
     @staticmethod
