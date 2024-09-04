@@ -8,13 +8,79 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import os
 import numpy as np
 import pandas as pd
-
-# TODO: add an initialisation function for the SIR
+import tensorflow as tf
+from datetime import datetime as datetime
 
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def construct_coordinates_dictionary(spatial_resolution='states', age_resolution='full'):
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,6,30)):
+
+    # model
+    if stochastic:
+        from influenza_USA.SVIR.model import TL_SVI2RHD as SVI2RHD
+    else:
+        from influenza_USA.SVIR.model import ODE_SVI2RHD as SVI2RHD
+
+    # coordinates
+    coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
+
+    # parameters
+    params = {
+            # core parameters
+            'beta': 0.030,                                                                                                        # infectivity (-)
+            'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
+            'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),             # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
+            'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
+            'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate (dummy)
+            'e_i': 0.2,                                                                                                           # vaccine efficacy against infection
+            'e_h': 0.5,                                                                                                           # vaccine efficacy against hospitalisation
+            'T_s': 365/2,                                                                                                         # average time to waning of immunity (both natural & vaccines)
+            'rho_h': 0.018,                                                                                                       # hospitalised fraction (source: Josh)
+            'T_h': 2.566,                                                                                                         # average time to hospitalisation (= length infectious period, source: Josh)
+            'rho_d': 0.83,                                                                                                        # deceased in hospital fraction (source: Josh)
+            'T_d': 4.716,                                                                                                         # average time to hospital outcome (source: Josh)
+            # time-dependencies
+            'vaccine_rate_modifier': 1.0,                                                                                         # used to modify vaccination rate
+            'waning_start': start_sim,                                                                                            # startdate of vaccine waning
+            'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
+            # ascertainment
+            'asc_case': 0.005,
+            'asc_hosp': 0.433,
+            'asc_death': 0.253,          
+            }
+
+    # initial condition
+    ## states
+    ic = load_initial_condition(season='17-18')
+    total_population = construct_initial_susceptible(spatial_resolution, age_resolution)
+    init_states = {}
+    for k,v in ic.items():
+        init_states[k] = tf.convert_to_tensor(v * total_population)
+    ## outcomes
+    init_states['I_inc'] = 0 * total_population
+    init_states['H_inc'] = 0 * total_population
+    init_states['D_inc'] = 0 * total_population
+
+    # time-dependencies
+    TDPFs = {}
+    ## contacts
+    if distinguish_daytype:
+        from influenza_USA.SVIR.TDPF import make_contact_function
+        TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
+                                                get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
+                                                get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
+    ## vaccines
+    ### vaccine uptake
+    from influenza_USA.SVIR.TDPF import make_vaccination_function
+    TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
+    ### exponential waning vaccine efficacy
+    from influenza_USA.SVIR.TDPF import exponential_waning_function
+    TDPFs['f_waning'] = exponential_waning_function
+
+    return SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
+
+def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     """
     A function returning the model's coordinates for the dimension 'age_group' and 'location'.
 
@@ -51,7 +117,6 @@ def construct_coordinates_dictionary(spatial_resolution='states', age_resolution
 
     return {'age_group': age_groups, 'location': list(demography['fips'].unique())}
 
-
 def get_vaccination_data():
     """
     A function to retrieve the 2017-2018 vaccination data
@@ -59,7 +124,7 @@ def get_vaccination_data():
     rel_dir = f'../../../data/interim/vaccination/vaccination_rates_2017-2018.csv'
     return pd.read_csv(os.path.join(abs_dir,rel_dir), index_col=0, header=0, parse_dates=True).reset_index()
 
-def get_contact_matrix(daytype='all', age_resolution='full'):
+def get_contact_matrix(daytype, age_resolution):
     """
     A function to retrieve a Polymod 2008 contact matrix, averaged for the UK, DE and FI and used as a proxy for American contacts
 
@@ -96,7 +161,7 @@ def get_contact_matrix(daytype='all', age_resolution='full'):
     else:
         return contacts.values
 
-def get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution='states'):
+def get_mobility_matrix(spatial_resolution, dataset='cellphone_03092020'):
     """
     A function to extract and format the mobility matrix
 
@@ -186,7 +251,7 @@ def load_initial_condition(season='17-18'):
     # return output
     return ic
 
-def construct_initial_susceptible(*subtract_states, spatial_resolution='states', age_resolution='full'):
+def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_states):
     """
     A function to construct the initial number of susceptible individuals, computed as the number of susceptibles 'S' derived from the demographic data, minus any individiduals present in `subtract_states`
 
@@ -252,7 +317,7 @@ def construct_initial_susceptible(*subtract_states, spatial_resolution='states',
 
 import random
 import warnings
-def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spatial_resolution='states', age_resolution='full'):
+def construct_initial_infected(spatial_resolution, age_resolution, seed_loc=('',''), n=1, agedist='demographic'):
     """
     A function to seed an initial number of infected
 

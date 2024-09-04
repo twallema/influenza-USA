@@ -10,7 +10,6 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
-
 def exponential_waning_function(t, states, param, waning_start, T_s):
     if t < waning_start:
         return 1.0

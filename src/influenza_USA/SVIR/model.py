@@ -31,11 +31,8 @@ class ODE_SVI2RHD(ODE):
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
 
-        # compute total population
-        T = S + V + I + Iv + R + H
-
         # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/T)
+        l = beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
 
         # calculate state differentials
         dS = - r_vacc*S - l*S + (1/T_s)*(R + V)
@@ -61,34 +58,50 @@ class TL_SVI2RHD(JumpProcess):
     """
     Stochastic influenza model with vaccines and age/spatial stratification
     """
-    states = ['S','V','I','R']
-    parameters = ['beta','gamma', 'f_v', 'N', 'M', 'r_vacc', 'e_vacc']
+
+    states = ['S','V','I','Iv','R','H','D',     # states
+              'I_inc', 'H_inc', 'D_inc'         # outcomes
+              ]
+    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'asc_case', 'asc_hosp', 'asc_death']
     dimensions = ['age_group', 'location']
 
-
     @staticmethod
-    def compute_rates(t, S, V, I, R, beta, gamma, f_v, N, M, r_vacc, e_vacc):
+    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, asc_case, asc_hosp, asc_death):
 
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
 
         # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, I/(S+V+I+R))
+        l = beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
 
+        # compute rates of transitionings
+        size_dummy = np.ones(S.shape, np.float64)
         rates = {
             'S': [l.numpy(), r_vacc], 
-            'V': [(1-e_vacc) * l.numpy(), ],
-            'I': [np.ones(S.shape, np.float64)*(1/gamma)],
+            'V': [(1-f_waning*e_i)*l.numpy(), size_dummy*(1/T_s)],
+            'I': [size_dummy*(1-rho_h)*(1/T_h), size_dummy*rho_h*(1/T_h)],
+            'Iv': [size_dummy*(1-((1-f_waning*e_h)*rho_h)*(1/T_h)), size_dummy*rho_h*(1-f_waning*e_h)*(1/T_h)],
+            'H': [size_dummy*(1-rho_d)*(1/T_d), size_dummy*rho_d*(1/T_d)],
+            'R': [size_dummy*(1/T_s),]
             }
         
         return rates
 
     @ staticmethod
-    def apply_transitionings(t, tau, transitionings, S, V, I, R, beta, f_v, gamma, N, M, r_vacc, e_vacc):
+    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, asc_case, asc_hosp, asc_death):
         
-        S_new = S - transitionings['S'][1] - transitionings['S'][0]
-        V_new = V + transitionings['S'][1] - transitionings['V'][0]
-        I_new = I + transitionings['S'][0] + transitionings['V'][0] - transitionings['I'][0]
-        R_new = R + transitionings['I'][0]
+        # states
+        S_new = S - transitionings['S'][0] - transitionings['S'][1] + transitionings['V'][1] + transitionings['R'][0]
+        V_new = V - transitionings['V'][0] - transitionings['V'][1] + transitionings['S'][1]
+        I_new = I + transitionings['S'][0] - transitionings['I'][0] - transitionings['I'][1]
+        Iv_new = Iv + transitionings['V'][0] - transitionings['Iv'][0] - transitionings['Iv'][1]
+        R_new = R + transitionings['I'][0] + transitionings['Iv'][0] - transitionings['R'][0] + transitionings['H'][0]
+        H_new = H + transitionings['I'][1] + transitionings['Iv'][1] - transitionings['H'][0] - transitionings['H'][1] 
+        D_new = D + transitionings['H'][1] 
         
-        return(S_new, V_new, I_new, R_new)
+        # incidences
+        I_inc_new = tau*asc_case*(transitionings['S'][0] + transitionings['V'][0])
+        H_inc_new = tau*asc_hosp*(transitionings['I'][1] + transitionings['Iv'][1])
+        D_inc_new = tau*asc_death*transitionings['H'][1]
+
+        return(S_new, V_new, I_new, Iv_new, R_new, H_new, D_new, I_inc_new, H_inc_new, D_inc_new)
