@@ -14,7 +14,8 @@ from influenza_USA.SVIR.utils import name2fips, \
                                                     get_mobility_matrix, \
                                                         get_vaccination_data, \
                                                             construct_initial_susceptible, \
-                                                                construct_initial_infected
+                                                                construct_initial_infected, \
+                                                                    load_initial_condition
     
 #################
 ## Setup model ##
@@ -43,7 +44,7 @@ coordinates = construct_coordinates_dictionary(spatial_resolution=sr, age_resolu
 params = {'beta': 0.023,                                                                                                        # infectivity (-)
           'gamma': 5,                                                                                                           # duration of infection (d)
           'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
-          'e_vacc': 1,                                                                                                          # vaccine efficacy
+          'e_vacc': 0.4,                                                                                                        # vaccine efficacy
           'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate
           'vaccine_rate_modifier': 1.0,                                                                                         # modify vaccination rate
           'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=ar), dtype=float),                         # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
@@ -51,13 +52,15 @@ params = {'beta': 0.023,                                                        
         }
 
 # initial states
-I0 = construct_initial_infected(seed_loc=('alabama',''), n=10, agedist='demographic', spatial_resolution=sr, age_resolution=ar)
-R0 = 0.3 * construct_initial_susceptible(spatial_resolution=sr, age_resolution=ar)
-S0 = construct_initial_susceptible(I0, R0, spatial_resolution=sr, age_resolution=ar)
-init_states = {'S': tf.convert_to_tensor(S0, dtype=float),
-               'I': tf.convert_to_tensor(I0, dtype=float),
-               'R': tf.convert_to_tensor(R0, dtype=float),
-                }
+ic = load_initial_condition(season='17-18')
+total_population = construct_initial_susceptible(spatial_resolution=sr, age_resolution=ar)
+init_states = {}
+for k,v in ic.items():
+    init_states[k] = tf.convert_to_tensor(v * total_population)
+
+del init_states['H']
+del init_states['D']
+del init_states['Iv']
 
 # time-dependencies
 TDPFs = {}
