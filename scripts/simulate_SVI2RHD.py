@@ -8,6 +8,7 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from datetime import datetime as datetime
 from influenza_USA.SVIR.utils import name2fips, \
                                             construct_coordinates_dictionary, \
                                                 get_contact_matrix, \
@@ -25,11 +26,11 @@ from influenza_USA.SVIR.utils import name2fips, \
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 distinguish_daytype = True          # vary contact matrix by daytype
-stochastic = True                   # ODE vs. tau-leap
-N = 20                              # number of stochastic realisations
-processes = 20
-start_sim = '2024-06-30'            # simulation start
-end_sim = '2025-07-01'              # simulation end
+stochastic = False                  # ODE vs. tau-leap
+N = 1                               # number of stochastic realisations
+processes = 1
+start_sim = datetime(2024, 6, 30)   # simulation start
+end_sim = datetime(2025, 7, 1)      # simulation end
 
 # model
 if stochastic:
@@ -41,14 +42,28 @@ else:
 coordinates = construct_coordinates_dictionary(spatial_resolution=sr, age_resolution=ar)
 
 # parameters
-params = {'beta': 0.023,                                                                                                        # infectivity (-)
-          'gamma': 5,                                                                                                           # duration of infection (d)
+params = {
+          # core parameters
+          'beta': 0.030,                                                                                                        # infectivity (-); source: Josh
           'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
-          'e_vacc': 0.4,                                                                                                        # vaccine efficacy
-          'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate
-          'vaccine_rate_modifier': 1.0,                                                                                         # modify vaccination rate
           'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=ar), dtype=float),                         # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
-          'M': tf.convert_to_tensor(get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution=sr), dtype=float)      # origin-destination mobility matrix
+          'M': tf.convert_to_tensor(get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution=sr), dtype=float),     # origin-destination mobility matrix          
+          'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate (dummy)
+          'e_i': 0.2,                                                                                                           # vaccine efficacy against infection
+          'e_h': 0.5,                                                                                                           # vaccine efficacy against hospitalisation
+          'T_s': 365/2,                                                                                                         # average time to waning of immunity (both natural & vaccines)
+          'rho_h': 0.018,                                                                                                       # hospitalised fraction (source: Josh)
+          'T_h': 2.566,                                                                                                         # average time to hospitalisation (= length infectious period, source: Josh)
+          'rho_d': 0.83,                                                                                                        # deceased in hospital fraction (source: Josh)
+          'T_d': 4.716,                                                                                                         # average time to hospital outcome (source: Josh)
+          # time-dependencies
+          'vaccine_rate_modifier': 1.0,                                                                                         # modify vaccination rate
+          'waning_start': datetime(2024, 6, 30),                                                                                # start of vaccine waning
+          'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
+          # ascertainment
+          'asc_case': 0.005,
+          'asc_hosp': 0.433,
+          'asc_death': 0.253,          
         }
 
 # initial states
@@ -58,9 +73,10 @@ init_states = {}
 for k,v in ic.items():
     init_states[k] = tf.convert_to_tensor(v * total_population)
 
-del init_states['H']
-del init_states['D']
-del init_states['Iv']
+# initial outcomes
+init_states['I_inc'] = 0 * total_population
+init_states['H_inc'] = 0 * total_population
+init_states['D_inc'] = 0 * total_population
 
 # time-dependencies
 TDPFs = {}
@@ -71,8 +87,12 @@ if distinguish_daytype:
                                              get_contact_matrix(daytype='week_holiday', age_resolution=ar),
                                              get_contact_matrix(daytype='weekend', age_resolution=ar)).contact_function
 ## vaccines
+### vaccine uptake
 from influenza_USA.SVIR.TDPF import make_vaccination_function
 TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
+### exponential waning vaccine efficacy
+from influenza_USA.SVIR.TDPF import exponential_waning_function
+TDPFs['f_waning'] = exponential_waning_function
 
 # initialise model
 model = SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
@@ -83,7 +103,7 @@ model = SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, 
 
 import time
 t0 = time.time()
-out = model.sim(time=[start_sim, end_sim], N=N, processes=processes, tau=0.2)
+out = model.sim(time=[start_sim, end_sim])
 t1 = time.time()
 print(f'elapsed: {t1-t0} s')
 
@@ -129,25 +149,28 @@ if ((sr == 'states') & (ar == 'full')):
     else:
 
         fig,ax=plt.subplots(nrows=3, figsize=(8.3,11.7/2))
-        ax[0].set_title('Overall')
+
+        out['I_sum'] = out['I'] + out['Iv']
+
+        ax[0].set_title('Population immunity')
         ax[0].plot(out['date'], out['S'].sum(dim=['age_group', 'location']), color='green', label='S')
         ax[0].plot(out['date'], out['V'].sum(dim=['age_group', 'location']), linestyle='--', color='green', label='V')
         ax[0].plot(out['date'], out['I'].sum(dim=['age_group', 'location']), color='red', label='I')
         ax[0].plot(out['date'], out['R'].sum(dim=['age_group', 'location']), color='black', label='R')
         ax[0].legend(loc=1, framealpha=1)
 
-        ax[1].set_title('Infected by spatial patch')
-        ax[1].plot(out['date'], out['I'].sum(dim='age_group').sel({'location': name2fips('Alabama')}), linestyle = '-', color='black', label='Alabama')
-        ax[1].plot(out['date'], out['I'].sum(dim='age_group').sel({'location': name2fips('Florida')}), linestyle = '-.', color='red', label='Florida')
-        ax[1].plot(out['date'], out['I'].sum(dim='age_group').sel({'location': name2fips('Maryland')}), linestyle = '--', color='green', label='Maryland')
+        ax[1].set_title('Ascertained incidences (USA)')
+        ax[1].plot(out['date'], out['I_inc'].sum(dim=['age_group', 'location']), color='black', label='Cases')
+        ax[1].plot(out['date'], out['H_inc'].sum(dim=['age_group', 'location']), color='orange', label='Hospitalisations')
+        ax[1].plot(out['date'], out['D_inc'].sum(dim=['age_group', 'location']), color='red', label='Deaths')
         ax[1].legend(loc=1, framealpha=1)
 
-        ax[2].set_title('Infected by age group (Maryland)')
-        ax[2].plot(out['date'], out['I'].sel({'age_group': '[0, 5)', 'location': name2fips('Maryland')}), linestyle = '-', color='red', label='0-5')
-        ax[2].plot(out['date'], out['I'].sel({'age_group': '[5, 18)', 'location': name2fips('Maryland')}), linestyle = ':', color='red', label='5-18')
-        ax[2].plot(out['date'], out['I'].sel({'age_group': '[18, 50)', 'location': name2fips('Maryland')}), linestyle = '--', color='green', label='18-50')
-        ax[2].plot(out['date'], out['I'].sel({'age_group': '[50, 65)', 'location': name2fips('Maryland')}), linestyle = '-.', color='green', label='50-65')
-        ax[2].plot(out['date'], out['I'].sel({'age_group': '[65, 100)', 'location': name2fips('Maryland')}), linestyle = '-', color='black', label='65-100')
+        ax[2].set_title('Infected prevalence by age group (Maryland)')
+        ax[2].plot(out['date'], out['I_sum'].sel({'age_group': '[0, 5)', 'location': name2fips('Maryland')}), linestyle = '-', color='red', label='0-5')
+        ax[2].plot(out['date'], out['I_sum'].sel({'age_group': '[5, 18)', 'location': name2fips('Maryland')}), linestyle = ':', color='red', label='5-18')
+        ax[2].plot(out['date'], out['I_sum'].sel({'age_group': '[18, 50)', 'location': name2fips('Maryland')}), linestyle = '--', color='green', label='18-50')
+        ax[2].plot(out['date'], out['I_sum'].sel({'age_group': '[50, 65)', 'location': name2fips('Maryland')}), linestyle = '-.', color='green', label='50-65')
+        ax[2].plot(out['date'], out['I_sum'].sel({'age_group': '[65, 100)', 'location': name2fips('Maryland')}), linestyle = '-', color='black', label='65-100')
         ax[2].legend(loc=1, framealpha=1)
 
         plt.tight_layout()

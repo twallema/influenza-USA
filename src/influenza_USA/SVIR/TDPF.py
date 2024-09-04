@@ -10,6 +10,13 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
+
+def exponential_waning_function(t, states, param, waning_start, T_s):
+    if t < waning_start:
+        return 1.0
+    else:
+        return np.exp(-1/T_s * (t - waning_start)/timedelta(days=1))
+
 class make_vaccination_function():
 
     def __init__(self, vaccination_data):
