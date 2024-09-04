@@ -56,6 +56,9 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `2017_2018_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2017-2018 Flu season. Obtained from Josh (#TODO: where did he get it from?).
 
+
++ `weekly_flu_incid_complete.csv`: Obtained from Shaun (#TODO: where did he get it from?).
+
 ### initial condition
 
 + `initial_condition_17-18.csv`: Contains the initial condition and model parameters of Josh' reference model, obtained by calibrating the model (no age groups or spatial patches) to the 2017-2018 Influenza season.
