@@ -5,8 +5,6 @@ This script simulates an age-stratified, spatially-explicit SIR model with a vac
 __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
-import numpy as np
-import tensorflow as tf
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
 from influenza_USA.SVIR.utils import initialise_SVI2RHD, name2fips
