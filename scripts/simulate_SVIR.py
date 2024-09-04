@@ -25,8 +25,8 @@ sr = 'states'                       # spatial resolution: 'collapsed', 'states' 
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 distinguish_daytype = True          # vary contact matrix by daytype
 stochastic = True                   # ODE vs. tau-leap
-N = 15                              # number of stochastic realisations
-processes = 15
+N = 20                              # number of stochastic realisations
+processes = 20
 start_sim = '2024-06-30'            # simulation start
 end_sim = '2025-07-01'              # simulation end
 
@@ -40,21 +40,23 @@ else:
 coordinates = construct_coordinates_dictionary(spatial_resolution=sr, age_resolution=ar)
 
 # parameters
-params = {'beta': 0.020,                                                                                                        # infectivity (-)
+params = {'beta': 0.023,                                                                                                        # infectivity (-)
           'gamma': 5,                                                                                                           # duration of infection (d)
           'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
           'e_vacc': 1,                                                                                                          # vaccine efficacy
           'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate
-          'vaccine_rate_modifier': 1.0,                                                                                           # modify vaccination rate
+          'vaccine_rate_modifier': 1.0,                                                                                         # modify vaccination rate
           'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=ar), dtype=float),                         # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
           'M': tf.convert_to_tensor(get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution=sr), dtype=float)      # origin-destination mobility matrix
         }
 
 # initial states
 I0 = construct_initial_infected(seed_loc=('alabama',''), n=10, agedist='demographic', spatial_resolution=sr, age_resolution=ar)
-S0 = construct_initial_susceptible(I0, spatial_resolution=sr, age_resolution=ar)
+R0 = 0.3 * construct_initial_susceptible(spatial_resolution=sr, age_resolution=ar)
+S0 = construct_initial_susceptible(I0, R0, spatial_resolution=sr, age_resolution=ar)
 init_states = {'S': tf.convert_to_tensor(S0, dtype=float),
-               'I': tf.convert_to_tensor(I0, dtype=float)
+               'I': tf.convert_to_tensor(I0, dtype=float),
+               'R': tf.convert_to_tensor(R0, dtype=float),
                 }
 
 # time-dependencies
@@ -78,7 +80,7 @@ model = SVIR(states=init_states, parameters=params, coordinates=coordinates, tim
 
 import time
 t0 = time.time()
-out = model.sim(time=[start_sim, end_sim], N=N, processes=processes)
+out = model.sim(time=[start_sim, end_sim], N=N, processes=processes, tau=0.2)
 t1 = time.time()
 print(f'elapsed: {t1-t0} s')
 
