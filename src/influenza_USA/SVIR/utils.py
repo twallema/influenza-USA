@@ -35,7 +35,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', disti
             'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate (dummy)
             'e_i': 0.2,                                                                                                           # vaccine efficacy against infection
             'e_h': 0.5,                                                                                                           # vaccine efficacy against hospitalisation
-            'T_s': 365/2,                                                                                                         # average time to waning of immunity (both natural & vaccines)
+            'T_s': 165,                                                                                                         # average time to waning of immunity (both natural & vaccines)
             'rho_h': 0.018,                                                                                                       # hospitalised fraction (source: Josh)
             'T_h': 2.566,                                                                                                         # average time to hospitalisation (= length infectious period, source: Josh)
             'rho_d': 0.83,                                                                                                        # deceased in hospital fraction (source: Josh)
@@ -44,6 +44,9 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', disti
             'vaccine_rate_modifier': 1.0,                                                                                         # used to modify vaccination rate
             'waning_start': start_sim,                                                                                            # startdate of vaccine waning
             'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
+            'amplitude': 0.10,
+            'peak_shift': 60,
+            'f_seasonality': 1,
             # ascertainment
             'asc_case': 0.005,
             }
@@ -75,6 +78,9 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', disti
     ### exponential waning vaccine efficacy
     from influenza_USA.SVIR.TDPF import exponential_waning_function
     TDPFs['f_waning'] = exponential_waning_function
+    ### seasonality
+    from influenza_USA.SVIR.TDPF import seasonality_function
+    TDPFs['f_seasonality'] = seasonality_function
 
     return SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 

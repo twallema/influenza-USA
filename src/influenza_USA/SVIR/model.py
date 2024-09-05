@@ -22,17 +22,17 @@ class ODE_SVI2RHD(ODE):
     states = ['S','V','I','Iv','R','H','D',     # states
               'I_inc', 'H_inc', 'D_inc'         # outcomes
               ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'asc_case']
+    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, asc_case):
+    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
 
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
 
         # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
+        l = f_seasonality * beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
 
         # calculate state differentials
         dS = - r_vacc*S - l*S + (1/T_s)*(R + V)
