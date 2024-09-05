@@ -40,7 +40,7 @@ stoch = False                       # ODE vs. tau-leap
 
 # simulation settings
 N = 1                               # number of stochastic realisations
-start_sim = datetime(2017, 6, 30)   # simulation start
+start_sim = datetime(2017, 8, 1)    # simulation start
 end_sim = datetime(2018, 7, 1)      # simulation end
 
 # initialise model
@@ -75,17 +75,17 @@ if __name__ == '__main__':
     log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson]
     log_likelihood_fnc_args = [[],[],[]]
     # calibated parameters and bounds
-    pars = ['beta', 'T_s', 'T_h', 'rho_h', 'T_d', 'rho_d', 'asc_case']
-    labels = ['$\\beta$', '$T_s$',  '$T_h$', '$\rho_h$',  '$T_d$', '$\rho_d$', '$\alpha_{case}$']
-    bounds = [(0.01,0.10), (0,365), (0,10), (0,0.1), (0,10), (0,1), (0,0.1)]
+    pars = ['beta', 'amplitude', 'peak_shift', 'rho_h', 'T_d', 'rho_d', 'asc_case']
+    labels = ['$\\beta$', 'A', '$\\delta$', '$\rho_h$',  '$T_d$', '$\rho_d$', '$\alpha_{case}$']
+    bounds = [(0.01,0.10), (0,0.20), (0,90), (0,0.1), (0,10), (0,1), (0,0.1)]
     # Setup objective function (no priors --> uniform priors based on bounds)
     objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,labels=labels)
     # Extract expanded bounds and labels
     expanded_labels = objective_function.expanded_labels 
     expanded_bounds = objective_function.expanded_bounds                                   
     # Nelder-mead
-    theta = [0.030, 165, 2.5, 0.002, 4.71, 0.05, 0.001]
-    #theta = [2.54427113e-02, 6.42023924e+01, 2.57300199e+00, 1.95412054e-03, 5.53401936e+00, 4.93271196e-02, 1.23325157e-03] ## LL: 863
+    theta = [0.0235, 0.01, 30, 0.002, 4.71, 0.05, 0.0015] # no seasonality --> good fit
+    #theta = [0.024, 0.05, 30, 0.002, 4.71, 0.05, 0.001]
     #step = len(expanded_bounds)*[0.05,]
     #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
 
