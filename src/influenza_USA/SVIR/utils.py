@@ -46,8 +46,6 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', disti
             'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
             # ascertainment
             'asc_case': 0.005,
-            'asc_hosp': 0.433,
-            'asc_death': 0.253,          
             }
 
     # initial condition
