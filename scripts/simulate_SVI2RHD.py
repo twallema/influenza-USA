@@ -20,9 +20,9 @@ dd = True                           # vary contact matrix by daytype
 stoch = False                       # ODE vs. tau-leap
 
 # simulation settings
-N = 1                               # number of stochastic realisations
-processes = 1                       # number of cores to use
-start_sim = datetime(2024, 6, 30)   # simulation start
+N = 20                               # number of stochastic realisations
+processes = 20                       # number of cores to use
+start_sim = datetime(2024, 8, 1)    # simulation start
 end_sim = datetime(2025, 7, 1)      # simulation end
 
 # initialise model

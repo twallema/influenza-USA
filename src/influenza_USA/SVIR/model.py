@@ -62,17 +62,17 @@ class TL_SVI2RHD(JumpProcess):
     states = ['S','V','I','Iv','R','H','D',     # states
               'I_inc', 'H_inc', 'D_inc'         # outcomes
               ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'asc_case']
+    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, asc_case):
+    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
 
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
 
         # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
+        l = f_seasonality * beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
 
         # compute rates of transitionings
         size_dummy = np.ones(S.shape, np.float64)
@@ -88,7 +88,7 @@ class TL_SVI2RHD(JumpProcess):
         return rates
 
     @ staticmethod
-    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, asc_case):
+    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
         
         # states
         S_new = S - transitionings['S'][0] - tau*transitionings['S'][1] + transitionings['V'][1] + transitionings['R'][0]
@@ -100,8 +100,8 @@ class TL_SVI2RHD(JumpProcess):
         D_new = D + transitionings['H'][1] 
         
         # incidences
-        I_inc_new = tau*asc_case*(transitionings['S'][0] + transitionings['V'][0])
-        H_inc_new = tau*(transitionings['I'][1] + transitionings['Iv'][1])
-        D_inc_new = tau*transitionings['H'][1]
+        I_inc_new = (1/tau)*asc_case*(transitionings['S'][0] + transitionings['V'][0])
+        H_inc_new = (1/tau)*(transitionings['I'][1] + transitionings['Iv'][1])
+        D_inc_new = (1/tau)*transitionings['H'][1]
 
         return(S_new, V_new, I_new, Iv_new, R_new, H_new, D_new, I_inc_new, H_inc_new, D_inc_new)
