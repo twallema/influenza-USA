@@ -35,11 +35,11 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', disti
             'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate (dummy)
             'e_i': 0.2,                                                                                                           # vaccine efficacy against infection
             'e_h': 0.5,                                                                                                           # vaccine efficacy against hospitalisation
-            'T_s': 180,                                                                                                           # average time to waning of immunity (both natural & vaccines)
+            'T_s': 270,                                                                                                           # average time to waning of immunity (both natural & vaccines)
             'rho_h': 0.014,                                                                                                       # hospitalised fraction (source: Josh)
             'T_h': 3.5,                                                                                                           # average time to hospitalisation (= length infectious period, source: Josh)
             'rho_d': 0.082,                                                                                                       # deceased in hospital fraction (source: Josh)
-            'T_d': 4.5,                                                                                                           # average time to hospital outcome (source: Josh)
+            'T_d': 5.0,                                                                                                           # average time to hospital outcome (source: Josh)
             # time-dependencies
             'vaccine_rate_modifier': 1.0,                                                                                         # used to modify vaccination rate
             'waning_start': start_sim,                                                                                            # startdate of vaccine waning
