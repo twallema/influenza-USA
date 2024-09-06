@@ -21,7 +21,7 @@ from influenza_USA.SVIR.utils import initialise_SVI2RHD
 # pySODM packages
 from pySODM.optimization import pso, nelder_mead
 from pySODM.optimization.utils import add_poisson_noise, assign_theta
-from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, ll_negative_binomial
+from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, ll_negative_binomial, ll_normal, ll_lognormal
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
 
 ##########################
@@ -34,11 +34,11 @@ multiplier_pso = 10                                 # PSO swarm size
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count())) # Retrieve CPU count
 
 # Bayesian
-identifier = 'test'                                 # Give any output of this script an ID
-n_mcmc = 80                                       # Number of MCMC iterations
-multiplier_mcmc = 3                                # Total number of Markov chains = number of parameters * multiplier_mcmc
+identifier = 'normal'                              # Give any output of this script an ID
+n_mcmc = 100                                        # Number of MCMC iterations
+multiplier_mcmc = 5                                 # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                        # Print diagnostics every print_n iterations
-discard = 20                                       # Discard first `discard` iterations as burn-in
+discard = 20                                        # Discard first `discard` iterations as burn-in
 thin = 2                                            # Thinning factor emcee chains
 n = 10                                              # Repeated simulations used in visualisations
 
@@ -55,29 +55,8 @@ df /= 7
 # pySODM convention: use 'date' as temporal index
 df.index.rename('date', inplace=True)
 # determine data start and enddate
-start_calibration = df.index.min()
+start_calibration = datetime(2017, 8, 1)
 end_calibration = df.index.max()
-
-# # Visualize
-# fig, axs = plt.subplots(3, 1, sharex=True, figsize=(8.3,11.7/2))
-# ## Cases
-# axs[0].scatter(df.index.unique().values, 7*df['Weekly_Cases'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-# axs[0].set_title('Cases')
-# ## Hospitalisations
-# axs[1].scatter(df.index.unique().values, 7*df['Weekly_Hosp'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-# axs[1].set_title('Hospitalisations')
-# ## Deaths
-# axs[2].scatter(df.index.unique().values, 7*df['Weekly_Deaths'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-# axs[2].set_title('Deaths')
-# ## Formatting
-# axs[2].xaxis.set_major_locator(plt.MaxNLocator(5))
-# for tick in axs[2].get_xticklabels():
-#     tick.set_rotation(30)
-# axs[2].grid(False)
-# ## Print to screen
-# plt.tight_layout()
-# plt.show()
-# plt.close()
 
 #################
 ## Setup model ##
@@ -106,14 +85,19 @@ if __name__ == '__main__':
     data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths']]
     weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]
     states = ['I_inc', 'H_inc', 'D_inc']
-    log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson]
-    log_likelihood_fnc_args = [[],[],[]]
+    log_likelihood_fnc = [ll_normal, ll_normal, ll_normal]
+    log_likelihood_fnc_args = [
+        0.033*df['Weekly_Cases'].values+1,
+        0.033*df['Weekly_Hosp'].values+1,
+        0.033*df['Weekly_Deaths'].values+1
+    ]
     # calibated parameters and bounds
     pars = ['beta', 'rho_h', 'T_d', 'rho_d', 'asc_case']
     labels = [r'$\beta$', r'$\rho_h$',  r'$T_d$', r'$\rho_d$', r'$\alpha_{case}$']
-    bounds = [(0.01,0.10), (0.001,0.1), (0.1,10), (0.001,1), (0.001,0.1)]
+    bounds = [(0.01,0.10), (0.001,0.1), (0.1,28), (0.001,1), (0.001,0.1)]
     # Setup objective function (no priors --> uniform priors based on bounds)
-    objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,weights=weights,labels=labels)
+    objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,
+                                                   start_sim=start_calibration,weights=weights,labels=labels)
     # Extract expanded bounds and labels
     expanded_labels = objective_function.expanded_labels 
     expanded_bounds = objective_function.expanded_bounds                                   
