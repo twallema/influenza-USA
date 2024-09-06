@@ -48,8 +48,6 @@ n = 10                                              # Repeated simulations used 
 
 # load dataset
 df = pd.read_csv(os.path.join(os.path.dirname(__file__),'../data/raw/cases/2017_2018_Flu.csv'), index_col=0, parse_dates=True)
-# prior to reporting --> force zero: #TODO: ability to choose startdate simulation in pySODM!!
-df.fillna(0, inplace=True)
 # convert to daily incidence
 df /= 7
 # pySODM convention: use 'date' as temporal index
