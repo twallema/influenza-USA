@@ -35,12 +35,12 @@ processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count())) # Retrieve CPU 
 
 # Bayesian
 identifier = 'normal_nodaytype'                     # Give any output of this script an ID
-n_mcmc = 200                                        # Number of MCMC iterations
-multiplier_mcmc = 5                                 # Total number of Markov chains = number of parameters * multiplier_mcmc
+n_mcmc = 500                                        # Number of MCMC iterations
+multiplier_mcmc = 10                                 # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                        # Print diagnostics every print_n iterations
-discard = 20                                        # Discard first `discard` iterations as burn-in
-thin = 2                                            # Thinning factor emcee chains
-n = 10                                              # Repeated simulations used in visualisations
+discard = 100                                        # Discard first `discard` iterations as burn-in
+thin = 5                                            # Thinning factor emcee chains
+n = 100                                              # Repeated simulations used in visualisations
 
 ###############
 ## Load data ##
@@ -80,15 +80,19 @@ if __name__ == '__main__':
     #####################
 
     # define dataset, states to match and observational model
-    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths']]
-    weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]
-    states = ['I_inc', 'H_inc', 'D_inc']
-    log_likelihood_fnc = [ll_normal, ll_normal, ll_normal] # poisson works about equally well --> just make sure to weigh datasets appropriately!
+    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'], df['Weekly_Hosp'][slice(datetime(2018,1,1), datetime(2018,3,1))], df['Weekly_Deaths'][slice(datetime(2018,1,1), datetime(2018,3,1))]]
+    weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]
+    states = ['I_inc', 'H_inc', 'D_inc', 'H_inc', 'D_inc']
+    log_likelihood_fnc = [ll_normal, ll_normal, ll_normal, ll_normal, ll_normal] # poisson works about equally well --> just make sure to weigh datasets appropriately!
     log_likelihood_fnc_args = [
-        0.033*df['Weekly_Cases'].values+1,
-        0.033*df['Weekly_Hosp'].values+1,
-        0.033*df['Weekly_Deaths'].values+1
+        (0.10/3)*df['Weekly_Cases'].values,     # 95% CI +/- 10 % 
+        (0.10/3)*df['Weekly_Hosp'].values,      # 95% CI +/- 5 %
+        (0.10/3)*df['Weekly_Deaths'].values,    # 95% CI +/- 5 %
+        (0.10/3)*df['Weekly_Deaths'][slice(datetime(2018,1,1), datetime(2018,3,1))].values,    # 95% CI +/- 5 %
+        (0.10/3)*df['Weekly_Deaths'][slice(datetime(2018,1,1), datetime(2018,3,1))].values,    # 95% CI +/- 5 %
     ]
+    #log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson] # poisson works about equally well --> just make sure to weigh datasets appropriately!
+    #log_likelihood_fnc_args = [[],[],[]]
     # calibated parameters and bounds
     pars = ['beta', 'rho_h', 'rho_d', 'asc_case']
     labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$']
@@ -100,8 +104,8 @@ if __name__ == '__main__':
     expanded_labels = objective_function.expanded_labels 
     expanded_bounds = objective_function.expanded_bounds                                   
     # Nelder-mead
-    theta = [0.025, 0.0025, 0.05, 0.0015] # With varying datypes --> very good fit
-    theta = [0.024, 0.0025, 0.05, 0.0015] # Without varying datypes --> very good fit
+    theta = [0.0252, 0.0023, 0.045, 0.0018] # With varying datypes + U-shaped severity --> very good fit    
+    theta = [0.024, 0.0025, 0.04, 0.0018] # Without varying datypes + U-shaped severity --> very good fit
     #step = len(expanded_bounds)*[0.05,]
     #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
 
@@ -135,6 +139,24 @@ if __name__ == '__main__':
         tick.set_rotation(30)
     axs[2].grid(False)
     ## Print to screen
+    plt.tight_layout()
+    plt.show()
+    plt.close()
+
+    # Visualize
+    fig, axs = plt.subplots(2,1,figsize=(8.3,11.7/3))
+
+    axs[0].plot(out['date'], 7*out['H_inc'].sum(dim=['location']).sel({'age_group': '[0, 5)'}), color='black', alpha=1, linewidth=2, label='0-5')
+    axs[0].plot(out['date'], 7*out['H_inc'].sum(dim=['location']).sel({'age_group': '[5, 18)'}), color='blue', alpha=1, linewidth=2, label='5-18')
+    axs[0].plot(out['date'], 7*out['H_inc'].sum(dim=['location']).sel({'age_group': '[18, 50)'}), color='red', alpha=1, linewidth=2, label='18-50')
+    axs[0].plot(out['date'], 7*out['H_inc'].sum(dim=['location']).sel({'age_group': '[50, 65)'}), color='orange', alpha=1, linewidth=2, label='50-65')
+    axs[0].plot(out['date'], 7*out['H_inc'].sum(dim=['location']).sel({'age_group': '[65, 100)'}), color='green', alpha=1, linewidth=2, label='65-100')
+    axs[0].legend()
+
+    demo = np.array([18608139, 54722401, 141598551, 63172279, 60019216])
+    axs[1].bar(out.coords['age_group'].values, 7*out['H_inc'].sum(dim=['location']).cumsum(dim='date').isel(date=-1)/demo * 100000, color='black', alpha=0.6, linewidth=2)
+    axs[1].set_title('Cumulative hospitalisations')
+
     plt.tight_layout()
     plt.show()
     plt.close()
