@@ -80,19 +80,19 @@ if __name__ == '__main__':
     #####################
 
     # define dataset, states to match and observational model
-    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'], df['Weekly_Hosp'][slice(datetime(2018,1,1), datetime(2018,3,1))], df['Weekly_Deaths'][slice(datetime(2018,1,1), datetime(2018,3,1))]]
+    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'], df['Weekly_Hosp'][slice(datetime(2018,1,10),datetime(2018,2,10))], df['Weekly_Deaths'][slice(datetime(2018,1,10),datetime(2018,2,10))]]
     weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]
     states = ['I_inc', 'H_inc', 'D_inc', 'H_inc', 'D_inc']
     log_likelihood_fnc = [ll_normal, ll_normal, ll_normal, ll_normal, ll_normal] # poisson works about equally well --> just make sure to weigh datasets appropriately!
     log_likelihood_fnc_args = [
-        (0.10/3)*df['Weekly_Cases'].values,     # 95% CI +/- 10 % 
-        (0.10/3)*df['Weekly_Hosp'].values,      # 95% CI +/- 5 %
-        (0.10/3)*df['Weekly_Deaths'].values,    # 95% CI +/- 5 %
-        (0.10/3)*df['Weekly_Deaths'][slice(datetime(2018,1,1), datetime(2018,3,1))].values,    # 95% CI +/- 5 %
-        (0.10/3)*df['Weekly_Deaths'][slice(datetime(2018,1,1), datetime(2018,3,1))].values,    # 95% CI +/- 5 %
+        (0.05/3)*df['Weekly_Cases'].values,     # 95% CI +/- 10 % 
+        (0.05/3)*df['Weekly_Hosp'].values,      # 95% CI +/- 5 %
+        (0.05/3)*df['Weekly_Deaths'].values,    # 95% CI +/- 5 %
+        (0.05/3)*df['Weekly_Deaths'][slice(datetime(2018,1,10),datetime(2018,2,10))].values,    # 95% CI +/- 5 %
+        (0.05/3)*df['Weekly_Deaths'][slice(datetime(2018,1,10),datetime(2018,2,10))].values,    # 95% CI +/- 5 %    
     ]
-    #log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson] # poisson works about equally well --> just make sure to weigh datasets appropriately!
-    #log_likelihood_fnc_args = [[],[],[]]
+    #log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson, ll_poisson, ll_poisson] # poisson works about equally well --> just make sure to weigh datasets appropriately!
+    #log_likelihood_fnc_args = [[],[],[],[],[]]
     # calibated parameters and bounds
     pars = ['beta', 'rho_h', 'rho_d', 'asc_case']
     labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$']
