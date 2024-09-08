@@ -34,6 +34,9 @@ class ODE_SVI2RHD(ODE):
         # compute force of infection
         l = f_seasonality * beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
 
+        # u-shaped severity curve
+        rho_h = (rho_h * np.array([1, 0.25*(19.8/20.1), 0.50*(19.8/18.6), 0.75*(19.8/13.1), 4.5*(19.8/7.8)]))[:, np.newaxis]
+
         # calculate state differentials
         dS = - r_vacc*S - l*S + (1/T_s)*(R + V)
         dV = r_vacc*S - (1-f_waning*e_i)*l*V  - (1/T_s)*V
