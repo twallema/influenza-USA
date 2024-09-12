@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import multiprocessing as mp
 import matplotlib.pyplot as plt
-from datetime import date
 from datetime import datetime as datetime
 
 # influenza model
@@ -29,9 +28,10 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
+season = '17-18'                    # season: '17-18' or '18-19'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
-dd = True                           # vary contact matrix by daytype
+dd = False                          # vary contact matrix by daytype
 stoch = False                       # ODE vs. tau-leap
 
 # Frequentist
@@ -40,11 +40,11 @@ multiplier_pso = 10                                                 # PSO swarm 
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve CPU count
 
 # Bayesian
-identifier = 'poisson_nodaytype_1718'               # Give any output of this script an ID
-n_mcmc = 1000                                       # Number of MCMC iterations
+identifier = f'poisson_nodaytype_{season}'          # Give any output of this script an ID
+n_mcmc = 200                                        # Number of MCMC iterations
 multiplier_mcmc = 10                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                        # Print diagnostics every print_n iterations
-discard = 100                                       # Discard first `discard` iterations as burn-in
+discard = 50                                        # Discard first `discard` iterations as burn-in
 thin = 5                                            # Thinning factor emcee chains
 n = 300                                             # Repeated simulations used in visualisations
 
@@ -53,7 +53,7 @@ n = 300                                             # Repeated simulations used 
 ###############
 
 # load dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),'../data/raw/cases/2017_2018_Flu.csv'), index_col=0, parse_dates=True)
+df = pd.read_csv(os.path.join(os.path.dirname(__file__),'../data/raw/cases/{season}_Flu.csv'), index_col=0, parse_dates=True)
 # convert to daily incidence
 df /= 7
 # pySODM convention: use 'date' as temporal index
@@ -83,7 +83,7 @@ if __name__ == '__main__':
           df['Weekly_Hosp'][slice(datetime(2018,1,10),datetime(2018,2,10))], df['Weekly_Deaths'][slice(datetime(2018,1,10),datetime(2018,2,10))]]   # hospital/death peak counted double
     # use maximum value in dataset as weight
     weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths']),
-               1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]
+               10/max(df['Weekly_Hosp']), 10/max(df['Weekly_Deaths'])]
     # states to match with datasets
     states = ['I_inc', 'H_inc', 'D_inc', 'H_inc', 'D_inc']
     # log likelihood function + arguments
@@ -101,8 +101,8 @@ if __name__ == '__main__':
     #################
 
     # Initial guess
-    theta = [0.024, 0.0025, 0.04, 0.0018] # Without varying datypes + U-shaped severity --> very good fit    
     theta = [0.0252, 0.0023, 0.045, 0.0018] # With varying datypes + U-shaped severity --> very good fit    
+    theta = [0.024, 0.0025, 0.04, 0.0018] # Without varying datypes + U-shaped severity --> very good fit    
     # Perform optimization 
     #step = len(expanded_bounds)*[0.05,]
     #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
@@ -146,9 +146,8 @@ if __name__ == '__main__':
     ##########
 
     # Variables
-    samples_path='sampler_output/'
-    fig_path='sampler_output/'
-    run_date = str(date.today())
+    samples_path=f'../data/interim/calibration/{season}/'
+    fig_path=f'../data/interim/calibration/{season}/'
     # Perturbate previously obtained estimate
     ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=bounds)
     # Write some usefull settings to a pickle file (no pd.Timestamps or np.arrays allowed!)
