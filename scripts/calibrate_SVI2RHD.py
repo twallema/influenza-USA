@@ -28,7 +28,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season = '17-18'                    # season: '17-18' or '18-19'
+season = '2017-2018'                    # season: '17-18' or '18-19'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 dd = False                          # vary contact matrix by daytype
@@ -41,7 +41,7 @@ processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve C
 
 # Bayesian
 identifier = f'poisson_nodaytype_{season}'          # Give any output of this script an ID
-n_mcmc = 200                                        # Number of MCMC iterations
+n_mcmc = 500                                        # Number of MCMC iterations
 multiplier_mcmc = 10                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                        # Print diagnostics every print_n iterations
 discard = 50                                        # Discard first `discard` iterations as burn-in
@@ -53,7 +53,7 @@ n = 300                                             # Repeated simulations used 
 ###############
 
 # load dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),'../data/raw/cases/{season}_Flu.csv'), index_col=0, parse_dates=True)
+df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../data/raw/cases/{season}_Flu.csv'), index_col=0, parse_dates=True)
 # convert to daily incidence
 df /= 7
 # pySODM convention: use 'date' as temporal index

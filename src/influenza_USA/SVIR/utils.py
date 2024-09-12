@@ -14,7 +14,7 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
 
     # model
     if stochastic:
@@ -47,13 +47,13 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', disti
             'amplitude': 0,
             'peak_shift': 30,
             'f_seasonality': 1,
-            # ascertainment
+            # outcomes
             'asc_case': 0.004,
             }
 
     # initial condition
     ## states
-    ic = load_initial_condition(season='17-18')
+    ic = load_initial_condition(season=season)
     total_population = construct_initial_susceptible(spatial_resolution, age_resolution)
     init_states = {}
     for k,v in ic.items():
@@ -236,7 +236,7 @@ def get_mobility_matrix(spatial_resolution, dataset='cellphone_03092020'):
 
     return mobility_matrix
 
-def load_initial_condition(season='17-18'):
+def load_initial_condition(season='2017-2018'):
     """
     A function to load the initial condition of the Influenza model, as calibrated by Josh to the 17-18 and 18-19 seasons
     """
