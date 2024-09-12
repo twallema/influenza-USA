@@ -1,5 +1,5 @@
 """
-This script simulates an age-stratified, spatially-explicit SIR model with a vaccine for the USA using pySODM
+This script simulates an age-stratified, spatially-explicit SVI2HRD model for the USA using pySODM
 """
 
 __author__      = "Tijs Alleman"
