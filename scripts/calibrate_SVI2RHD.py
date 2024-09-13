@@ -146,8 +146,7 @@ if __name__ == '__main__':
     ##########
 
     # Variables
-    samples_path=f'../data/interim/calibration/{season}/'
-    fig_path=f'../data/interim/calibration/{season}/'
+    samples_path=fig_path=f'../data/interim/calibration/{season}/'
     # Perturbate previously obtained estimate
     ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=bounds)
     # Write some usefull settings to a pickle file (no pd.Timestamps or np.arrays allowed!)
@@ -165,6 +164,7 @@ if __name__ == '__main__':
     fig = corner.corner(sampler.get_chain(discard=discard, thin=2, flat=True), labels=labels, **CORNER_KWARGS)
     for idx,ax in enumerate(fig.get_axes()):
         ax.grid(False)
+    plt.savefig(fig_path+'corner.pdf')
     plt.show()
     plt.close()
 
@@ -214,6 +214,7 @@ if __name__ == '__main__':
         tick.set_rotation(30)
     axs[2].grid(False)
     ## Print to screen
+    plt.savefig(fig_path+'goodness_fit.pdf')
     plt.tight_layout()
     plt.show()
     plt.close()
