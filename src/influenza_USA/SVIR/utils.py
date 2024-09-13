@@ -43,11 +43,11 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # time-dependencies
             'vaccine_rate_modifier': 1.0,                                                                                         # used to modify vaccination rate
             'vaccine_rate_timedelta': 0,                                                                                          # shift the vaccination season
-            'waning_start': pd.to_datetime(start_sim),                                                                            # startdate of vaccine waning
-            'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
-            'amplitude': 0,
-            'peak_shift': 30,
-            'f_seasonality': 1,
+            #'waning_start': pd.to_datetime(start_sim),                                                                            # startdate of vaccine waning
+            #'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
+            #'amplitude': 0,
+            #'peak_shift': 30,
+            #'f_seasonality': 1,
             # outcomes
             'asc_case': 0.004,
             }
