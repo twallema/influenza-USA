@@ -13,10 +13,7 @@ import pandas as pd
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-
-# influenza model
-from influenza_USA.SVIR.utils import initialise_SVI2RHD
-
+from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import add_poisson_noise, assign_theta
@@ -28,7 +25,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season = '2017-2018'                    # season: '17-18' or '18-19'
+season = '2017-2018'                # season: '17-18' or '18-19'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 dd = False                          # vary contact matrix by daytype
@@ -149,9 +146,10 @@ if __name__ == '__main__':
     samples_path=fig_path=f'../data/interim/calibration/{season}/'
     # Perturbate previously obtained estimate
     ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=bounds)
-    # Write some usefull settings to a pickle file (no pd.Timestamps or np.arrays allowed!)
+    # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
-              'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels}
+              'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
+              'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd, 'stochastic': stoch}
     # Sample n_mcmc iterations
     sampler = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function,  objective_function_kwargs={'simulation_kwargs': {'warmup': 0}},
                                     fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True,
