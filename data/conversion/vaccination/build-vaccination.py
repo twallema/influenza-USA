@@ -15,12 +15,13 @@ import pandas as pd
 ###################################################
 
 # use demography for the age groups and spatial units
-demography = pd.read_csv(os.path.join(os.getcwd(), '../../interim/demography/demography_states_2023.csv'), dtype={'state': str}) # state, age, population
+demography = pd.read_csv(os.path.join(os.getcwd(), '../../interim/demography/demography_states_2023.csv'), dtype={'fips': str}) # state, age, population
 ages = demography['age'].unique()
-states = demography['state'].unique()
+states = demography['fips'].unique()
 # use one of the datafiles for the dates
-vaccination = pd.read_csv(os.path.join(os.getcwd(), '../../raw/vaccination/vacc_Flu_2024_R1_age18to49_dose1_reported_2017.csv')) 
+vaccination = pd.read_csv(os.path.join(os.getcwd(), '../../raw/vaccination/vacc_Flu_2024_R1_age18to49_dose1_reported_2017.csv'), parse_dates=True) 
 dates = vaccination['date'].unique()
+
 # pre-allocate output (date, age, state)
 out = pd.Series(0, index=pd.MultiIndex.from_product([dates, ages, states], names=['date', 'age', 'state']), name='vaccination_rate', dtype=np.float64)
 
@@ -41,11 +42,12 @@ for fn,age in zip(file_names,ages):
     data = pd.read_csv(os.path.join(os.getcwd(), f'../../raw/vaccination/{fn}'), index_col=0) 
     # change column names to desired format (verified equality of used notations)
     data = data.rename(columns=dict(zip(data.columns, states)))
-    # melt from wide to long format
-    df_melted = data.melt(ignore_index=False, var_name='state', value_name='vaccination_rate').reset_index().set_index(['date', 'state'])
-    df_melted = df_melted.squeeze()
     # fill in data
-    out.loc[slice(None), age, slice(None)] = df_melted.values
+    for state in states:
+        out.loc[slice(None), age, state] = data[state].values
+
+# vaccination data typically start in week 30
+out = out.loc[slice('2017-08-01', None)]
 
 #################
 ## Save result ##
