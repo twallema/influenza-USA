@@ -42,7 +42,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'T_d': 5.0,                                                                                                           # average time to hospital outcome (source: Josh)
             # time-dependencies
             'vaccine_rate_modifier': 1.0,                                                                                         # used to modify vaccination rate
-            'waning_start': start_sim,                                                                                            # startdate of vaccine waning
+            'waning_start': pd.to_datetime(start_sim),                                                                            # startdate of vaccine waning
             'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
             'amplitude': 0,
             'peak_shift': 30,
