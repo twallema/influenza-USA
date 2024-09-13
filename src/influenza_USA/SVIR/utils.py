@@ -33,9 +33,9 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),             # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
             'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate (dummy)
-            'e_i': 0.2,                                                                                                           # vaccine efficacy against infection
-            'e_h': 0.5,                                                                                                           # vaccine efficacy against hospitalisation
-            'T_s': 270,                                                                                                           # average time to waning of immunity (both natural & vaccines)
+            'e_i': 0.0,                                                                                                           # vaccine efficacy against infection
+            'e_h': 0.8,                                                                                                           # vaccine efficacy against hospitalisation
+            'T_s': 180,                                                                                                           # average time to waning of immunity (both natural & vaccines)
             'rho_h': 0.014,                                                                                                       # hospitalised fraction (source: Josh)
             'T_h': 3.5,                                                                                                           # average time to hospitalisation (= length infectious period, source: Josh)
             'rho_d': 0.082,                                                                                                       # deceased in hospital fraction (source: Josh)
@@ -78,12 +78,6 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     ### vaccine uptake
     from influenza_USA.SVIR.TDPF import make_vaccination_function
     TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
-    ### exponential waning vaccine efficacy
-    from influenza_USA.SVIR.TDPF import exponential_waning_function
-    TDPFs['f_waning'] = exponential_waning_function
-    ### seasonality
-    from influenza_USA.SVIR.TDPF import seasonality_function
-    TDPFs['f_seasonality'] = seasonality_function
 
     return SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
