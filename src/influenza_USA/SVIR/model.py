@@ -22,11 +22,11 @@ class ODE_SVI2RHD(ODE):
     states = ['S','V','I','Iv','R','H','D',     # states
               'I_inc', 'H_inc', 'D_inc'         # outcomes
               ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
+    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
+    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
 
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
@@ -38,11 +38,11 @@ class ODE_SVI2RHD(ODE):
         rho_h = (rho_h * np.array([1, 0.25*(19.8/20.1), 0.50*(19.8/18.6), 0.75*(19.8/13.1), 4.5*(19.8/7.8)]))[:, np.newaxis]
 
         # calculate state differentials
-        dS = - r_vacc*S - l*S + (1/T_s)*(R + V)
-        dV = r_vacc*S - (1-f_waning*e_i)*l*V  - (1/T_s)*V
+        dS = - r_vacc*S - l*S + (1/T_r)*R + (1/T_v)*V
+        dV = r_vacc*S - (1-f_waning*e_i)*l*V  - (1/T_v)*V
         dI = l*S - (1/T_h)*I
         dIv = (1-f_waning*e_i)*l*V - (1/T_h)*Iv
-        dR = (1-rho_h)*(1/T_h)*I + 1 - ((1-f_waning*e_h)*rho_h)*(1/T_h)*Iv + (1-rho_d)*(1/T_d)*H - (1/T_s)*R
+        dR = (1-rho_h)*(1/T_h)*I + 1 - ((1-f_waning*e_h)*rho_h)*(1/T_h)*Iv + (1-rho_d)*(1/T_d)*H - (1/T_r)*R
         dH = rho_h*(1/T_h)*I + rho_h*(1-f_waning*e_h)*(1/T_h)*Iv - (1/T_d)*H
         dD = rho_d*(1/T_d)*H
 
@@ -65,11 +65,11 @@ class TL_SVI2RHD(JumpProcess):
     states = ['S','V','I','Iv','R','H','D',     # states
               'I_inc', 'H_inc', 'D_inc'         # outcomes
               ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
+    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
+    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
 
         # compute contact tensor with different home vs. visited contacts
         C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
@@ -81,17 +81,17 @@ class TL_SVI2RHD(JumpProcess):
         size_dummy = np.ones(S.shape, np.float64)
         rates = {
             'S': [l.numpy(), r_vacc], 
-            'V': [(1-f_waning*e_i)*l.numpy(), size_dummy*(1/T_s)],
+            'V': [(1-f_waning*e_i)*l.numpy(), size_dummy*(1/T_v)],
             'I': [size_dummy*(1-rho_h)*(1/T_h), size_dummy*rho_h*(1/T_h)],
             'Iv': [size_dummy*(1-((1-f_waning*e_h)*rho_h)*(1/T_h)), size_dummy*rho_h*(1-f_waning*e_h)*(1/T_h)],
             'H': [size_dummy*(1-rho_d)*(1/T_d), size_dummy*rho_d*(1/T_d)],
-            'R': [size_dummy*(1/T_s),]
+            'R': [size_dummy*(1/T_r),]
             }
         
         return rates
 
     @ staticmethod
-    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
+    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
         
         # states
         S_new = S - transitionings['S'][0] - tau*transitionings['S'][1] + transitionings['V'][1] + transitionings['R'][0]

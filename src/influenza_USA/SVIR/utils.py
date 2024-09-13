@@ -28,26 +28,27 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     # parameters
     params = {
             # core parameters
-            'beta': 0.023,                                                                                                        # infectivity (-)
-            'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
-            'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),             # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
+            'beta': 0.023,                                                                                                          # infectivity (-)
+            'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
+            'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),               # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
-            'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate (dummy)
-            'e_i': 0.0,                                                                                                           # vaccine efficacy against infection
-            'e_h': 0.8,                                                                                                           # vaccine efficacy against hospitalisation
-            'T_s': 180,                                                                                                           # average time to waning of immunity (both natural & vaccines)
-            'rho_h': 0.014,                                                                                                       # hospitalised fraction (source: Josh)
-            'T_h': 3.5,                                                                                                           # average time to hospitalisation (= length infectious period, source: Josh)
-            'rho_d': 0.082,                                                                                                       # deceased in hospital fraction (source: Josh)
-            'T_d': 5.0,                                                                                                           # average time to hospital outcome (source: Josh)
+            'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),                # vaccination rate (dummy)
+            'e_i': 0.2,                                                                                                             # vaccine efficacy against infection
+            'e_h': 0.75,                                                                                                            # vaccine efficacy against hospitalisation
+            'T_r': 365,                                                                                                             # average time to waning of natural immunity
+            'T_v': 365/2,                                                                                                           # average time to waning of vaccine immunity
+            'rho_h': 0.014,                                                                                                         # hospitalised fraction (source: Josh)
+            'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
+            'rho_d': 0.082,                                                                                                         # deceased in hospital fraction (source: Josh)
+            'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
             # time-dependencies
-            'vaccine_rate_modifier': 1.0,                                                                                         # used to modify vaccination rate
-            'vaccine_rate_timedelta': 0,                                                                                          # shift the vaccination season
-            #'waning_start': pd.to_datetime(start_sim),                                                                            # startdate of vaccine waning
-            #'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
+            'vaccine_rate_modifier': 1.0,                                                                                           # used to modify vaccination rate
+            'vaccine_rate_timedelta': 0,                                                                                            # shift the vaccination season
+            #'waning_start': pd.to_datetime(start_sim),                                                                             # startdate of vaccine waning
+            'f_waning': 1,                                                                                                          # exponentially decaying vaccine efficacy
             #'amplitude': 0,
             #'peak_shift': 30,
-            #'f_seasonality': 1,
+            'f_seasonality': 1,
             # outcomes
             'asc_case': 0.004,
             }
