@@ -15,15 +15,15 @@ dd = False                                  # vary contact matrix by daytype
 stoch = False                               # ODE vs. tau-leap
 
 # calibration settings
-identifier = f'waning_180'  # identifier calibration
+identifier = f'no_waning'  # identifier calibration
 rundate = '2024-09-13'
 
 # scenario settings
 N = 100                                     # number of repeated simulations
-parameter_name = 'vaccine_rate_modifier'    # parameter to vary
-parameter_values = [0.8, 0, 1.2]            # values to use
+parameter_name = 'vaccine_rate_multiplier'  # parameter to vary
+parameter_values = [0.8, 1, 1.2]            # values to use
 colors = ['red', 'black', 'green']
-labels = ['-20%', '0%', '20%']
+labels = ['-20 %', '0 %', '20 %']
 start_sim = '2024-08-01'
 end_sim = '2025-07-01'                      # start and end of simulation
 conf_int = 0.05                             # confidence level used to visualise model fit
@@ -49,7 +49,7 @@ def draw_fcn(parameters, samples):
 ## Setup model ##
 #################
 
-model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, distinguish_daytype=dd, stochastic=stoch, start_sim=start_sim)
+model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, stochastic=stoch, start_sim=start_sim)
 
 ########################
 ## Simulate scenarios ##

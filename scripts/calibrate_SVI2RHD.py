@@ -25,7 +25,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season = '2017-2018'                # season: '17-18' or '18-19'
+season = '2019-2020'                # season: '2017-2018' or '2018-2019'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 dd = False                          # vary contact matrix by daytype
@@ -38,7 +38,7 @@ processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve C
 
 # Bayesian
 identifier = f'waning_180'                          # Give any output of this script an ID
-n_mcmc = 120                                        # Number of MCMC iterations
+n_mcmc = 500                                        # Number of MCMC iterations
 multiplier_mcmc = 10                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                        # Print diagnostics every print_n iterations
 discard = 50                                        # Discard first `discard` iterations as burn-in
@@ -56,14 +56,14 @@ df /= 7
 # pySODM convention: use 'date' as temporal index
 df.index.rename('date', inplace=True)
 # determine data start and enddate
-start_calibration = datetime(2017, 8, 1)
+start_calibration = datetime(2019, 8, 1)
 end_calibration = df.index.max()
 
 #################
 ## Setup model ##
 #################
 
-model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, distinguish_daytype=dd, stochastic=stoch, start_sim=start_calibration)
+model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, stochastic=stoch, start_sim=start_calibration)
 
 #####################
 ## Calibrate model ##
@@ -75,12 +75,17 @@ if __name__ == '__main__':
     ## Set up posterior probability ##
     ##################################
 
+    # automate correct slicing peak year
+    if season == '2017-2018':
+        year_peakslice = 2018
+    elif season == '2019-2020':
+        year_peakslice = 2020
     # define datasets
-    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'],                                                                               # all data
-          df['Weekly_Hosp'][slice(datetime(2018,1,10),datetime(2018,2,10))], df['Weekly_Deaths'][slice(datetime(2018,1,10),datetime(2018,2,10))]]   # hospital/death peak counted double
+    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'],                                                                                                                       # all data
+          df['Weekly_Hosp'][slice(datetime(year_peakslice,1,10),datetime(year_peakslice,2,10))], df['Weekly_Deaths'][slice(datetime(year_peakslice,1,10),datetime(year_peakslice,2,10))]]   # hospital/death peak counted double
     # use maximum value in dataset as weight
     weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths']),
-               10/max(df['Weekly_Hosp']), 10/max(df['Weekly_Deaths'])]
+               1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]
     # states to match with datasets
     states = ['I_inc', 'H_inc', 'D_inc', 'H_inc', 'D_inc']
     # log likelihood function + arguments
@@ -99,11 +104,15 @@ if __name__ == '__main__':
     #################
 
     # Initial guess
-    theta = [0.0247, 0.0028, 0.05, 0.0018] # --> no vaccine waning waning
+    # season: 2017-2018
     theta = [0.0253, 0.0033, 0.05, 0.0020] # --> efficacy 80% at start, vaccine waning at rate of 180 days
+    theta = [0.0254, 0.0033, 0.05, 0.0020] # --> no vaccine waning waning
+    # season: 2019-2020
+    theta = [0.024, 0.003, 0.03, 0.0025] # --> no vaccine waning waning
+    theta = [0.024, 0.003, 0.03, 0.0025] # --> efficacy 80% at start, vaccine waning at rate of 180 days
 
     # Perform optimization 
-    #step = len(expanded_bounds)*[0.05,]
+    #step = len(bounds)*[0.05,]
     #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
 
     ######################

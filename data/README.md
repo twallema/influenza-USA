@@ -56,6 +56,7 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `2017_2018_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2017-2018 Flu season. Obtained from Josh (#TODO: where did he get it from?).
 
++ `2019_2020_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2019-2020 Flu season. Obtained from Josh (#TODO: where did he get it from?).
 
 + `weekly_flu_incid_complete.csv`: Obtained from Shaun (#TODO: where did he get it from?).
 
