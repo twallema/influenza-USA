@@ -10,7 +10,6 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
-
 def seasonality_function(t, states, param, amplitude, peak_shift):
     """
     Default output function. Returns a sinusoid with average value 1.
@@ -60,10 +59,10 @@ class make_vaccination_function():
         except:
             return np.zeros([self.n_age, self.n_loc], np.float64)
     
-    def vaccination_function(self, t, states, param, vaccine_rate_modifier):
+    def vaccination_function(self, t, states, param, vaccine_rate_modifier, vaccine_rate_timdelta):
         """ pySODM compatible wrapper
         """
-        return vaccine_rate_modifier * self.get_vaccination_rate(t)
+        return vaccine_rate_modifier * self.get_vaccination_rate(t + timedelta(days=vaccine_rate_timdelta))
 
 class make_contact_function():
 
