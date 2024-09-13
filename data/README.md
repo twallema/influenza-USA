@@ -61,7 +61,9 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### initial condition
 
-+ `initial_condition_17-18.csv`: Contains the initial condition and model parameters of Josh' reference model, obtained by calibrating the model (no age groups or spatial patches) to the 2017-2018 Influenza season.
++ `initial_condition_2017-2018.csv`: Contains the initial condition and model parameters of Josh' reference model, obtained by calibrating the model (no age groups or spatial patches) to the 2017-2018 Influenza season.
+
++ `initial_condition_2019-2020.csv`: Idem for the 2019-2020 Influenza season.
 
 ## Interim
 
