@@ -7,34 +7,36 @@ from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
 ## Settings ##
 ##############
 
-# model settings
-season = '2017-2018'                        # season: '17-18' or '18-19'
-sr = 'states'                               # spatial resolution: 'collapsed', 'states' or 'counties'
-ar = 'full'                                 # age resolution: 'collapsed' or 'full'
-dd = False                                  # vary contact matrix by daytype
-stoch = False                               # ODE vs. tau-leap
-
 # calibration settings
-identifier = f'no_waning'  # identifier calibration
-rundate = '2024-09-13'
+season = '2017-2018'                        # season: '17-18' or '19-20'
+waning = 'no_waning'                        # 'no_waning' vs. 'waning_180'
+if season == '2017-2018':                   # select right date
+    rundate = '2024-09-13'
+elif season == '2019-2020':
+    rundate = '2024-09-15' 
 
 # scenario settings
 N = 100                                     # number of repeated simulations
 parameter_name = 'vaccine_rate_multiplier'  # parameter to vary
 parameter_values = [0.8, 1, 1.2]            # values to use
-colors = ['red', 'black', 'green']
-labels = ['-20 %', '0 %', '20 %']
-start_sim = '2024-08-01'
-end_sim = '2025-07-01'                      # start and end of simulation
-conf_int = 0.05                             # confidence level used to visualise model fit
+colors = ['red', 'black', 'green']          # colors used in visualisation
+labels = ['-20 %', '0 %', '20 %']           # labels used in visualisation
+start_sim = '2024-08-01'                    # start of visualisation
+end_sim = '2025-07-01'                      # end of visualisation
+conf_int = 0.05                             # confidence level of visualisation
 
 ###############################
 ## Set up posterior sampling ##
 ###############################
 
-samples_dict = json.load(open(f'../data/interim/calibration/{season}/{identifier}/{identifier}_SAMPLES_{rundate}.json'))
+# retrieve dictionary of samples
+samples_dict = json.load(open(f'../data/interim/calibration/{season}/{waning}/{waning}_SAMPLES_{rundate}.json'))
 
-# todo: get season, sr, ar, dd, stoch from samples dict
+# retrieve model settings
+sr = samples_dict['spatial_resolution']
+ar = samples_dict['age_resolution']
+dd = samples_dict['distinguish_daytype']
+stoch = samples_dict['stochastic']
 
 # define draw function
 def draw_fcn(parameters, samples):
@@ -50,6 +52,15 @@ def draw_fcn(parameters, samples):
 #################
 
 model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, stochastic=stoch, start_sim=start_sim)
+
+if waning == 'no_waning':
+    model.parameters['e_i'] = 0.2
+    model.parameters['e_h'] = 0.5
+    model.parameters['T_v'] = 10*365
+elif waning == 'waning_180':
+    model.parameters['e_i'] = 0.2
+    model.parameters['e_h'] = 0.75
+    model.parameters['T_v'] = 365/2
 
 ########################
 ## Simulate scenarios ##

@@ -25,25 +25,38 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season = '2019-2020'                # season: '2017-2018' or '2018-2019'
+season = '2019-2020'                # season: '2017-2018' or '2019-2020'
+waning = 'no_waning'                # 'no_waning' vs. 'waning_180'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 dd = False                          # vary contact matrix by daytype
 stoch = False                       # ODE vs. tau-leap
 
-# Frequentist
+# optimization
+## frequentist
 n_pso = 100                                                         # Number of PSO iterations
 multiplier_pso = 10                                                 # PSO swarm size
+## bayesian
+identifier = waning                                                 # Use waning as identifier of script output
+n_mcmc = 600                                                        # Number of MCMC iterations
+multiplier_mcmc = 10                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
+print_n = 10                                                        # Print diagnostics every `print_n`` iterations
+discard = 50                                                        # Discard first `discard` iterations as burn-in
+thin = 5                                                            # Thinning factor emcee chains
+n = 200                                                             # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve CPU count
 
-# Bayesian
-identifier = f'waning_180'                          # Give any output of this script an ID
-n_mcmc = 500                                        # Number of MCMC iterations
-multiplier_mcmc = 10                                # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 10                                        # Print diagnostics every print_n iterations
-discard = 50                                        # Discard first `discard` iterations as burn-in
-thin = 5                                            # Thinning factor emcee chains
-n = 200                                             # Repeated simulations used in visualisations
+# data
+start_calibration = datetime(2019, 8, 1)
+## season specific
+if season == '2017-2018':
+    end_calibration = None
+    start_peakslice = datetime(2018, 1, 1)
+    end_peakslice = datetime(2018, 2, 21)
+elif season == '2019-2020':
+    end_calibration = datetime(2020, 3, 22)
+    start_peakslice = datetime(2020, 1, 1)
+    end_peakslice = datetime(2020, 3, 1)
 
 ###############
 ## Load data ##
@@ -55,8 +68,10 @@ df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../data/raw/cases/{sea
 df /= 7
 # pySODM convention: use 'date' as temporal index
 df.index.rename('date', inplace=True)
-# determine data start and enddate
-start_calibration = datetime(2019, 8, 1)
+# slice data until end
+df = df.loc[slice(None, end_calibration)]
+df_peak = df.loc[slice(start_peakslice, end_peakslice)]
+# replace `end_calibration` None --> datetime
 end_calibration = df.index.max()
 
 #################
@@ -64,6 +79,16 @@ end_calibration = df.index.max()
 #################
 
 model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, stochastic=stoch, start_sim=start_calibration)
+
+# set up right waning parameters
+if waning == 'no_waning':
+    model.parameters['e_i'] = 0.2
+    model.parameters['e_h'] = 0.5
+    model.parameters['T_v'] = 10*365
+elif waning == 'waning_180':
+    model.parameters['e_i'] = 0.2
+    model.parameters['e_h'] = 0.75
+    model.parameters['T_v'] = 365/2
 
 #####################
 ## Calibrate model ##
@@ -75,14 +100,9 @@ if __name__ == '__main__':
     ## Set up posterior probability ##
     ##################################
 
-    # automate correct slicing peak year
-    if season == '2017-2018':
-        year_peakslice = 2018
-    elif season == '2019-2020':
-        year_peakslice = 2020
     # define datasets
     data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'],                                                                                                                       # all data
-          df['Weekly_Hosp'][slice(datetime(year_peakslice,1,10),datetime(year_peakslice,2,10))], df['Weekly_Deaths'][slice(datetime(year_peakslice,1,10),datetime(year_peakslice,2,10))]]   # hospital/death peak counted double
+          df_peak['Weekly_Hosp'], df_peak['Weekly_Deaths']]   # hospital/death peak counted double
     # use maximum value in dataset as weight
     weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths']),
                1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]

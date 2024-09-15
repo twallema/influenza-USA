@@ -34,9 +34,9 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
             'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),                # vaccination rate (dummy)
             'e_i': 0.2,                                                                                                             # vaccine efficacy against infection
-            'e_h': 0.75,                                                                                                            # vaccine efficacy against hospitalisation
+            'e_h': 0.5,                                                                                                            # vaccine efficacy against hospitalisation
             'T_r': 365,                                                                                                             # average time to waning of natural immunity
-            'T_v': 365/2,                                                                                                           # average time to waning of vaccine immunity
+            'T_v': 10*365/2,                                                                                                           # average time to waning of vaccine immunity
             'rho_h': 0.014,                                                                                                         # hospitalised fraction (source: Josh)
             'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
             'rho_d': 0.082,                                                                                                         # deceased in hospital fraction (source: Josh)
