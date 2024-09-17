@@ -25,8 +25,8 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season = '2019-2020'                # season: '2017-2018' or '2019-2020'
-waning = 'waning_180'                # 'no_waning' vs. 'waning_180'
+season = '2017-2018'                # season: '2017-2018' or '2019-2020'
+waning = 'no_waning'                # 'no_waning' vs. 'waning_180'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 dd = False                          # vary contact matrix by daytype
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     # season: 2017-2018
     theta = [0.0253, 0.0033, 0.05, 0.0020] # --> works well for both waning and no waning
     # season: 2019-2020
-    theta = [0.0242, 0.004, 0.03, 0.0030] # --> no vaccine waning waning
+    #theta = [0.0242, 0.004, 0.03, 0.0030] # --> no vaccine waning waning
     #theta = [0.024, 0.003, 0.03, 0.0025] # --> efficacy 80% at start, vaccine waning at rate of 180 days
 
     # Perform optimization 

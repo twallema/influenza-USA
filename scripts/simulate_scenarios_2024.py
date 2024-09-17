@@ -10,14 +10,11 @@ from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
 
 # calibration settings
 season = '2017-2018'                        # season: '17-18' or '19-20'
-waning = 'no_waning'                       # 'no_waning' vs. 'waning_180'
-if season == '2017-2018':                   # select right date
-    rundate = '2024-09-16'
-elif season == '2019-2020':
-    rundate = '2024-09-15' 
+waning = 'no_waning'                        # 'no_waning' vs. 'waning_180'
+rundate = '2024-09-16'                      # calibration date
 
 # scenario settings
-N = 200                                           # number of repeated simulations
+N = 200                                         # number of repeated simulations
 parameter_name = 'vaccine_rate_modifier'        # parameter to vary
 parameter_values = [0.8, 1, 1.2]                # values to use
 colors = ['red', 'black', 'green', 'blue']      # colors used in visualisation
@@ -75,7 +72,7 @@ for val in parameter_values:
     simout = model.sim([start_sim, end_sim], N=N, draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict})
     output.append(simout)
     # save result
-    simout.to_netcdf(f"{val}_{float(waning)}_{season}.nc")
+    simout.to_netcdf(f"{float(val)}_{waning}_{season}.nc")
 
 #########################
 ## Visualise scenarios ##

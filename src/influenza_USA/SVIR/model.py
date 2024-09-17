@@ -32,8 +32,8 @@ class ODE_SVI2RHD(ODE):
         T = S+V+I+Iv+R+H
 
         # compute visiting populations
-        I_v = (I+Iv) @ M
-        T_v = T @ M
+        I_v = np.matmul((I+Iv), M)
+        T_v = np.matmul(T, M)
 
         # compute force of infection
         l = beta * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
