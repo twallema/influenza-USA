@@ -1,5 +1,6 @@
 import json
 import random
+import numpy as np
 import matplotlib.pyplot as plt
 from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
 
@@ -9,21 +10,21 @@ from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
 
 # calibration settings
 season = '2017-2018'                        # season: '17-18' or '19-20'
-waning = 'no_waning'                        # 'no_waning' vs. 'waning_180'
+waning = 'no_waning'                       # 'no_waning' vs. 'waning_180'
 if season == '2017-2018':                   # select right date
-    rundate = '2024-09-13'
+    rundate = '2024-09-16'
 elif season == '2019-2020':
     rundate = '2024-09-15' 
 
 # scenario settings
-N = 100                                     # number of repeated simulations
-parameter_name = 'vaccine_rate_multiplier'  # parameter to vary
-parameter_values = [0.8, 1, 1.2]            # values to use
-colors = ['red', 'black', 'green']          # colors used in visualisation
-labels = ['-20 %', '0 %', '20 %']           # labels used in visualisation
-start_sim = '2024-08-01'                    # start of visualisation
-end_sim = '2025-07-01'                      # end of visualisation
-conf_int = 0.05                             # confidence level of visualisation
+N = 200                                           # number of repeated simulations
+parameter_name = 'vaccine_rate_modifier'        # parameter to vary
+parameter_values = [0.8, 1, 1.2]                # values to use
+colors = ['red', 'black', 'green', 'blue']      # colors used in visualisation
+labels = ['-20%', '0%', '+20%']                 # labels used in visualisation
+start_sim = '2024-08-01'                        # start of visualisation
+end_sim = '2025-06-07'                          # end of visualisation
+conf_int = 0.05                                 # confidence level of visualisation
 
 ###############################
 ## Set up posterior sampling ##
@@ -71,7 +72,10 @@ for val in parameter_values:
     # alter parameter value
     model.parameters[parameter_name] = val
     # simulate model
-    output.append(model.sim([start_sim, end_sim], N=N, draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}))
+    simout = model.sim([start_sim, end_sim], N=N, draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict})
+    output.append(simout)
+    # save result
+    simout.to_netcdf(f"{val}_{float(waning)}_{season}.nc")
 
 #########################
 ## Visualise scenarios ##
@@ -79,7 +83,7 @@ for val in parameter_values:
 
 date = output[0]['date']
 
-fig, axs = plt.subplots(3,1, figsize=(8.3,11.7/3))
+fig, axs = plt.subplots(4,1, figsize=(8.3,11.7/2))
 # overall
 for i in range(len(parameter_values)):
     axs[0].plot(date, (7*output[i]['H_inc']).sum(dim=['age_group', 'location']).mean(dim='draws'), linewidth=2, color=colors[i], label=labels[i])
@@ -87,18 +91,14 @@ for i in range(len(parameter_values)):
                         (7*output[i]['H_inc']).sum(dim=['age_group', 'location']).quantile(q=1-conf_int/2, dim='draws'), color=colors[i], alpha=0.2)
 axs[0].legend()
 
-# vaccinated population
+# age breakdown of scenarios
+demo = np.array([18608139, 54722401, 141598551, 63172279, 60019216])
 for i in range(len(parameter_values)):
-    axs[1].plot(date, output[i]['V'].sum(dim=['age_group', 'location']).mean(dim='draws'), linewidth=2, color=colors[i], label=labels[i])
-axs[1].legend()
-
-# age breakdown of 0% scenario
-
-# cumulative hospitalisations
-# demo = np.array([18608139, 54722401, 141598551, 63172279, 60019216])
-# axs[1].bar(out.coords['age_group'].values, (out['H_inc'].sum(dim=['location'])).cumsum(dim='date').isel(date=-1)/demo * 100000, color='black', alpha=0.6, linewidth=2)
-# axs[1].set_ylabel('per 100K inhab.')
-# axs[1].set_title('Cumulative hospitalisations')
+    axs[i+1].bar(output[i].coords['age_group'].values, (output[i]['H_inc'].mean(dim='draws').sum(dim=['location'])).cumsum(dim='date').isel(date=-1)/demo * 100000,
+                 color='black', alpha=0.6, linewidth=2)
+    axs[i+1].set_ylim([0, 400])
+    axs[i+1].set_ylabel('per 100K inhab.')
+    axs[i+1].set_title(f"Cumulative hosp. scenario {labels[i]}: {int(output[i]['H_inc'].mean(dim='draws').sum(dim=['location', 'age_group']).cumsum(dim='date').isel(date=-1).values)}")
 
 plt.tight_layout()
 plt.show()
