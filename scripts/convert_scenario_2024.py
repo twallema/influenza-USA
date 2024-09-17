@@ -1,6 +1,7 @@
 import xarray as xr
 import pandas as pd
 from datetime import datetime
+from fastparquet import write
 
 # settings
 ## projection start & end
@@ -12,8 +13,9 @@ targets = ['inc hosp',]     # scenariohub 'target' name
 states = ['H_inc',]         # corresponding model state
 
 ## scenarios
-scenario_ids = ['E-2024-08-01', 'C-2024-08-01', 'A-2024-08-01']
-filenames = ['0.8_no_waning_2017-2018.nc', '1_no_waning_2017-2018.nc', '1.2_no_waning_2017-2018.nc']
+scenario_ids = ['E-2024-08-01', 'C-2024-08-01', 'A-2024-08-01', 'F-2024-08-01', 'D-2024-08-01', 'B-2024-08-01']
+filenames = ['0.8_no_waning_2017-2018.nc', '1.0_no_waning_2017-2018.nc', '1.2_no_waning_2017-2018.nc',
+             '0.8_no_waning_2019-2020.nc', '1.0_no_waning_2019-2020.nc', '1.2_no_waning_2019-2020.nc']
 
 # LOOP scenarios:
 gather_scenarios=[]
@@ -57,6 +59,7 @@ for i, (scenario_id, filename) in enumerate(zip(scenario_ids,filenames)):
 # 7) append scenarios together
 output = pd.concat(gather_scenarios)
 
-# 8) save as a parquet and csv
+# 8) save as a parquet, gz.parquet and csv
+write(f'{projection_start.strftime('%Y-%m-%d')}-JHU_IDD-SVI2RHD.gz.parquet', output, compression='GZIP')
 output.to_parquet(f'{projection_start.strftime('%Y-%m-%d')}-JHU_IDD-SVI2RHD.parquet', index=False)
 output.to_csv(f'{projection_start.strftime('%Y-%m-%d')}-JHU_IDD-SVI2RHD.csv', index=False)
