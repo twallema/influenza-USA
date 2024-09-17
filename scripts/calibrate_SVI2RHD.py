@@ -26,7 +26,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 season = '2019-2020'                # season: '2017-2018' or '2019-2020'
-waning = 'no_waning'                # 'no_waning' vs. 'waning_180'
+waning = 'waning_180'                # 'no_waning' vs. 'waning_180'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 dd = False                          # vary contact matrix by daytype
@@ -46,14 +46,15 @@ thin = 5                                                            # Thinning f
 n = 200                                                             # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve CPU count
 
-# data
-start_calibration = datetime(2019, 8, 1)
+# dates
 ## season specific
 if season == '2017-2018':
+    start_calibration = datetime(2017, 8, 1)
     end_calibration = None
-    start_peakslice = datetime(2018, 1, 1)
-    end_peakslice = datetime(2018, 2, 21)
+    start_peakslice = datetime(2018, 1, 10)
+    end_peakslice = datetime(2018, 2, 10)
 elif season == '2019-2020':
+    start_calibration = datetime(2019, 8, 1)
     end_calibration = datetime(2020, 3, 22)
     start_peakslice = datetime(2020, 1, 1)
     end_peakslice = datetime(2020, 3, 1)
@@ -105,7 +106,7 @@ if __name__ == '__main__':
           df_peak['Weekly_Hosp'], df_peak['Weekly_Deaths']]   # hospital/death peak counted double
     # use maximum value in dataset as weight
     weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths']),
-               1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths'])]
+               5/max(df['Weekly_Hosp']), 5/max(df['Weekly_Deaths'])]
     # states to match with datasets
     states = ['I_inc', 'H_inc', 'D_inc', 'H_inc', 'D_inc']
     # log likelihood function + arguments
@@ -125,11 +126,10 @@ if __name__ == '__main__':
 
     # Initial guess
     # season: 2017-2018
-    theta = [0.0253, 0.0033, 0.05, 0.0020] # --> efficacy 80% at start, vaccine waning at rate of 180 days
-    theta = [0.0254, 0.0033, 0.05, 0.0020] # --> no vaccine waning waning
+    theta = [0.0253, 0.0033, 0.05, 0.0020] # --> works well for both waning and no waning
     # season: 2019-2020
-    theta = [0.024, 0.003, 0.03, 0.0025] # --> no vaccine waning waning
-    theta = [0.024, 0.003, 0.03, 0.0025] # --> efficacy 80% at start, vaccine waning at rate of 180 days
+    theta = [0.0242, 0.004, 0.03, 0.0030] # --> no vaccine waning waning
+    #theta = [0.024, 0.003, 0.03, 0.0025] # --> efficacy 80% at start, vaccine waning at rate of 180 days
 
     # Perform optimization 
     #step = len(bounds)*[0.05,]
