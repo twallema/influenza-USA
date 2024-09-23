@@ -22,33 +22,37 @@ class ODE_SVI2RHD(ODE):
     states = ['S','V','I','Iv','R','H','D',     # states
               'I_inc', 'H_inc', 'D_inc'         # outcomes
               ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
+    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'CHR', 'T_h', 'rho_d', 'T_d', 'asc_case']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
+    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
 
-        # compute contact tensor with different home vs. visited contacts
-        C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
+        # compute total population
+        T = S+V+I+Iv+R+H
+
+        # compute visiting populations
+        I_v = np.matmul((I+Iv), M)
+        T_v = np.matmul(T, M)
 
         # compute force of infection
-        l = f_seasonality * beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
+        l = beta * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
 
         # u-shaped severity curve
-        rho_h = (rho_h * np.array([1, 0.25*(19.8/20.1), 0.50*(19.8/18.6), 0.75*(19.8/13.1), 4.5*(19.8/7.8)]))[:, np.newaxis]
+        rho_h = (rho_h * CHR)[:, np.newaxis]
 
         # calculate state differentials
-        dS = - r_vacc*S - l*S + (1/T_s)*(R + V)
-        dV = r_vacc*S - (1-f_waning*e_i)*l*V  - (1/T_s)*V
+        dS = - r_vacc*S - l*S + (1/T_r)*R + (1/T_v)*V
+        dV = r_vacc*S - (1-e_i)*l*V  - (1/T_v)*V
         dI = l*S - (1/T_h)*I
-        dIv = (1-f_waning*e_i)*l*V - (1/T_h)*Iv
-        dR = (1-rho_h)*(1/T_h)*I + 1 - ((1-f_waning*e_h)*rho_h)*(1/T_h)*Iv + (1-rho_d)*(1/T_d)*H - (1/T_s)*R
-        dH = rho_h*(1/T_h)*I + rho_h*(1-f_waning*e_h)*(1/T_h)*Iv - (1/T_d)*H
+        dIv = (1-e_i)*l*V - (1/T_h)*Iv
+        dR = (1-rho_h)*(1/T_h)*I + 1 - ((1-e_h)*rho_h)*(1/T_h)*Iv + (1-rho_d)*(1/T_d)*H - (1/T_r)*R
+        dH = rho_h*(1/T_h)*I + rho_h*(1-e_h)*(1/T_h)*Iv - (1/T_d)*H
         dD = rho_d*(1/T_d)*H
 
         # calculate outcome differentials
-        dI_inc = asc_case*(l*S + (1-f_waning*e_i)*l*V) - I_inc
-        dH_inc = rho_h*(1/T_h)*I + rho_h*(1-f_waning*e_h)*(1/T_h)*Iv - H_inc
+        dI_inc = asc_case*(l*S + (1-e_i)*l*V) - I_inc
+        dH_inc = rho_h*(1/T_h)*I + rho_h*(1-e_h)*(1/T_h)*Iv - H_inc
         dD_inc = dD - D_inc
 
         return dS, dV, dI, dIv, dR, dH, dD, dI_inc, dH_inc, dD_inc
@@ -65,33 +69,40 @@ class TL_SVI2RHD(JumpProcess):
     states = ['S','V','I','Iv','R','H','D',     # states
               'I_inc', 'H_inc', 'D_inc'         # outcomes
               ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_s', 'rho_h', 'T_h', 'rho_d', 'T_d', 'f_waning', 'f_seasonality', 'asc_case']
+    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'CHR', 'T_h', 'rho_d', 'T_d', 'asc_case']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
+    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
 
-        # compute contact tensor with different home vs. visited contacts
-        C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
+        # compute total population
+        T = S+V+I+Iv+R+H
+
+        # compute visiting populations
+        I_v = (I+Iv) @ M
+        T_v = T @ M
 
         # compute force of infection
-        l = f_seasonality * beta * tf.einsum ('abcd,bd->ac', C, (I+Iv)/(S+V+I+Iv+R+H))
+        l = beta * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
+
+        # u-shaped severity curve
+        rho_h = (rho_h * CHR)[:, np.newaxis]
 
         # compute rates of transitionings
         size_dummy = np.ones(S.shape, np.float64)
         rates = {
             'S': [l.numpy(), r_vacc], 
-            'V': [(1-f_waning*e_i)*l.numpy(), size_dummy*(1/T_s)],
+            'V': [(1-e_i)*l.numpy(), size_dummy*(1/T_v)],
             'I': [size_dummy*(1-rho_h)*(1/T_h), size_dummy*rho_h*(1/T_h)],
-            'Iv': [size_dummy*(1-((1-f_waning*e_h)*rho_h)*(1/T_h)), size_dummy*rho_h*(1-f_waning*e_h)*(1/T_h)],
+            'Iv': [size_dummy*(1-((1-e_h)*rho_h)*(1/T_h)), size_dummy*rho_h*(1-e_h)*(1/T_h)],
             'H': [size_dummy*(1-rho_d)*(1/T_d), size_dummy*rho_d*(1/T_d)],
-            'R': [size_dummy*(1/T_s),]
+            'R': [size_dummy*(1/T_r),]
             }
         
         return rates
 
     @ staticmethod
-    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_s, rho_h, T_h, rho_d, T_d, f_waning, f_seasonality, asc_case):
+    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
         
         # states
         S_new = S - transitionings['S'][0] - tau*transitionings['S'][1] + transitionings['V'][1] + transitionings['R'][0]

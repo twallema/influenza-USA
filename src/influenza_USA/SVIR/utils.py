@@ -28,28 +28,34 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     # parameters
     params = {
             # core parameters
-            'beta': 0.023,                                                                                                        # infectivity (-)
-            'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
-            'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),             # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
+            'beta': 0.023,                                                                                                          # infectivity (-)
+            'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
+            'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),               # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
-            'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),              # vaccination rate (dummy)
-            'e_i': 0.2,                                                                                                           # vaccine efficacy against infection
-            'e_h': 0.5,                                                                                                           # vaccine efficacy against hospitalisation
-            'T_s': 270,                                                                                                           # average time to waning of immunity (both natural & vaccines)
-            'rho_h': 0.014,                                                                                                       # hospitalised fraction (source: Josh)
-            'T_h': 3.5,                                                                                                           # average time to hospitalisation (= length infectious period, source: Josh)
-            'rho_d': 0.082,                                                                                                       # deceased in hospital fraction (source: Josh)
-            'T_d': 5.0,                                                                                                           # average time to hospital outcome (source: Josh)
+            'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),                # vaccination rate (dummy)
+            'e_i': 0.2,                                                                                                             # vaccine efficacy against infection
+            'e_h': 0.5,                                                                                                             # vaccine efficacy against hospitalisation
+            'T_r': 365,                                                                                                             # average time to waning of natural immunity
+            'T_v': 10*365/2,                                                                                                        # average time to waning of vaccine immunity
+            'rho_h': 0.014,                                                                                                         # hospitalised fraction (source: Josh)
+            'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
+            'rho_d': 0.082,                                                                                                         # deceased in hospital fraction (source: Josh)
+            'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
             # time-dependencies
-            'vaccine_rate_modifier': 1.0,                                                                                         # used to modify vaccination rate
-            'waning_start': start_sim,                                                                                            # startdate of vaccine waning
-            'f_waning': 1,                                                                                                        # exponentially decaying vaccine efficacy
-            'amplitude': 0,
-            'peak_shift': 30,
-            'f_seasonality': 1,
+            'vaccine_rate_modifier': 1.0,                                                                                           # used to modify vaccination rate
+            'vaccine_rate_timedelta': 0,                                                                                            # shift the vaccination season
             # outcomes
             'asc_case': 0.004,
             }
+
+    # season-specific case hospitalisation rate
+    if season == '2017-2018':
+        CDC_estimated_hosp = np.array([23750, 19636, 76819, 123601, 466766])                            # https://archive.cdc.gov/#/details?url=https://www.cdc.gov/flu/about/burden/2017-2018.htm
+    elif season == '2019-2020':
+        CDC_estimated_hosp = np.array([26376, 19276, 80866, 92391, 173012])                             # https://www.cdc.gov/flu-burden/php/data-vis/2019-2020.html?CDC_AAref_Val=https://www.cdc.gov/flu/about/burden/2019-2020.html
+    demo = np.array([18608139, 54722401, 141598551, 63172279, 60019216])                                # US demography
+    rel_contacts = np.array([17.4/19.8, 17.4/29.1, 17.4/18.6, 17.4/13.2, 17.4/7.8])                     # contacts in age groups relative to the population average
+    params.update({'CHR': rel_contacts * (CDC_estimated_hosp/demo) / (rel_contacts * (CDC_estimated_hosp/demo))[0]})
 
     # initial condition
     ## states
@@ -77,12 +83,6 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     ### vaccine uptake
     from influenza_USA.SVIR.TDPF import make_vaccination_function
     TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
-    ### exponential waning vaccine efficacy
-    from influenza_USA.SVIR.TDPF import exponential_waning_function
-    TDPFs['f_waning'] = exponential_waning_function
-    ### seasonality
-    from influenza_USA.SVIR.TDPF import seasonality_function
-    TDPFs['f_seasonality'] = seasonality_function
 
     return SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 

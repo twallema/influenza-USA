@@ -13,10 +13,7 @@ import pandas as pd
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-
-# influenza model
-from influenza_USA.SVIR.utils import initialise_SVI2RHD
-
+from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import add_poisson_noise, assign_theta
@@ -28,25 +25,39 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season = '2017-2018'                    # season: '17-18' or '18-19'
+season = '2017-2018'                # season: '2017-2018' or '2019-2020'
+waning = 'no_waning'                # 'no_waning' vs. 'waning_180'
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
 dd = False                          # vary contact matrix by daytype
 stoch = False                       # ODE vs. tau-leap
 
-# Frequentist
+# optimization
+## frequentist
 n_pso = 100                                                         # Number of PSO iterations
 multiplier_pso = 10                                                 # PSO swarm size
+## bayesian
+identifier = waning                                                 # Use waning as identifier of script output
+n_mcmc = 600                                                        # Number of MCMC iterations
+multiplier_mcmc = 10                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
+print_n = 10                                                        # Print diagnostics every `print_n`` iterations
+discard = 50                                                        # Discard first `discard` iterations as burn-in
+thin = 5                                                            # Thinning factor emcee chains
+n = 200                                                             # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve CPU count
 
-# Bayesian
-identifier = f'poisson_nodaytype_{season}'          # Give any output of this script an ID
-n_mcmc = 500                                        # Number of MCMC iterations
-multiplier_mcmc = 10                                # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 10                                        # Print diagnostics every print_n iterations
-discard = 50                                        # Discard first `discard` iterations as burn-in
-thin = 5                                            # Thinning factor emcee chains
-n = 300                                             # Repeated simulations used in visualisations
+# dates
+## season specific
+if season == '2017-2018':
+    start_calibration = datetime(2017, 8, 1)
+    end_calibration = None
+    start_peakslice = datetime(2018, 1, 10)
+    end_peakslice = datetime(2018, 2, 10)
+elif season == '2019-2020':
+    start_calibration = datetime(2019, 8, 1)
+    end_calibration = datetime(2020, 3, 22)
+    start_peakslice = datetime(2020, 1, 1)
+    end_peakslice = datetime(2020, 3, 1)
 
 ###############
 ## Load data ##
@@ -58,15 +69,27 @@ df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../data/raw/cases/{sea
 df /= 7
 # pySODM convention: use 'date' as temporal index
 df.index.rename('date', inplace=True)
-# determine data start and enddate
-start_calibration = datetime(2017, 8, 1)
+# slice data until end
+df = df.loc[slice(None, end_calibration)]
+df_peak = df.loc[slice(start_peakslice, end_peakslice)]
+# replace `end_calibration` None --> datetime
 end_calibration = df.index.max()
 
 #################
 ## Setup model ##
 #################
 
-model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, distinguish_daytype=dd, stochastic=stoch, start_sim=start_calibration)
+model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, stochastic=stoch, start_sim=start_calibration)
+
+# set up right waning parameters
+if waning == 'no_waning':
+    model.parameters['e_i'] = 0.2
+    model.parameters['e_h'] = 0.5
+    model.parameters['T_v'] = 10*365
+elif waning == 'waning_180':
+    model.parameters['e_i'] = 0.2
+    model.parameters['e_h'] = 0.75
+    model.parameters['T_v'] = 365/2
 
 #####################
 ## Calibrate model ##
@@ -79,11 +102,11 @@ if __name__ == '__main__':
     ##################################
 
     # define datasets
-    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'],                                                                               # all data
-          df['Weekly_Hosp'][slice(datetime(2018,1,10),datetime(2018,2,10))], df['Weekly_Deaths'][slice(datetime(2018,1,10),datetime(2018,2,10))]]   # hospital/death peak counted double
+    data=[df['Weekly_Cases'], df['Weekly_Hosp'], df['Weekly_Deaths'],                                                                                                                       # all data
+          df_peak['Weekly_Hosp'], df_peak['Weekly_Deaths']]   # hospital/death peak counted double
     # use maximum value in dataset as weight
     weights = [1/max(df['Weekly_Cases']), 1/max(df['Weekly_Hosp']), 1/max(df['Weekly_Deaths']),
-               10/max(df['Weekly_Hosp']), 10/max(df['Weekly_Deaths'])]
+               5/max(df['Weekly_Hosp']), 5/max(df['Weekly_Deaths'])]
     # states to match with datasets
     states = ['I_inc', 'H_inc', 'D_inc', 'H_inc', 'D_inc']
     # log likelihood function + arguments
@@ -96,15 +119,20 @@ if __name__ == '__main__':
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,
                                                    start_sim=start_calibration, weights=weights, labels=labels)
+    
     #################
     ## Nelder-Mead ##
     #################
 
     # Initial guess
-    theta = [0.0252, 0.0023, 0.045, 0.0018] # With varying datypes + U-shaped severity --> very good fit    
-    theta = [0.024, 0.0025, 0.04, 0.0018] # Without varying datypes + U-shaped severity --> very good fit    
+    # season: 2017-2018
+    theta = [0.0253, 0.0033, 0.05, 0.0020] # --> works well for both waning and no waning
+    # season: 2019-2020
+    #theta = [0.0242, 0.004, 0.03, 0.0030] # --> no vaccine waning waning
+    #theta = [0.024, 0.003, 0.03, 0.0025] # --> efficacy 80% at start, vaccine waning at rate of 180 days
+
     # Perform optimization 
-    #step = len(expanded_bounds)*[0.05,]
+    #step = len(bounds)*[0.05,]
     #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
 
     ######################
@@ -146,12 +174,13 @@ if __name__ == '__main__':
     ##########
 
     # Variables
-    samples_path=fig_path=f'../data/interim/calibration/{season}/'
+    samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'
     # Perturbate previously obtained estimate
     ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=bounds)
-    # Write some usefull settings to a pickle file (no pd.Timestamps or np.arrays allowed!)
+    # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
-              'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels}
+              'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
+              'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd, 'stochastic': stoch}
     # Sample n_mcmc iterations
     sampler = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function,  objective_function_kwargs={'simulation_kwargs': {'warmup': 0}},
                                     fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True,

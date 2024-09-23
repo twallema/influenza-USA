@@ -10,32 +10,6 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
-
-def seasonality_function(t, states, param, amplitude, peak_shift):
-    """
-    Default output function. Returns a sinusoid with average value 1.
-    
-    t : datetime.datetime
-        simulation time
-    amplitude : float
-        maximum deviation of output with respect to the average (1)
-    peak_shift : float
-        phase. Number of days after January 1st after which the maximum value of the seasonality rescaling is reached 
-    """
-    ref_date = datetime(2021,1,1)
-    # If peak_shift = 0, the max is on the first of January
-    maxdate = ref_date + timedelta(days=float(peak_shift))
-    # One period is one year long (seasonality)
-    t = (t - maxdate)/timedelta(days=1)/365
-    rescaling = 1 + amplitude*np.cos( 2*np.pi*(t))
-    return rescaling
-
-def exponential_waning_function(t, states, param, waning_start, T_s):
-    if t < waning_start:
-        return 1.0
-    else:
-        return np.exp(-1/T_s * float((t - waning_start)/timedelta(days=1)))
-
 class make_vaccination_function():
 
     def __init__(self, vaccination_data):
@@ -60,10 +34,10 @@ class make_vaccination_function():
         except:
             return np.zeros([self.n_age, self.n_loc], np.float64)
     
-    def vaccination_function(self, t, states, param, vaccine_rate_modifier):
+    def vaccination_function(self, t, states, param, vaccine_rate_modifier, vaccine_rate_timedelta):
         """ pySODM compatible wrapper
         """
-        return vaccine_rate_modifier * self.get_vaccination_rate(t)
+        return vaccine_rate_modifier * self.get_vaccination_rate(t - timedelta(days=vaccine_rate_timedelta))
 
 class make_contact_function():
 
@@ -219,3 +193,32 @@ class make_contact_function():
             return True
         
         return False
+
+################################################################
+## PARKING: seasonality & exponential vaccine efficacy waning ##
+################################################################
+
+def seasonality_function(t, states, param, amplitude, peak_shift):
+    """
+    Default output function. Returns a sinusoid with average value 1.
+    
+    t : datetime.datetime
+        simulation time
+    amplitude : float
+        maximum deviation of output with respect to the average (1)
+    peak_shift : float
+        phase. Number of days after January 1st after which the maximum value of the seasonality rescaling is reached 
+    """
+    ref_date = datetime(2021,1,1)
+    # If peak_shift = 0, the max is on the first of January
+    maxdate = ref_date + timedelta(days=float(peak_shift))
+    # One period is one year long (seasonality)
+    t = (t - maxdate)/timedelta(days=1)/365
+    rescaling = 1 + amplitude*np.cos( 2*np.pi*(t))
+    return rescaling
+
+def exponential_waning_function(t, states, param, waning_start, T_s):
+    if t < waning_start:
+        return 1.0
+    else:
+        return np.exp(-1/T_s * float((t - waning_start)/timedelta(days=1)))
