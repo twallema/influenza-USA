@@ -21,15 +21,19 @@ from influenza_USA.SIR.utils import name2fips, \
 # settings
 sr = 'states'                       # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                         # age resolution: 'collapsed' or 'full'
-distinguish_daytype = True          # vary contact matrix by daytype
-stochastic = True                   # ODE vs. tau-leap
-N = 30
+distinguish_daytype = False          # vary contact matrix by daytype
+stochastic = False                   # ODE vs. tau-leap
+N = 20
 
 # model
 if stochastic:
     from influenza_USA.SIR.model import TL_SIR as SIR
 else:
     from influenza_USA.SIR.model import ODE_SIR as SIR
+
+# dummy draw function
+def draw_function(parameters, initial_states):
+    return parameters, initial_states
 
 # coordinates
 coordinates = construct_coordinates_dictionary(spatial_resolution=sr, age_resolution=ar)
@@ -66,7 +70,7 @@ else:
 
 import time
 t0 = time.time()
-out = model.sim(time=['2024-08-01', '2025-04-01'], tau=1, N=N, processes=15)
+out = model.sim(time=['2024-08-01', '2025-04-01'], tau=1, N=N, draw_function=draw_function, processes=15)
 t1 = time.time()
 print(f'elapsed: {t1-t0} s')
 
