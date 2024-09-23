@@ -26,11 +26,15 @@ class ODE_SIR(ODE):
     @staticmethod
     def integrate(t, S, I, R, beta, gamma, f_v, N, M):
 
-        # compute contact tensor with different home vs. visited contacts
-        C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
+        # compute total population
+        T = S + I + R
 
-        # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, I/(S+I+R))
+        # compute visiting populations
+        I_v = I @ M
+        T_v = T @ M
+
+        #  compute force of infection
+        l = beta * (tf.einsum ('lj, il -> ij', I/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
 
         # calculate differentials
         dS = - l * S
@@ -55,11 +59,15 @@ class TL_SIR(JumpProcess):
     @staticmethod
     def compute_rates(t, S, I, R, beta, gamma, f_v, N, M):
 
-        # compute contact tensor with different home vs. visited contacts
-        C =  ((1 - f_v) * tf.einsum('ab,cd->abcd', N, tf.eye(M.shape[0])) + f_v * tf.einsum('ab,cd->abcd', N, M))
+        # compute total population
+        T = S + I + R
 
-        # compute force of infection
-        l = beta * tf.einsum ('abcd,bd->ac', C, I/(S+I+R))
+        # compute visiting populations
+        I_v = I @ M
+        T_v = T @ M
+
+        #  compute force of infection
+        l = beta * (tf.einsum ('lj, il -> ij', I/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
 
         rates = {
             'S': [l.numpy()], 
