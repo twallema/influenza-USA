@@ -9,12 +9,12 @@ from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
 ##############
 
 # calibration settings
-season = '2017-2018'                        # season: '17-18' or '19-20'
+season = '2019-2020'                        # season: '17-18' or '19-20'
 waning = 'no_waning'                        # 'no_waning' vs. 'waning_180'
 rundate = '2024-09-16'                      # calibration date
 
 # scenario settings
-N = 200                                         # number of repeated simulations
+N = 5                                         # number of repeated simulations
 parameter_name = 'vaccine_rate_modifier'        # parameter to vary
 parameter_values = [0.8, 1, 1.2]                # values to use
 colors = ['red', 'black', 'green', 'blue']      # colors used in visualisation
@@ -37,13 +37,14 @@ dd = samples_dict['distinguish_daytype']
 stoch = samples_dict['stochastic']
 
 # define draw function
-def draw_fcn(parameters, samples):
+def draw_fcn(parameters, initial_states, samples):
     # Sample model parameters
     idx, parameters['beta'] = random.choice(list(enumerate(samples['beta'])))
     parameters['rho_h'] = samples['rho_h'][idx]
     parameters['rho_d'] = samples['rho_d'][idx]
     parameters['asc_case'] = samples['asc_case'][idx]
-    return parameters
+
+    return parameters, initial_states
     
 #################
 ## Setup model ##
