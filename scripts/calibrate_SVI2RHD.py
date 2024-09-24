@@ -38,12 +38,12 @@ n_pso = 100                                                         # Number of 
 multiplier_pso = 10                                                 # PSO swarm size
 ## bayesian
 identifier = waning                                                 # Use waning as identifier of script output
-n_mcmc = 300                                                        # Number of MCMC iterations
+n_mcmc = 500                                                        # Number of MCMC iterations
 multiplier_mcmc = 10                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                                        # Print diagnostics every `print_n`` iterations
 discard = 100                                                       # Discard first `discard` iterations as burn-in
 thin = 5                                                            # Thinning factor emcee chains
-n = 100                                                             # Repeated simulations used in visualisations
+n = 200                                                             # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve CPU count
 
 # dates
@@ -92,7 +92,9 @@ elif waning == 'waning_180':
     model.parameters['T_v'] = 365/2
 
 # set up a draw function with calibratable infected and recovered fractions
-def draw_function_calibration(parameters, initial_states, f_I, f_R):
+def draw_function_calibration(parameters, initial_states, f_R):
+
+    f_I = 1e-4
 
     # What I'd like to calibrate
     initial_states['S'] = (1-f_I-f_R) * construct_initial_susceptible(sr, ar)
@@ -129,9 +131,9 @@ if __name__ == '__main__':
     log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson, ll_poisson, ll_poisson] 
     log_likelihood_fnc_args = [[],[],[],[],[]]
     # parameters to calibrate and bounds
-    pars = ['beta', 'rho_h', 'rho_d', 'asc_case', 'f_I', 'f_R']
-    labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$', r'$f_I$', r'$f_R$']
-    bounds = [(0.001,0.10), (0.001,0.1), (0.001,1), (0.001,0.1), (1e-8,1), (0,1)]
+    pars = ['beta', 'rho_h', 'rho_d', 'asc_case', 'f_R']
+    labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$', r'$f_R$']
+    bounds = [(0.001,0.05), (0.001,0.1), (0.001,1), (0.001,0.1), (0,1)]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,draw_function=draw_function_calibration,
                                                    start_sim=start_calibration, weights=weights, labels=labels)
@@ -142,24 +144,23 @@ if __name__ == '__main__':
 
     # Initial guess
     # season: 2017-2018
-    theta = [2.30585009e-02, 3.41239795e-03, 4.75034047e-02, 2.68058141e-03, 2.75850757e-06, 3.41421536e-01] # --> no waning
-    #theta = [2.30549453e-02, 3.91404744e-03, 4.77077774e-02, 2.66114360e-03, 2.56112585e-06, 3.40340309e-01] # --> waning 180 daysß
+    theta = [0.03216971, 0.00315444, 0.04745116, 0.00274503, 0.63861876] # --> no waning
     # season: 2019-2020
     #theta = [0.0242, 0.004, 0.03, 0.0030] # --> no vaccine waning waning
     #theta = [0.024, 0.003, 0.03, 0.0025] # --> efficacy 80% at start, vaccine waning at rate of 180 days
 
     # Perform optimization 
-    #step = len(bounds)*[0.05,]
-    #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
+    step = len(bounds)*[0.05,]
+    theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
 
     ######################
     ## Visualize result ##
     ######################
 
     # Assign results to model
-    model.parameters = assign_theta(model.parameters, pars[:-2], theta[:-2])
+    model.parameters = assign_theta(model.parameters, pars[:-1], theta[:-1])
     # Simulate model
-    out = model.sim([start_calibration, end_calibration], N=1, draw_function=draw_function_calibration, draw_function_kwargs={'f_I': theta[-2], 'f_R': theta[-1]})
+    out = model.sim([start_calibration, end_calibration], N=1, draw_function=draw_function_calibration, draw_function_kwargs={'f_R': theta[-1]})
     # Add poisson obervational noise
     #out = add_poisson_noise(out)
     # Visualize
@@ -193,7 +194,7 @@ if __name__ == '__main__':
     # Variables
     samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=[1, 0.2, 0.2, 0.2, 2, 2], multiplier=multiplier_mcmc, bounds=bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=[0.2, 0.2, 0.2, 0.2, 2], multiplier=multiplier_mcmc, bounds=bounds)
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -227,7 +228,7 @@ if __name__ == '__main__':
         parameters['asc_case'] = samples['asc_case'][idx]
 
         # sample initial condition
-        f_I = samples['f_I'][idx]
+        f_I = 1e-4
         f_R = samples['f_R'][idx]
         initial_states['S'] = (1-f_I-f_R) * construct_initial_susceptible(sr, ar)
         initial_states['I'] = f_I * construct_initial_susceptible(sr, ar)
