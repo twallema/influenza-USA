@@ -13,7 +13,7 @@ import pandas as pd
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
+from influenza_USA.SVIR.utils import initialise_SVI2RHD, construct_initial_susceptible # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import add_poisson_noise, assign_theta
@@ -38,12 +38,12 @@ n_pso = 100                                                         # Number of 
 multiplier_pso = 10                                                 # PSO swarm size
 ## bayesian
 identifier = waning                                                 # Use waning as identifier of script output
-n_mcmc = 600                                                        # Number of MCMC iterations
+n_mcmc = 300                                                        # Number of MCMC iterations
 multiplier_mcmc = 10                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                                        # Print diagnostics every `print_n`` iterations
-discard = 50                                                        # Discard first `discard` iterations as burn-in
+discard = 100                                                       # Discard first `discard` iterations as burn-in
 thin = 5                                                            # Thinning factor emcee chains
-n = 200                                                             # Repeated simulations used in visualisations
+n = 100                                                             # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve CPU count
 
 # dates
@@ -91,6 +91,22 @@ elif waning == 'waning_180':
     model.parameters['e_h'] = 0.75
     model.parameters['T_v'] = 365/2
 
+# set up a draw function with calibratable infected and recovered fractions
+def draw_function_calibration(parameters, initial_states, f_I, f_R):
+
+    # What I'd like to calibrate
+    initial_states['S'] = (1-f_I-f_R) * construct_initial_susceptible(sr, ar)
+    initial_states['I'] = f_I * construct_initial_susceptible(sr, ar)
+    initial_states['R'] = f_R * construct_initial_susceptible(sr, ar)
+
+    # What I don't want to calibrate
+    initial_states['V'] = 0 * construct_initial_susceptible(sr, ar)
+    initial_states['Iv'] = 0 * construct_initial_susceptible(sr, ar)
+    initial_states['H'] = 0 * construct_initial_susceptible(sr, ar)
+    initial_states['D'] = 0 * construct_initial_susceptible(sr, ar)
+
+    return parameters, initial_states
+
 #####################
 ## Calibrate model ##
 #####################
@@ -113,11 +129,11 @@ if __name__ == '__main__':
     log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson, ll_poisson, ll_poisson] 
     log_likelihood_fnc_args = [[],[],[],[],[]]
     # parameters to calibrate and bounds
-    pars = ['beta', 'rho_h', 'rho_d', 'asc_case']
-    labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$']
-    bounds = [(0.01,0.10), (0.001,0.1), (0.001,1), (0.001,0.1)]
+    pars = ['beta', 'rho_h', 'rho_d', 'asc_case', 'f_I', 'f_R']
+    labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$', r'$f_I$', r'$f_R$']
+    bounds = [(0.001,0.10), (0.001,0.1), (0.001,1), (0.001,0.1), (1e-8,1), (0,1)]
     # Setup objective function (no priors defined = uniform priors based on bounds)
-    objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,
+    objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,draw_function=draw_function_calibration,
                                                    start_sim=start_calibration, weights=weights, labels=labels)
     
     #################
@@ -126,7 +142,8 @@ if __name__ == '__main__':
 
     # Initial guess
     # season: 2017-2018
-    theta = [0.0253, 0.0033, 0.05, 0.0020] # --> works well for both waning and no waning
+    theta = [2.30585009e-02, 3.41239795e-03, 4.75034047e-02, 2.68058141e-03, 2.75850757e-06, 3.41421536e-01] # --> no waning
+    #theta = [2.30549453e-02, 3.91404744e-03, 4.77077774e-02, 2.66114360e-03, 2.56112585e-06, 3.40340309e-01] # --> waning 180 daysß
     # season: 2019-2020
     #theta = [0.0242, 0.004, 0.03, 0.0030] # --> no vaccine waning waning
     #theta = [0.024, 0.003, 0.03, 0.0025] # --> efficacy 80% at start, vaccine waning at rate of 180 days
@@ -140,11 +157,11 @@ if __name__ == '__main__':
     ######################
 
     # Assign results to model
-    model.parameters = assign_theta(model.parameters, pars, theta)
+    model.parameters = assign_theta(model.parameters, pars[:-2], theta[:-2])
     # Simulate model
-    out = model.sim([start_calibration, end_calibration])
+    out = model.sim([start_calibration, end_calibration], N=1, draw_function=draw_function_calibration, draw_function_kwargs={'f_I': theta[-2], 'f_R': theta[-1]})
     # Add poisson obervational noise
-    out = add_poisson_noise(out)
+    #out = add_poisson_noise(out)
     # Visualize
     fig, axs = plt.subplots(3, 1, sharex=True, figsize=(8.3,11.7/2))
     ## Cases
@@ -176,7 +193,7 @@ if __name__ == '__main__':
     # Variables
     samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=[1, 0.2, 0.2, 0.2, 2, 2], multiplier=multiplier_mcmc, bounds=bounds)
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -202,20 +219,34 @@ if __name__ == '__main__':
     ######################
  
     # Define draw function
-    def draw_fcn(parameters, samples):
-        # Sample model parameters
+    def draw_fcn(parameters, initial_states, samples):
+        # sample model parameters
         idx, parameters['beta'] = random.choice(list(enumerate(samples['beta'])))
         parameters['rho_h'] = samples['rho_h'][idx]
         parameters['rho_d'] = samples['rho_d'][idx]
         parameters['asc_case'] = samples['asc_case'][idx]
-        return parameters
+
+        # sample initial condition
+        f_I = samples['f_I'][idx]
+        f_R = samples['f_R'][idx]
+        initial_states['S'] = (1-f_I-f_R) * construct_initial_susceptible(sr, ar)
+        initial_states['I'] = f_I * construct_initial_susceptible(sr, ar)
+        initial_states['R'] = f_R * construct_initial_susceptible(sr, ar)
+
+        # what I don't want to calibrate
+        initial_states['V'] = 0 * construct_initial_susceptible(sr, ar)
+        initial_states['Iv'] = 0 * construct_initial_susceptible(sr, ar)
+        initial_states['H'] = 0 * construct_initial_susceptible(sr, ar)
+        initial_states['D'] = 0 * construct_initial_susceptible(sr, ar)
+
+        return parameters, initial_states
     
     # Simulate model
     out = model.sim([start_calibration, end_calibration], N=n,
                     draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
     
     # Add poisson observation noise
-    out_noise = add_poisson_noise(out)
+    #out_noise = add_poisson_noise(out)
 
     # Visualize
     fig, axs = plt.subplots(3, 1, sharex=True, figsize=(8.3,11.7/2))
