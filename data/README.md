@@ -120,6 +120,10 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `locations-all_daytype-weekend_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weekends. Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
 
+### Cases
+
++ `hospitalisations_per_state.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
+
 ## Conversion
 
 ### Demography
@@ -147,3 +151,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 ### FIPS codes
 
 + `build-FIPS-list.py`: A script formatting and merging the raw US state and county FIPS codes found in `national_state2020.txt` and `national_county2020.txt`. Corrects the Connecticut counties to the post 2020 counties and FIPS codes using the crosswalk file `ct_cou_to_cousub_crosswalk.xlsx`. Resulting file in interim folder contains a five-digit FIPS codes for both states and counties. State FIPS codes are assumed to have an 'xx000' format.
+
+### Cases
+
++ `build-hospitalisations_per_state.py`: A script formatting the weekly flu hospitalisation incidence data per US state from 2009-2024 in `data/raw/cases/weekly_flu_incid_complete.csv` into `data/interim/hospitalisations_per_state.csv`. Swaps the US state name for it's FIPS code and guarantees the data always start in week 40 of the year.
