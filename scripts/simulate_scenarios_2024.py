@@ -2,14 +2,14 @@ import json
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from influenza_USA.SVIR.utils import initialise_SVI2RHD # influenza model
+from influenza_USA.SVIR.utils import initialise_SVI2RHD, construct_initial_susceptible # influenza model
 
 ##############
 ## Settings ##
 ##############
 
 # calibration settings
-season = '2019-2020'                        # season: '17-18' or '19-20'
+season = '2017-2018'                        # season: '17-18' or '19-20'
 waning = 'no_waning'                        # 'no_waning' vs. 'waning_180'
 rundate = '2024-09-16'                      # calibration date
 
@@ -38,11 +38,25 @@ stoch = samples_dict['stochastic']
 
 # define draw function
 def draw_fcn(parameters, initial_states, samples):
-    # Sample model parameters
+        
+    # sample model parameters
     idx, parameters['beta'] = random.choice(list(enumerate(samples['beta'])))
     parameters['rho_h'] = samples['rho_h'][idx]
     parameters['rho_d'] = samples['rho_d'][idx]
     parameters['asc_case'] = samples['asc_case'][idx]
+
+    # sample initial condition
+    f_I = samples['f_I'][idx]
+    f_R = samples['f_R'][idx]
+    initial_states['S'] = (1-f_I-f_R) * construct_initial_susceptible(sr, ar)
+    initial_states['I'] = f_I * construct_initial_susceptible(sr, ar)
+    initial_states['R'] = f_R * construct_initial_susceptible(sr, ar)
+
+    # what I don't want to calibrate
+    initial_states['V'] = 0 * construct_initial_susceptible(sr, ar)
+    initial_states['Iv'] = 0 * construct_initial_susceptible(sr, ar)
+    initial_states['H'] = 0 * construct_initial_susceptible(sr, ar)
+    initial_states['D'] = 0 * construct_initial_susceptible(sr, ar)
 
     return parameters, initial_states
     
