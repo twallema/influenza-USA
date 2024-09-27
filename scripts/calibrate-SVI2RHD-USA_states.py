@@ -199,7 +199,7 @@ if __name__ == '__main__':
     # Backend
     backend = emcee.backends.HDFBackend(samples_path+"no_waning_BACKEND_2024-09-27.hdf5")
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=(n_states+1)*[0.05,]+[0.05, 0.05, 0.05], multiplier=multiplier_mcmc, bounds=bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=(n_states+1)*[0.10,]+[0.20, 0.20, 0.20], multiplier=multiplier_mcmc, bounds=bounds)
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,

@@ -24,7 +24,6 @@ class ODE_SVI2RHD(ODE):
               ]
     parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'CHR', 'T_h', 'rho_d', 'T_d', 'asc_case']
     dimensions = ['age_group', 'location']
-    stratified_parameters = [[],['beta']]
 
     @staticmethod
     def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
