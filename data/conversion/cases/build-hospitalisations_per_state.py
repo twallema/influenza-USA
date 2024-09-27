@@ -21,8 +21,11 @@ data = pd.read_csv(os.path.join(os.getcwd(), '../../raw/cases/weekly_flu_incid_c
 data = data[data['state'] != 'US']
 data = data.dropna(subset=['state'])
 
-# guarantee the data starts at week 40
-data = data[data['mmwr_week'] >= 40]
+# guarantee the data starts at week 30 when simulation starts (August)
+data = data[((data['mmwr_week'] < 18) | (data['mmwr_week'] > 30))]
+
+# BUT: data actually starts in week 40 --> extend dataranges with zeros
+data = data.fillna(0)
 
 # slice only what we need
 data = data[['season_start', 'date', 'state', 'incidH']]

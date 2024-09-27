@@ -39,7 +39,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'T_v': 10*365/2,                                                                                                        # average time to waning of vaccine immunity
             'rho_h': 0.014,                                                                                                         # hospitalised fraction (source: Josh)
             'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
-            'rho_d': 0.082,                                                                                                         # deceased in hospital fraction (source: Josh)
+            'rho_d': 0.06,                                                                                                          # deceased in hospital fraction (source: Josh)
             'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
             # time-dependencies
             'vaccine_rate_modifier': 1.0,                                                                                           # used to modify vaccination rate
