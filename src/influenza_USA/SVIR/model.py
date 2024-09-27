@@ -24,6 +24,7 @@ class ODE_SVI2RHD(ODE):
               ]
     parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'CHR', 'T_h', 'rho_d', 'T_d', 'asc_case']
     dimensions = ['age_group', 'location']
+    stratified_parameters = [[],['beta']]
 
     @staticmethod
     def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
@@ -36,7 +37,7 @@ class ODE_SVI2RHD(ODE):
         T_v = np.matmul(T, M)
 
         # compute force of infection
-        l = beta * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
+        l = beta[np.newaxis, :] * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
 
         # u-shaped severity curve
         rho_h = (rho_h * CHR)[:, np.newaxis]

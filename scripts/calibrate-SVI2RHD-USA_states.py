@@ -8,6 +8,7 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import os
 import random
 import corner
+import emcee
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
@@ -17,7 +18,7 @@ from influenza_USA.SVIR.utils import initialise_SVI2RHD, construct_initial_susce
 # pySODM packages
 from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import add_poisson_noise, assign_theta
-from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson
+from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, ll_negative_binomial, ll_normal_heteroskedastic
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
 
 ##############
@@ -38,12 +39,12 @@ n_pso = 50                                                          # Number of 
 multiplier_pso = 10                                                 # PSO swarm size
 ## bayesian
 identifier = waning                                                 # Use waning as identifier of script output
-n_mcmc = 1000                                                       # Number of MCMC iterations
-multiplier_mcmc = 10                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
+n_mcmc = 50                                                       # Number of MCMC iterations
+multiplier_mcmc = 3                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                                        # Print diagnostics every `print_n`` iterations
-discard = 100                                                       # Discard first `discard` iterations as burn-in
+discard = 40                                                       # Discard first `discard` iterations as burn-in
 thin = 5                                                            # Thinning factor emcee chains
-n = 200                                                             # Repeated simulations used in visualisations
+n = 50                                                             # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve CPU count
 
 # dates
@@ -79,6 +80,8 @@ df_peak = df.loc[slice(start_peakslice, end_peakslice), slice(None)]
 df_bump = df.loc[slice(datetime(2017, 8, 1), datetime(2017, 8, 16)), slice(None)]
 # replace `end_calibration` None --> datetime
 end_calibration = df.index.get_level_values('date').unique().max()
+# variables we need a lot
+n_states = len(df.index.get_level_values('location').unique())
 
 #################
 ## Setup model ##
@@ -123,33 +126,34 @@ if __name__ == '__main__':
     ##################################
 
     # define datasets
-    data=[df, df_peak, df_bump]   # hospital/death peak counted double
+    data=[df,]   # hospital/death peak counted double
     # use maximum value in dataset as weight
-    weights = [1, 10, 100]
+    weights = [1,]
     # states to match with datasets
-    states = ['H_inc', 'H_inc', 'H_inc']
+    states = ['H_inc', ]
     # log likelihood function + arguments
-    log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson] 
-    log_likelihood_fnc_args = [[],[],[]]
+    log_likelihood_fnc = [ll_normal_heteroskedastic,] 
+    log_likelihood_fnc_args = [0.05*np.ones(n_states),]
     # parameters to calibrate and bounds
     pars = ['beta', 'rho_h', 'f_I', 'f_R']
     labels = [r'$\beta$', r'$\rho_h$', r'$f_I$', r'$f_R$']
-    bounds = [(0.001,0.05), (0.0001,0.1), (1e-8,1), (0,1)]
+    bounds = (n_states+1)*[(0.001,0.05),] + [(0.0001,0.1), (1e-8,1), (0,1)]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,draw_function=draw_function_calibration,
-                                                   start_sim=start_calibration, weights=weights, labels=labels)
-    
+                                                  start_sim=start_calibration, weights=weights, labels=labels)
+
     #################
     ## Nelder-Mead ##
     #################
 
     # Initial guess
     # season: 2017-2018
-    theta = [2.97959440e-02, 3.33875610e-03, 9.13140716e-05, 5.83462036e-01] # --> no waning
+    theta = [3.06832268e-02, 3.34026895e-03, 8.72838050e-05, 5.92385536e-01] # --> no waning; one beta
+    theta = (n_states+1)*[0.0307,] + [3.34026895e-03, 8.72838050e-05, 5.92385536e-01] # --> no waning; stratified beta
 
     # Perform optimization 
-    step = len(bounds)*[0.05,]
-    theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=processes, max_iter=n_pso)[0]
+    #step = len(bounds)*[0.05,]
+    #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=1, max_iter=n_pso)[0]
 
     ######################
     ## Visualize result ##
@@ -159,21 +163,31 @@ if __name__ == '__main__':
     model.parameters = assign_theta(model.parameters, pars[:-2], theta[:-2])
     # Simulate model
     out = model.sim([start_calibration, end_calibration], N=1, draw_function=draw_function_calibration, draw_function_kwargs={'f_I': theta[-2], 'f_R': theta[-1]})
-    # Visualize (Overall)
-    fig, ax = plt.subplots(1, 1, sharex=True, figsize=(8.3,11.7/4))
-    ## Hospitalisations
+    # Visualize
+    fig, ax = plt.subplots(n_states+1, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states+1)))
+    ## Overall
     x_data = df.index.get_level_values('date').unique().values
-    ax.scatter(x_data, 7*df.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-    ax.plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
-    ax.set_title('Hospitalisations')
-    ## Formatting
-    ax.xaxis.set_major_locator(plt.MaxNLocator(5))
-    for tick in ax.get_xticklabels():
+    ax[0].scatter(x_data, 7*df.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
+    ax[0].set_title('USA')
+    ax[0].grid(False)
+
+    ## per state
+    for i,loc in enumerate(df.index.get_level_values('location').unique().values):
+        ax[i+1].scatter(x_data, 7*df.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc), color='blue', alpha=1, linewidth=2)
+        ax[i+1].set_title(loc)
+        ax[i+1].grid(False)
+
+    ## format dates
+    ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
+    for tick in ax[-1].get_xticklabels():
         tick.set_rotation(30)
-    ax.grid(False)
+
     ## Print to screen
     plt.tight_layout()
-    plt.show()
+    fig_path=f'../data/interim/calibration/{season}/{identifier}/'
+    plt.savefig(fig_path+'goodness-fit-NM.pdf')
     plt.close()
 
     ##########
@@ -182,8 +196,10 @@ if __name__ == '__main__':
 
     # Variables
     samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'
+    # Backend
+    backend = emcee.backends.HDFBackend(samples_path+"no_waning_BACKEND_2024-09-27.hdf5")
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=[0.2, 0.2, 0.2, 0.2, 0.99, 0.99], multiplier=multiplier_mcmc, bounds=bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=(n_states+1)*[0.05,]+[0.05, 0.05, 0.05], multiplier=multiplier_mcmc, bounds=bounds)
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -191,18 +207,21 @@ if __name__ == '__main__':
     # Sample n_mcmc iterations
     sampler = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function,  objective_function_kwargs={'simulation_kwargs': {'warmup': 0}},
                                     fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True,
+                                    moves=[(emcee.moves.DEMove(), 0.5*0.5*0.9),(emcee.moves.DEMove(gamma0=1.0),0.5*0.5*0.1),
+                                            (emcee.moves.DESnookerMove(),0.5*0.5),
+                                            (emcee.moves.StretchMove(live_dangerously=True), 0.5)],
                                     settings_dict=settings)                                                                               
     # Generate a sample dictionary and save it as .json for long-term storage
     # Have a look at the script `emcee_sampler_to_dictionary.py`, which does the same thing as the function below but can be used while your MCMC is running.
     samples_dict = emcee_sampler_to_dictionary(samples_path, identifier, discard=discard, thin=thin)
     # Look at the resulting distributions in a cornerplot
-    CORNER_KWARGS = dict(smooth=0.90,title_fmt=".2E")
-    fig = corner.corner(sampler.get_chain(discard=discard, thin=2, flat=True), labels=labels, **CORNER_KWARGS)
-    for idx,ax in enumerate(fig.get_axes()):
-        ax.grid(False)
-    plt.savefig(fig_path+'corner.pdf')
+    #CORNER_KWARGS = dict(smooth=0.90,title_fmt=".2E")
+    #fig = corner.corner(sampler.get_chain(discard=discard, thin=2, flat=True), labels=objective_function.expanded_labels , **CORNER_KWARGS)
+    #for idx,ax in enumerate(fig.get_axes()):
+    #    ax.grid(False)
+    #plt.savefig(fig_path+'corner.pdf')
     #plt.show()
-    plt.close()
+    #plt.close()
 
     ######################
     ## Visualize result ##
@@ -210,11 +229,10 @@ if __name__ == '__main__':
  
     # Define draw function
     def draw_fcn(parameters, initial_states, samples):
+
         # sample model parameters
-        idx, parameters['beta'] = random.choice(list(enumerate(samples['beta'])))
-        parameters['rho_h'] = samples['rho_h'][idx]
-        parameters['rho_d'] = samples['rho_d'][idx]
-        parameters['asc_case'] = samples['asc_case'][idx]
+        idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
+        parameters['beta'] = np.array([slice[idx] for slice in samples['beta']])
 
         # sample initial condition
         f_I = samples['f_I'][idx]
@@ -234,23 +252,34 @@ if __name__ == '__main__':
     # Simulate model
     out = model.sim([start_calibration, end_calibration], N=n,
                     draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
-    
-    # Visualize (Overall)
-    fig, ax = plt.subplots(1, 1, sharex=True, figsize=(8.3,11.7/4))
-    ## Hospitalisations
+
+    # Visualize
+    fig, ax = plt.subplots(n_states+1, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states+1)))
+    ## Overall
     x_data = df.index.get_level_values('date').unique().values
-    ax.scatter(x_data, 7*df.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-    ax.plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
-    ax.fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
+    ax[0].scatter(x_data, 7*df.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+    ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
                         7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
-    ax.set_title('Hospitalisations')
-    ## Formatting
-    ax.xaxis.set_major_locator(plt.MaxNLocator(5))
-    for tick in ax.get_xticklabels():
+    ax[0].set_title('USA')
+    ax[0].grid(False)
+
+    ## per state
+    for i,loc in enumerate(df.index.get_level_values('location').unique().values):
+        ax[i+1].scatter(x_data, 7*df.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+        ax[i+1].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=0.05/2),
+                             7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
+        ax[i+1].set_title(loc)
+        ax[i+1].grid(False)
+
+    ## format dates
+    ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
+    for tick in ax[-1].get_xticklabels():
         tick.set_rotation(30)
-    ax.grid(False)
+
     ## Print to screen
-    plt.savefig(fig_path+'goodness_fit.pdf')
     plt.tight_layout()
-    plt.show()
+    fig_path=f'../data/interim/calibration/{season}/{identifier}/'
+    plt.savefig(fig_path+'goodness-fit-MCMC.pdf')
     plt.close()

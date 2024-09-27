@@ -28,7 +28,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     # parameters
     params = {
             # core parameters
-            'beta': 0.023,                                                                                                          # infectivity (-)
+            'beta': 0.03*np.ones(52),                                                                                               # infectivity (-)
             'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
             'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),               # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
