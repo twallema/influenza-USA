@@ -159,7 +159,6 @@ if __name__ == '__main__':
     labels = [r'$\beta$', r'$\rho_h$', r'$f_I$']
     for i in range(n_states+1):
         labels.extend([f'$f_R$_{i}',])
-    print(labels)
     # parameter bounds
     bounds = (n_states+1)*[(0.001,0.05),] + [(0.0001,0.1), (1e-8,1)] + (n_states+1)* [(0,1),]
     # Setup objective function (no priors defined = uniform priors based on bounds)
@@ -266,16 +265,12 @@ if __name__ == '__main__':
 
         # sample initial condition
         f_I = samples['f_I'][idx]
-        f_R = np.array([
-            samples['f_R_1'][idx], samples['f_R_2'][idx], samples['f_R_3'][idx], samples['f_R_4'][idx], samples['f_R_5'][idx], samples['f_R_6'][idx], samples['f_R_7'][idx], samples['f_R_8'][idx], samples['f_R_9'][idx], samples['f_R_10'][idx],
-            samples['f_R_11'][idx], samples['f_R_12'][idx], samples['f_R_13'][idx], samples['f_R_14'][idx], samples['f_R_15'][idx], samples['f_R_16'][idx], samples['f_R_17'][idx], samples['f_R_18'][idx], samples['f_R_19'][idx], samples['f_R_20'][idx],
-            samples['f_R_21'][idx], samples['f_R_22'][idx], samples['f_R_23'][idx], samples['f_R_24'][idx], samples['f_R_25'][idx], samples['f_R_26'][idx], samples['f_R_27'][idx], samples['f_R_28'][idx], samples['f_R_29'][idx], samples['f_R_30'][idx],
-            samples['f_R_31'][idx], samples['f_R_32'][idx], samples['f_R_33'][idx], samples['f_R_34'][idx], samples['f_R_35'][idx], samples['f_R_36'][idx], samples['f_R_37'][idx], samples['f_R_38'][idx], samples['f_R_39'][idx], samples['f_R_40'][idx],
-            samples['f_R_41'][idx], samples['f_R_42'][idx], samples['f_R_43'][idx], samples['f_R_44'][idx], samples['f_R_45'][idx], samples['f_R_46'][idx], samples['f_R_47'][idx], samples['f_R_48'][idx], samples['f_R_49'][idx], samples['f_R_50'][idx],
-            samples['f_R_51'][idx],
-        ])
-        
-        f_R = samples['f_R'][idx]
+        f_R = []
+        for i in range(n_states+1):
+            f_R.extend([samples[f'f_R_{i}'][idx],])
+        f_R = np.array([f_R])
+
+        # what i calibrated
         initial_states['S'] = (1-f_I-f_R) * construct_initial_susceptible(sr, ar)
         initial_states['I'] = f_I * construct_initial_susceptible(sr, ar)
         initial_states['R'] = f_R * construct_initial_susceptible(sr, ar)
