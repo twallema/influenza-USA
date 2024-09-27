@@ -38,7 +38,7 @@ stoch = False                       # ODE vs. tau-leap
 n_pso = 50                                                          # Number of PSO iterations
 multiplier_pso = 10                                                 # PSO swarm size
 ## bayesian
-identifier = waning                                                 # Use waning as identifier of script output
+identifier = 'beta_f_R'                                                 # Use waning as identifier of script output
 n_mcmc = 50                                                       # Number of MCMC iterations
 multiplier_mcmc = 3                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                                        # Print diagnostics every `print_n`` iterations
