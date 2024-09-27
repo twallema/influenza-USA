@@ -158,9 +158,9 @@ if __name__ == '__main__':
     # labels in output figures
     labels = [r'$\beta$', r'$\rho_h$', r'$f_I$']
     for i in range(n_states+1):
-        labels.extend([f'$f_R$_{i}',])
+        labels.extend([f'$f_R$_({i})',])
     # parameter bounds
-    bounds = (n_states+1)*[(0.001,0.05),] + [(0.0001,0.1), (1e-8,1)] + (n_states+1)* [(0,1),]
+    bounds = [(0.001,0.05),(0.0001,0.1), (1e-8,1)] + (n_states+1)* [(0,1),]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,draw_function=draw_function_calibration,
                                                   start_sim=start_calibration, weights=weights, labels=labels)
@@ -171,8 +171,8 @@ if __name__ == '__main__':
 
     # Initial guess
     # season: 2017-2018
-    theta = (n_states+1)*[0.0307,] + [3.34026895e-03, 8.72838050e-05] + (n_states+1)*[5.92385536e-01,] # --> no waning; state beta + f_R
-
+    theta = [3.06832268e-02, 3.34026895e-03, 8.72838050e-05] + (n_states+1)*[5.92385536e-01,] # --> no waning; state beta + f_R
+    
     # Perform optimization 
     #step = len(bounds)*[0.05,]
     #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=1, max_iter=n_pso)[0]
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     # Backend
     backend = emcee.backends.HDFBackend(samples_path+"no_waning_BACKEND_2024-09-27.hdf5")
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=(n_states+1)*[0.10,]+[0.20, 0.20] + (n_states+1)*[0.20,], multiplier=multiplier_mcmc, bounds=bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=[0.10, 0.20, 0.20] + (n_states+1)*[0.20,], multiplier=multiplier_mcmc, bounds=bounds)
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -259,7 +259,7 @@ if __name__ == '__main__':
 
         # sample model parameters
         idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
-        parameters['beta'] = np.array([slice[idx] for slice in samples['beta']])
+        parameters['beta'] = samples['beta'][idx]
 
         # sample initial condition
         f_I = samples['f_I'][idx]
@@ -268,7 +268,7 @@ if __name__ == '__main__':
             f_R.extend([samples[f'f_R_{i}'][idx],])
         f_R = np.array([f_R])
 
-        # what i calibrated
+        # what I calibrated
         initial_states['S'] = (1-f_I-f_R) * construct_initial_susceptible(sr, ar)
         initial_states['I'] = f_I * construct_initial_susceptible(sr, ar)
         initial_states['R'] = f_R * construct_initial_susceptible(sr, ar)

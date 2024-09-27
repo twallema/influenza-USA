@@ -132,7 +132,7 @@ if __name__ == '__main__':
     # states to match with datasets
     states = ['H_inc', ]
     # log likelihood function + arguments
-    log_likelihood_fnc = [ll_normal_heteroskedastic,] 
+    log_likelihood_fnc = [ll_negative_binomial,] 
     log_likelihood_fnc_args = [0.05*np.ones(n_states),]
     # parameters to calibrate and bounds
     pars = ['beta', 'rho_h', 'f_I', 'f_R']
