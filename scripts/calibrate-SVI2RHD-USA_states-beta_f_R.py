@@ -36,24 +36,26 @@ stoch = False                       # ODE vs. tau-leap
 
 # optimization
 start_calibration = datetime(season_start, 8, 1)
-end_calibration = None                                                  # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
+end_calibration = None                                                          # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
 start_peakslice = datetime(season_start+1, 1, 1)
-end_peakslice = datetime(season_start+1, 2, 10)
+end_peakslice = datetime(season_start+1, 2, 14)
 ## frequentist
-n_pso = 500                                                             # Number of PSO iterations
-multiplier_pso = 10                                                     # PSO swarm size
+n_pso = 500                                                                     # Number of PSO iterations
+multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'beta_f_R'                                                 # ID of run
-n_mcmc = 2000                                                              # Number of MCMC iterations
-multiplier_mcmc = 3                                                     # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 100                                                           # Print diagnostics every `print_n`` iterations
-discard = 5000                                                          # Discard first `discard` iterations as burn-in
-thin = 100                                                               # Thinning factor emcee chains
-n = 200                                                                 # Repeated simulations used in visualisations
-processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))        # Retrieve CPU count
-## rerunning code
-run_date = '2024-09-30'                                                                 # First date of run
-samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'    # Path to backend
+identifier = 'beta_f_R_nowaning'                                                # ID of run
+samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
+n_mcmc = 1                                                                   # Number of MCMC iterations
+multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
+print_n = 100                                                                   # Print diagnostics every `print_n`` iterations
+discard = 1000                                                                  # Discard first `discard` iterations as burn-in
+thin = 50                                                                       # Thinning factor emcee chains
+n = 200                                                                         # Repeated simulations used in visualisations
+processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))                # Retrieve CPU count
+## get initial parameter estimate from backend
+run_date = '2024-10-01'                                                         # First date of run
+backend_identifier = 'beta_f_R_nowaning'
+backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 
 ###############################
 ## Load hospitalisation data ##
@@ -80,7 +82,7 @@ n_states = len(df.index.get_level_values('location').unique())
 #####################################################
 
 # Load emcee backend
-backend_path = os.path.join(os.getcwd(), samples_path+f"{identifier}_BACKEND_{run_date}.hdf5")
+backend_path = os.path.join(os.getcwd(), backend_path)
 backend = emcee.backends.HDFBackend(backend_path)
 # Get last position
 pos = backend.get_chain(discard=0, thin=1, flat=False)[-1, ...]
@@ -97,6 +99,8 @@ def get_pos_beta_f_R(fips, model_coordinates):
 #################
 
 model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, stochastic=stoch, start_sim=start_calibration)
+
+model.parameters['T_r'] = 10*365
 
 # set up right waning parameters
 if waning == 'no_waning':
@@ -187,7 +191,7 @@ if __name__ == '__main__':
     # pos_beta, pos_f_R = get_pos_beta_f_R(tweak_fips, model.coordinates['location'])
     # theta[pos_beta] = 0.035
     # theta[pos_f_R] = 0.67
-
+    theta[:n_states+1] *= 1.2
     # Perform optimization 
     #step = len(bounds)*[0.05,]
     #theta = nelder_mead.optimize(objective_function, np.array(theta), step, processes=1, max_iter=n_pso)[0]
@@ -242,7 +246,7 @@ if __name__ == '__main__':
     ##########
 
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=(n_states+1)*[0.10,]+[0.20, 0.20] + (n_states+1)*[0.20,], multiplier=multiplier_mcmc, bounds=bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=(n_states+1)*[0.50,]+[0.50, 0.50] + (n_states+1)*[0.50,], multiplier=multiplier_mcmc, bounds=bounds)
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
