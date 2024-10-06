@@ -36,7 +36,7 @@ class ODE_SVI2RHD(ODE):
         T_v = np.matmul(T, M)
 
         # compute force of infection
-        l = beta[np.newaxis, :] * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
+        l = np.atleast_1d(beta)[np.newaxis, :] * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
 
         # u-shaped severity curve
         rho_h = (rho_h * CHR)[:, np.newaxis]

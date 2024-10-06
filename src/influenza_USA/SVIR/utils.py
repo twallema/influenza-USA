@@ -44,6 +44,9 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # time-dependencies
             'vaccine_rate_modifier': 1.0,                                                                                           # used to modify vaccination rate
             'vaccine_rate_timedelta': 0,                                                                                            # shift the vaccination season
+            # initial condition
+            'f_I': 1e-4,                                                                                                            # initial fraction of infected
+            'f_R': 0.5*np.ones(52),                                                                                                 # initial fraction of recovered
             # outcomes
             'asc_case': 0.004,
             }
@@ -58,6 +61,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     params.update({'CHR': rel_contacts * (CDC_estimated_hosp/demo) / (rel_contacts * (CDC_estimated_hosp/demo))[0]})
 
     # initial condition
+    # OLD >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     ## states
     ic = load_initial_condition(season=season)
     total_population = construct_initial_susceptible(spatial_resolution, age_resolution)
@@ -70,6 +74,10 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     init_states['I_inc'] = 0 * total_population
     init_states['H_inc'] = 0 * total_population
     init_states['D_inc'] = 0 * total_population
+    # NEW >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    from influenza_USA.SVIR.TDPF import make_initial_condition_function
+    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution).initial_condition_function
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     # time-dependencies
     TDPFs = {}
@@ -84,7 +92,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     from influenza_USA.SVIR.TDPF import make_vaccination_function
     TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
 
-    return SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
+    return SVI2RHD(states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     """
@@ -266,7 +274,8 @@ def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_
 
     *subtract_states: np.ndarray
         Other states that contain individuals at the start of the simulation.
-        Must must be substracted from the demographic data to compute the number of initial susceptible individuals
+        Substracted from the demographic data to compute the number of initial susceptible individuals
+        If not provided: function returns demography
 
     spatial_resolution: str
         US 'states' or 'counties'

@@ -10,6 +10,16 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
+from influenza_USA.SVIR.utils import construct_initial_susceptible
+class make_initial_condition_function():
+
+    def __init__(self, spatial_resolution, age_resolution):
+        self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
+    
+    def initial_condition_function(self, f_I, f_R):
+        """ A function setting the initial conditions """
+        return {'S':  (1-f_I-f_R) * self.demography, 'I': f_I * self.demography, 'R': f_R * self.demography}
+
 class make_vaccination_function():
 
     def __init__(self, vaccination_data):
