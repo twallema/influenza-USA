@@ -92,7 +92,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     from influenza_USA.SVIR.TDPF import make_vaccination_function
     TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
 
-    return SVI2RHD(states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
+    return SVI2RHD(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     """
