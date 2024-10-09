@@ -18,7 +18,7 @@ from influenza_USA.SVIR.utils import initialise_SVI2RHD, fips2name # influenza m
 # pySODM packages
 from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import add_poisson_noise, assign_theta
-from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, ll_negative_binomial
+from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
 
 ##############
@@ -37,24 +37,24 @@ stoch = False                       # ODE vs. tau-leap
 # optimization
 start_calibration = datetime(season_start, 8, 1)
 end_calibration = None                                                          # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
-start_peakslice = datetime(season_start+1, 1, 1)
-end_peakslice = datetime(season_start+1, 2, 14)
+start_slice = datetime(season_start+1, 1, 1)
+end_slice = datetime(season_start+1, 2, 10)
 ## frequentist
 n_pso = 500                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
 identifier = 'USA_states'                                                       # ID of run
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
-n_mcmc = 2000                                                                   # Number of MCMC iterations
+n_mcmc = 1                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 100                                                                    # Print diagnostics every `print_n`` iterations
-discard = 1000                                                                  # Discard first `discard` iterations as burn-in
-thin = 50                                                                      # Thinning factor emcee chains
-n = 100                                                                         # Repeated simulations used in visualisations
+print_n = 100                                                                   # Print diagnostics every `print_n`` iterations
+discard = 1600                                                                  # Discard first `discard` iterations as burn-in
+thin = 50                                                                       # Thinning factor emcee chains
+n = 200                                                                         # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))                # Retrieve CPU count
 ## get initial parameter estimate from backend
-run_date = '2024-09-27'                                                         # First date of run
-backend_identifier = 'beta_f_R'
+run_date = '2024-10-06'                                                         # First date of run
+backend_identifier = 'USA_states'
 backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 
 ###############################
@@ -71,7 +71,7 @@ df = df.groupby(by=['date', 'location']).sum().squeeze()
 df /= 7
 # slice data until end
 df = df.loc[slice(None, end_calibration), slice(None)]
-df_peak = df.loc[slice(start_peakslice, end_peakslice), slice(None)]
+df_slice = df.loc[slice(start_slice, end_slice), slice(None)]
 # replace `end_calibration` None --> datetime
 end_calibration = df.index.get_level_values('date').unique().max()
 # variables we need a lot
@@ -125,24 +125,26 @@ if __name__ == '__main__':
     states = []
     log_likelihood_fnc = []
     log_likelihood_fnc_args = []
-    for state_fips in df.index.get_level_values('location').unique():
-        for d_star in [df, df_peak]:
+    for d_star, rel_weight in zip([df, df_slice], [0.05, 0.05]):
+        for state_fips in df.index.get_level_values('location').unique():
             d = d_star.reset_index()[d_star.reset_index()['location'] == state_fips].groupby(by=['date', 'location']).sum()
             data.append(d)
             weights.append(1/max(d.squeeze()))
             states.append('H_inc')
             log_likelihood_fnc.append(ll_poisson)
             log_likelihood_fnc_args.append([])
+        # recenter around one
+        weights = list(rel_weight * np.array(weights) / np.mean(weights))
 
-    # define datasets
-    #data=[df, df_peak]   # hospital/death peak counted double
-    # use maximum value in dataset as weight
-    #weights = [1, 1]
-    # states to match with datasets
-    #states = ['H_inc', 'H_inc']
-    # log likelihood function + arguments
-    #log_likelihood_fnc = [ll_negative_binomial, ll_negative_binomial] 
-    #log_likelihood_fnc_args = [0.03*np.ones(n_states), 0.03*np.ones(n_states)]
+    # # define datasets
+    # data=[df,]   # hospital/death peak counted double
+    # # uniform wights
+    # weights = [1,]
+    # # states to match with datasets
+    # states = ['H_inc',]
+    # # log likelihood function + arguments
+    # log_likelihood_fnc = [ll_poisson,] 
+    # log_likelihood_fnc_args = [[],]
     # parameters to calibrate
     pars = ['beta', 'rho_h', 'f_I', 'f_R']
     # labels in output figures
@@ -215,14 +217,13 @@ if __name__ == '__main__':
     ##########
 
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=0.25*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
               'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd, 'stochastic': stoch}
     # Sample n_mcmc iterations
-    sampler = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function,  objective_function_kwargs={'simulation_kwargs': {'warmup': 0}},
-                                    fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 
+    sampler = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=backend_path, processes=processes, progress=True, 
                                         moves=[(emcee.moves.DEMove(), 0.5*0.5*0.9),(emcee.moves.DEMove(gamma0=1.0),0.5*0.5*0.1),
                                                 (emcee.moves.DESnookerMove(),0.5*0.5),(emcee.moves.StretchMove(live_dangerously=True), 0.50)],
                                         settings_dict=settings)                                                                               
