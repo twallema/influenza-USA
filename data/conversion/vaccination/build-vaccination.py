@@ -29,7 +29,7 @@ out = pd.Series(0, index=pd.MultiIndex.from_product([dates, ages, states], names
 ## Load & format county data ##
 ###############################
 
-# load names of all demography files
+# load names of all vaccination files
 file_names = os.listdir(os.path.join(os.getcwd(), '../../raw/vaccination/'))
 # remove all hidden files (start with a .)
 file_names = [file for file in file_names if not file.startswith('.')]
