@@ -36,6 +36,8 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `vacc_Flu_2024_R1_agexxtoxx_dose1_reported_2017.csv`: Contains the rate of flu vaccination reported during the 2017 season. Rate proportional to the remaining number of unvaccinated individuals in the age group and state. File originally provided by Shaun Truelove. The vaccination rate for Puerto Rico (FIPS: 72) was added by Tijs Alleman, and is defined as the USA average vaccination rate within the age group.
 
++ `vacc_alldoses_age_Flu_2024_R1_allflu_allseasons.csv`: Contains, from the 2010-2011 to the 2023-2024 season, the weekly number of administered vaccines ('vacc_age'), per age group ('age_group'), per US state ('subpop').
+
 ### Contacts
 
 `locations-all_daytype-all_XX_polymod-2008.xlsx`: Contains social contact matrices for age groups 0-5, 5-18, 18-50, 50-65, 65+ in country XX from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and averaged over all daytypes (week, weekend, holiday). Physical and non-physical contacts. Available countries: UK, Germany and Finland. Downloaded from: https://lwillem.shinyapps.io/socrates_rshiny/ 
