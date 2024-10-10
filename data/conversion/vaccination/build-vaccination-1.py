@@ -46,7 +46,7 @@ for season in vaccination['season'].unique():
             for state in states:
                 try:
                     # State 72000 has no vaccination data!
-                    out.loc[season, date, age, state] = slice[((slice['end_date'] == date) & (slice['age_group'] == translation[age]) & (slice['subpop'] == state))]['vacc_age'].values
+                    out.loc[season, date, age, state] = slice[((slice['end_date'] == date) & (slice['age_group'] == translation[age]) & (slice['subpop'] == state))]['vacc_age_daily'].values
                 except:
                     pass
     # append to list
