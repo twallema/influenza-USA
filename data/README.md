@@ -34,8 +34,6 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### Vaccination
 
-+ `vacc_Flu_2024_R1_agexxtoxx_dose1_reported_2017.csv`: Contains the rate of flu vaccination reported during the 2017 season. Rate proportional to the remaining number of unvaccinated individuals in the age group and state. File originally provided by Shaun Truelove. The vaccination rate for Puerto Rico (FIPS: 72) was added by Tijs Alleman, and is defined as the USA average vaccination rate within the age group.
-
 + `vacc_alldoses_age_Flu_2024_R1_allflu_allseasons.csv`: Contains, from the 2010-2011 to the 2023-2024 season, the weekly number of administered vaccines ('vacc_age'), per age group ('age_group'), per US state ('subpop').
 
 ### Contacts
@@ -105,8 +103,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 ##### To state-level data
 
 ### Vaccination
-
-+ `vaccination_rates_2017-2018.csv`: Groups the raw vaccination data for the 2017-2018 season, which was spread out over multiple files, into one and adopts the naming conventions used in this software. 
+ 
 + `vaccination_incidences_2010-2024.csv`: Formats the raw vaccination data from 2010-2024, `vacc_alldoses_age_Flu_2024_R1_allflu_allseasons.csv`, to use the naming conventions used in this software.
 
 ### FIPS codes
@@ -149,7 +146,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 ### Vaccination
 
-+ `build-vaccination.py`: A script that aggregates the vaccination rates of the 2017-2018 season, whose age component was spread over multiple files, into one long-format .csv file. 
++ `build-vaccination.py`: A script that formats the vaccination rates of the 2010-2024 season.
 
 ### FIPS codes
 
