@@ -45,17 +45,27 @@ multiplier_pso = 10                                                             
 ## bayesian
 identifier = 'USA_states'                                                       # ID of run
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
-n_mcmc = 1                                                                   # Number of MCMC iterations
+n_mcmc = 2000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 100                                                                   # Print diagnostics every `print_n`` iterations
 discard = 1600                                                                  # Discard first `discard` iterations as burn-in
 thin = 50                                                                       # Thinning factor emcee chains
 n = 200                                                                         # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))                # Retrieve CPU count
-## get initial parameter estimate from backend
-run_date = '2024-10-06'                                                         # First date of run
-backend_identifier = 'USA_states'
-backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+## continue run
+#run_date = '2024-10-09'                                                        # First date of run
+#backend_identifier = 'USA_states_strat_f_I'
+#backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+
+## new run
+backend_path = None
+if not backend_path:
+    run_date = datetime.today().strftime("%Y-%m-%d")
+# national estimates
+beta = 0.032
+rho_h = 0.0035
+f_I = 0.5e-4
+f_R = 0.58
 
 ###############################
 ## Load hospitalisation data ##
@@ -70,29 +80,31 @@ df = df.groupby(by=['date', 'location']).sum().squeeze()
 # convert to daily incidence
 df /= 7
 # slice data until end
-df = df.loc[slice(None, end_calibration), slice(None)]
+df = df.loc[slice(start_calibration, end_calibration), slice(None)]
 df_slice = df.loc[slice(start_slice, end_slice), slice(None)]
 # replace `end_calibration` None --> datetime
 end_calibration = df.index.get_level_values('date').unique().max()
-# variables we need a lot
+# variable we need a lot
 n_states = len(df.index.get_level_values('location').unique())
 
 #####################################################
 ## Load previous sampler and extract last estimate ##
 #####################################################
 
-# Load emcee backend
-backend_path = os.path.join(os.getcwd(), backend_path)
-backend = emcee.backends.HDFBackend(backend_path)
-# Get last position
-pos = backend.get_chain(discard=0, thin=1, flat=False)[-1, ...]
-# Average out all walkers/parameter
-theta = np.mean(pos, axis=0)
+if backend_path:
+    # Load emcee backend
+    backend_path = os.path.join(os.getcwd(), backend_path)
+    backend = emcee.backends.HDFBackend(backend_path)
+    # Get last position
+    pos = backend.get_chain(discard=0, thin=1, flat=False)[-1, ...]
+    # Average out all walkers/parameter
+    theta = np.mean(pos, axis=0)
+
 # Function to get indices of a states fips
-def get_pos_beta_f_R(fips, model_coordinates):
+def get_pos_beta_f_I_f_R(fips, model_coordinates):
     n = len(model_coordinates)                  # number of states
     i = model_coordinates.index(fips)           # index of desired state
-    return i, n+2+i
+    return i, n+1+i, 2*n+1+i
 
 #################
 ## Setup model ##
@@ -120,6 +132,7 @@ if __name__ == '__main__':
     ## Set up posterior probability ##
     ##################################
 
+    # weight of each state = 1/(max(hosp_i)) --> recentered around one using mean_i{max(hosp_i)} --> multiplied with a hyperweight 
     data = []
     weights = []
     states = []
@@ -133,24 +146,13 @@ if __name__ == '__main__':
             states.append('H_inc')
             log_likelihood_fnc.append(ll_poisson)
             log_likelihood_fnc_args.append([])
-        # recenter around one
         weights = list(rel_weight * np.array(weights) / np.mean(weights))
-
-    # # define datasets
-    # data=[df,]   # hospital/death peak counted double
-    # # uniform wights
-    # weights = [1,]
-    # # states to match with datasets
-    # states = ['H_inc',]
-    # # log likelihood function + arguments
-    # log_likelihood_fnc = [ll_poisson,] 
-    # log_likelihood_fnc_args = [[],]
     # parameters to calibrate
     pars = ['beta', 'rho_h', 'f_I', 'f_R']
     # labels in output figures
     labels = [r'$\beta$', r'$\rho_h$', r'$f_I$', r'$f_R$']
     # parameter bounds
-    bounds = [(0.001,0.06), (0.0001,0.1), (1e-8,1), (0,1)]
+    bounds = [(0.001,0.06), (0.0001,0.1), (1e-9,1), (0,1)]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args, start_sim=start_calibration, weights=weights, labels=labels)
 
@@ -159,14 +161,7 @@ if __name__ == '__main__':
     #################
 
     # Initial guess
-    # season: 2017-2018
-    #theta = (n_states+1)*[0.0307,] + [3.34026895e-03, 8.72838050e-05] + (n_states+1)*[5.92385536e-01,] # --> no waning; state beta + f_R --> startpoint of 2024-09-27 fit
-
-    # tweaking
-    # tweak_fips = '09000'
-    # pos_beta, pos_f_R = get_pos_beta_f_R(tweak_fips, model.coordinates['location'])
-    # theta[pos_beta] = 0.035
-    # theta[pos_f_R] = 0.67
+    theta = (n_states+1)*[beta,] + [rho_h,] + (n_states+1)*[f_I,] + (n_states+1)*[f_R,] 
 
     # Perform optimization 
     #step = len(bounds)*[0.05,]
@@ -195,8 +190,8 @@ if __name__ == '__main__':
         ax[i+1].scatter(x_data, 7*df.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc), color='blue', alpha=1, linewidth=2)
         ax[i+1].set_title(f"{fips2name(loc)} ({loc})")
-        pos_beta, pos_f_R = get_pos_beta_f_R(loc, model.coordinates['location'])
-        ax[i+1].text(0.05, 0.95, f"$\\beta$: {theta[pos_beta]:.3f}, $f_R$: {theta[pos_f_R]:.2f}", transform=ax[i+1].transAxes, fontsize=12,
+        pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R(loc, model.coordinates['location'])
+        ax[i+1].text(0.05, 0.95, f"$\\beta$: {theta[pos_beta]:.3f}, $f_I$: {theta[pos_f_I]:.2e}, $f_R$: {theta[pos_f_R]:.2e}", transform=ax[i+1].transAxes, fontsize=12,
             verticalalignment='top', bbox=props)
         ax[i+1].grid(False)
 
@@ -211,6 +206,8 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
+    import sys
+    sys.exit()
 
     ##########
     ## MCMC ##
@@ -245,8 +242,8 @@ if __name__ == '__main__':
     def draw_fcn(parameters, initial_states, samples):
         # sample posterior distribution
         idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
-        parameters['f_I'] = samples['f_I'][idx] 
         parameters['beta'] = np.array([slice[idx] for slice in samples['beta']])
+        parameters['f_I'] = np.array([slice[idx] for slice in samples['f_I']])
         parameters['f_R'] = np.array([slice[idx] for slice in samples['f_R']])
 
         return parameters, initial_states
@@ -274,8 +271,8 @@ if __name__ == '__main__':
         ax[i+1].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=0.05/2),
                              7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
         ax[i+1].set_title(f"{fips2name(loc)} ({loc})")
-        pos_beta, pos_f_R = get_pos_beta_f_R(loc, model.coordinates['location'])
-        ax[i+1].text(0.05, 0.95, f"$\\beta$: {theta[pos_beta]:.3f}, $f_R$: {theta[pos_f_R]:.2f}", transform=ax[i+1].transAxes, fontsize=12,
+        pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R(loc, model.coordinates['location'])
+        ax[i+1].text(0.05, 0.95, f"$\\beta$: {theta[pos_beta]:.3f}, $f_I$: {theta[pos_f_I]:.2e}, $f_R$: {theta[pos_f_R]:.2f}", transform=ax[i+1].transAxes, fontsize=12,
             verticalalignment='top', bbox=props)
         ax[i+1].grid(False)
 
