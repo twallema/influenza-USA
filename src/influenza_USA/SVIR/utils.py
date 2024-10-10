@@ -42,6 +42,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
             'rho_d': 0.06,                                                                                                          # deceased in hospital fraction (source: Josh)
             'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
+            'CHR': compute_case_hospitalisation_rate(season),                                                                       # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # time-dependencies
             'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
             'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
@@ -51,16 +52,6 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # outcomes
             'asc_case': 0.004,
             }
-
-    # season-specific case hospitalisation rate:
-    # TODO: load from excel:
-    if season == '2017-2018':
-        CDC_estimated_hosp = np.array([23750, 19636, 76819, 123601, 466766])                            # https://archive.cdc.gov/#/details?url=https://www.cdc.gov/flu/about/burden/2017-2018.htm
-    elif season == '2019-2020':
-        CDC_estimated_hosp = np.array([26376, 19276, 80866, 92391, 173012])                             # https://www.cdc.gov/flu-burden/php/data-vis/2019-2020.html?CDC_AAref_Val=https://www.cdc.gov/flu/about/burden/2019-2020.html
-    demo = np.array([18608139, 54722401, 141598551, 63172279, 60019216])                                # US demography
-    rel_contacts = np.array([17.4/19.8, 17.4/29.1, 17.4/18.6, 17.4/13.2, 17.4/7.8])                     # contacts in age groups relative to the population average
-    params.update({'CHR': rel_contacts * (CDC_estimated_hosp/demo) / (rel_contacts * (CDC_estimated_hosp/demo))[0]})
 
     # initial condition function
     from influenza_USA.SVIR.TDPF import make_initial_condition_function
@@ -117,6 +108,39 @@ def construct_coordinates_dictionary(spatial_resolution, age_resolution):
         age_groups = list(demography['age'].unique())
 
     return {'age_group': age_groups, 'location': list(demography['fips'].unique())}
+
+def compute_case_hospitalisation_rate(season):
+    """
+    A function to compute case hospitalisation rate per age group, corrected for the differences in the number of social contacts, and expressed relative to [0, 5) years old.
+    """
+
+    # get case hospitalisation rates published by CDC
+    CDC_estimated_hosp = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/cases/CDC_hosp-rate-age_2017-2020.csv'),
+                                        dtype={'season': str, 'age': str, 'hospitalisation_rate': float})
+
+    # check input season
+    if ((season not in CDC_estimated_hosp['season'].unique()) & (season != 'average')):
+        raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+
+    # slice right season out
+    if season != 'average':
+        CDC_estimated_hosp = CDC_estimated_hosp[CDC_estimated_hosp['season'] == season]['hospitalisation_rate'].values
+    else:
+        CDC_estimated_hosp = CDC_estimated_hosp.groupby(by=['age']).mean('hospitalisation_rate')['hospitalisation_rate'].values
+    
+    # get demography per age group
+    demography = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/demography/demography_collapsed_2023.csv'),
+                                dtype={'fips': str, 'age': str, 'population': int})['population'].values
+
+    # get social contact matrix
+    contacts = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/contacts/locations-all_daytype-all_avg-UK-DE-FI_polymod-2008.csv'), index_col=0, header=0)
+    
+    # normalise contacts per age group
+    rel_contacts = (np.mean(np.sum(contacts, axis=1)) / np.sum(contacts, axis=1)).values
+
+    # account for difference in contact rates
+    return rel_contacts * (CDC_estimated_hosp/demography) / (rel_contacts * (CDC_estimated_hosp/demography))[0]
+
 
 def get_vaccination_data():
     """

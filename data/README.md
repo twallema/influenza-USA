@@ -60,6 +60,8 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `weekly_flu_incid_complete.csv`: Obtained from Shaun (#TODO: where did he get it from?).
 
++ `CDC_hosp-rate-age_2017-2020.csv`: Hospitalisation rate per age group as reported by the CDC. For the 2017-2018 and 2019-2020 season. #TODO: more seasons!
+
 ### initial condition
 
 + `initial_condition_2017-2018.csv`: Contains the initial condition and model parameters of Josh' reference model, obtained by calibrating the model (no age groups or spatial patches) to the 2017-2018 Influenza season.
