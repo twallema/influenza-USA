@@ -62,10 +62,10 @@ backend_path = None
 if not backend_path:
     run_date = datetime.today().strftime("%Y-%m-%d")
 # national estimates
-beta = 0.032
-rho_h = 0.0035
-f_I = 0.5e-4
-f_R = 0.58
+beta = 0.0333
+rho_h = 0.00334
+f_I = 2.33e-05
+f_R = 0.60
 
 ###############################
 ## Load hospitalisation data ##

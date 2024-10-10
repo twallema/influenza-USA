@@ -46,7 +46,7 @@ class ODE_SVI2RHD(ODE):
 
         # calculate state differentials
         dS = - n_vacc - l*S + (1/T_r)*R + (1/T_v)*V
-        dV = n_vacc- (1-e_i)*l*V  - (1/T_v)*V
+        dV = n_vacc - (1-e_i)*l*V  - (1/T_v)*V
         dI = l*S - (1/T_h)*I
         dIv = (1-e_i)*l*V - (1/T_h)*Iv
         dR = (1-rho_h)*(1/T_h)*I + 1 - ((1-e_h)*rho_h)*(1/T_h)*Iv + (1-rho_d)*(1/T_d)*H - (1/T_r)*R
