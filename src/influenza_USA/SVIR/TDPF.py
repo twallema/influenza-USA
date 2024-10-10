@@ -17,37 +17,57 @@ class make_initial_condition_function():
         self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
     
     def initial_condition_function(self, f_I, f_R):
-        """ A function setting the initial conditions """
+        """ A function setting the initial conditions of the model"""
         return {'S':  (1-f_I-f_R) * self.demography, 'I': f_I * self.demography, 'R': f_R * self.demography}
 
 class make_vaccination_function():
 
-    def __init__(self, vaccination_data):
-        """ Load the vaccination data and store them in class
+    def __init__(self, season, vaccination_data):
+        """ Format the vaccination data
         """
-        # add week number for temporal indexing
-        vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week
-        vaccination_data = vaccination_data[['week', 'age', 'state', 'vaccination_rate']]
-        self.vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()    # make sure it's ordered
-        # state sizes
+
+        # check input season
+        if ((season not in vaccination_data.index.unique().values) & (season != 'average')):
+            raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+
+        if season != 'average':
+            # drop index
+            vaccination_data = vaccination_data.reset_index()
+            # slice out correct season
+            vaccination_data = vaccination_data[vaccination_data['season'] == season]
+            # add week number & remove date
+            vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
+            # drop cumulative column
+            vaccination_data = vaccination_data[['week', 'age', 'state', 'daily_incidence']]
+            # sort age groups / spatial units --> are sorted in the model
+            vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()
+            # remove negative entries (there may be some in the first week(s) of the season)
+            vaccination_data['daily_incidence'] = np.where(vaccination_data['daily_incidence'] < 0, 0, vaccination_data['daily_incidence'])
+        else:
+            # to do
+            pass
+
+        # assign to object
+        self.vaccination_data = vaccination_data
+
+        # compute state sizes
         self.n_age = len(self.vaccination_data['age'].unique())
         self.n_loc = len(self.vaccination_data['state'].unique())
-        pass
 
     @lru_cache() # avoid heavy IO while simulating
-    def get_vaccination_rate(self, t):
-        """ Returns the vaccination rates in a given week as an np.ndarray of shape (n_age, n_loc)
+    def get_vaccination_incidence(self, t):
+        """ Returns the daily vaccination incidence as an np.ndarray of shape (n_age, n_loc)
         """
         week_number = t.isocalendar().week
         try:
-            return np.array(self.vaccination_data[self.vaccination_data['week'] == week_number]['vaccination_rate'].values, np.float64).reshape(self.n_age, self.n_loc) 
+            return np.array(self.vaccination_data[self.vaccination_data['week'] == week_number]['daily_incidence'].values, np.float64).reshape(self.n_age, self.n_loc) 
         except:
             return np.zeros([self.n_age, self.n_loc], np.float64)
     
-    def vaccination_function(self, t, states, param, vaccine_rate_modifier, vaccine_rate_timedelta):
+    def vaccination_function(self, t, states, param, vaccine_incidence_modifier, vaccine_incidence_timedelta):
         """ pySODM compatible wrapper
         """
-        return vaccine_rate_modifier * self.get_vaccination_rate(t - timedelta(days=vaccine_rate_timedelta))
+        return vaccine_incidence_modifier * self.get_vaccination_incidence(t - timedelta(days=vaccine_incidence_timedelta))
 
 class make_contact_function():
 

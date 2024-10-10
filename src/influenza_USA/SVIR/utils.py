@@ -32,7 +32,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
             'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),               # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
-            'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),                # vaccination rate (dummy)
+            'n_vacc': np.zeros(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),               # vaccination incidence (dummy)
             'e_i': 0.2,                                                                                                             # vaccine efficacy against infection
             'e_h': 0.5,                                                                                                             # vaccine efficacy against hospitalisation
             'T_r': 365,                                                                                                             # average time to waning of natural immunity
@@ -42,16 +42,17 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'rho_d': 0.06,                                                                                                          # deceased in hospital fraction (source: Josh)
             'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
             # time-dependencies
-            'vaccine_rate_modifier': 1.0,                                                                                           # used to modify vaccination rate
-            'vaccine_rate_timedelta': 0,                                                                                            # shift the vaccination season
+            'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
+            'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
             # initial condition
-            'f_I': 1e-4,                                                                                                            # initial fraction of infected
+            'f_I': 1e-4*np.ones(52),                                                                                                # initial fraction of infected
             'f_R': 0.5*np.ones(52),                                                                                                 # initial fraction of recovered
             # outcomes
             'asc_case': 0.004,
             }
 
-    # season-specific case hospitalisation rate
+    # season-specific case hospitalisation rate:
+    # TODO: load from excel:
     if season == '2017-2018':
         CDC_estimated_hosp = np.array([23750, 19636, 76819, 123601, 466766])                            # https://archive.cdc.gov/#/details?url=https://www.cdc.gov/flu/about/burden/2017-2018.htm
     elif season == '2019-2020':
@@ -90,7 +91,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     ## vaccines
     ### vaccine uptake
     from influenza_USA.SVIR.TDPF import make_vaccination_function
-    TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
+    TDPFs['n_vacc'] = make_vaccination_function(season, get_vaccination_data()).vaccination_function
 
     return SVI2RHD(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
@@ -133,10 +134,19 @@ def construct_coordinates_dictionary(spatial_resolution, age_resolution):
 
 def get_vaccination_data():
     """
-    A function to retrieve the 2017-2018 vaccination data
+    A function to retrieve the 2010-2024 vaccination incidence data
+
+    output
+    ------
+
+    data: pd.DataFrame
+        Index: 'season' (str; '20xx-20xx')
+        Columns: 'date' (str; 'yyyy-mm-dd'), 'age' (str; '[0, 5('), 'state' (str; 'xx000'), 'vaccination_incidence' (float)
     """
-    rel_dir = f'../../../data/interim/vaccination/vaccination_rates_2017-2018.csv'
-    return pd.read_csv(os.path.join(abs_dir,rel_dir), index_col=0, header=0, parse_dates=True).reset_index()
+    rel_dir = f'../../../data/interim/vaccination/vaccination_incidences_2010-2024.csv'
+    data = pd.read_csv(os.path.join(abs_dir,rel_dir), dtype={'season': str, 'age': str, 'state': str, 'daily_incidence': float, 'cumulative': float})
+    data['date'] = pd.to_datetime(data['date'])
+    return data.set_index('season')
 
 def get_contact_matrix(daytype, age_resolution):
     """
