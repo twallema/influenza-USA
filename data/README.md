@@ -106,7 +106,8 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 ### Vaccination
 
-+ `vaccination_rates_2017-2018.csv`: A script to aggregate the age-and space stratified vaccination rates for 2017-2018 into one dataframe.
++ `vaccination_rates_2017-2018.csv`: Groups the raw vaccination data for the 2017-2018 season, which was spread out over multiple files, into one and adopts the naming conventions used in this software. 
++ `vaccination_incidences_2010-2024.csv`: Formats the raw vaccination data from 2010-2024, `vacc_alldoses_age_Flu_2024_R1_allflu_allseasons.csv`, to use the naming conventions used in this software.
 
 ### FIPS codes
 
