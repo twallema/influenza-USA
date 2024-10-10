@@ -30,22 +30,27 @@ class make_vaccination_function():
         if ((season not in vaccination_data.index.unique().values) & (season != 'average')):
             raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
 
+        # drop index
+        vaccination_data = vaccination_data.reset_index()
+
         if season != 'average':
-            # drop index
-            vaccination_data = vaccination_data.reset_index()
             # slice out correct season
             vaccination_data = vaccination_data[vaccination_data['season'] == season]
             # add week number & remove date
             vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
-            # drop cumulative column
             vaccination_data = vaccination_data[['week', 'age', 'state', 'daily_incidence']]
             # sort age groups / spatial units --> are sorted in the model
             vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()
             # remove negative entries (there may be some in the first week(s) of the season)
             vaccination_data['daily_incidence'] = np.where(vaccination_data['daily_incidence'] < 0, 0, vaccination_data['daily_incidence'])
         else:
-            # to do
-            pass
+            # add week number & remove date
+            vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
+            vaccination_data = vaccination_data[['week', 'age', 'state', 'daily_incidence']]
+            # average out + sort
+            vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).mean('daily_incidence').sort_index().reset_index()
+            # remove negative entries (there may be some in the first week(s) of the season)
+            vaccination_data['daily_incidence'] = np.where(vaccination_data['daily_incidence'] < 0, 0, vaccination_data['daily_incidence'])
 
         # assign to object
         self.vaccination_data = vaccination_data
