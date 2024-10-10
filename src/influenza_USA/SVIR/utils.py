@@ -44,7 +44,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # time-dependencies
             'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
             'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
-            # initial condition
+            # initial condition function
             'f_I': 1e-4*np.ones(52),                                                                                                # initial fraction of infected
             'f_R': 0.5*np.ones(52),                                                                                                 # initial fraction of recovered
             # outcomes
@@ -61,24 +61,9 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     rel_contacts = np.array([17.4/19.8, 17.4/29.1, 17.4/18.6, 17.4/13.2, 17.4/7.8])                     # contacts in age groups relative to the population average
     params.update({'CHR': rel_contacts * (CDC_estimated_hosp/demo) / (rel_contacts * (CDC_estimated_hosp/demo))[0]})
 
-    # initial condition
-    # OLD >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    ## states
-    ic = load_initial_condition(season=season)
-    total_population = construct_initial_susceptible(spatial_resolution, age_resolution)
-    init_states = {}
-    for k,v in ic.items():
-        # no vaccines initially
-        if k != 'V':
-            init_states[k] = tf.convert_to_tensor(v * total_population)
-    ## outcomes
-    init_states['I_inc'] = 0 * total_population
-    init_states['H_inc'] = 0 * total_population
-    init_states['D_inc'] = 0 * total_population
-    # NEW >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # initial condition function
     from influenza_USA.SVIR.TDPF import make_initial_condition_function
-    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution).initial_condition_function
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season, get_vaccination_data()).initial_condition_function
 
     # time-dependencies
     TDPFs = {}
@@ -147,6 +132,52 @@ def get_vaccination_data():
     data = pd.read_csv(os.path.join(abs_dir,rel_dir), dtype={'season': str, 'age': str, 'state': str, 'daily_incidence': float, 'cumulative': float})
     data['date'] = pd.to_datetime(data['date'])
     return data.set_index('season')
+
+def get_cumulative_vaccinated(t, season, vaccination_data):
+    """
+    A function returning the cumulative number of vaccinated individuals at date 't' in season 'season'
+
+    input
+    -----
+
+    output
+    ------
+
+    """
+
+    # get week number
+    week_number = t.isocalendar().week
+
+    # compute state sizes
+    n_age = len(vaccination_data['age'].unique())
+    n_loc = len(vaccination_data['state'].unique())
+
+    # check input season
+    if ((season not in vaccination_data.index.unique().values) & (season != 'average')):
+        raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+
+    # drop index
+    vaccination_data = vaccination_data.reset_index()
+
+    if season != 'average':
+        # slice out correct season
+        vaccination_data = vaccination_data[vaccination_data['season'] == season]
+        # add week number & remove date
+        vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
+        vaccination_data = vaccination_data[['week', 'age', 'state', 'cumulative']]
+        # sort age groups / spatial units --> are sorted in the model
+        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()
+    else:
+        # add week number & remove date
+        vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
+        vaccination_data = vaccination_data[['week', 'age', 'state', 'cumulative']]
+        # average out + sort
+        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).mean('cumulative').sort_index().reset_index()
+
+    try:
+        return np.array(vaccination_data[vaccination_data['week'] == week_number]['cumulative'].values, np.float64).reshape(n_age, n_loc) 
+    except:
+        return np.zeros([n_age, n_loc], np.float64)
 
 def get_contact_matrix(daytype, age_resolution):
     """

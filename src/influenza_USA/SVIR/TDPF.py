@@ -10,15 +10,38 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
-from influenza_USA.SVIR.utils import construct_initial_susceptible
+from influenza_USA.SVIR.utils import construct_initial_susceptible, get_cumulative_vaccinated
 class make_initial_condition_function():
 
-    def __init__(self, spatial_resolution, age_resolution):
+    def __init__(self, spatial_resolution, age_resolution, start_sim, season, vaccination_data):
+        # retrieve the demography (susceptible pool)
         self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
+        # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
+        self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
     
     def initial_condition_function(self, f_I, f_R):
-        """ A function setting the initial conditions of the model"""
-        return {'S':  (1-f_I-f_R) * self.demography, 'I': f_I * self.demography, 'R': f_R * self.demography}
+        """
+        A function setting the model's initial condition
+        
+        input
+        -----
+
+        f_I: float / np.ndarray
+            Fraction of the unvaccinated population infected at simulation start
+        
+        f_R: float / np.ndarray
+            Fraction of the unvaccinated population recovered at simulation start
+
+        output
+        ------
+
+        initial_condition: dict
+            Keys: 'S', 'V', 'I', 'R'. Values: np.ndarray (n_age x n_loc).
+        """
+        return {'S':  (1-f_I-f_R) * (self.demography - self.vaccinated),
+                'V': self.vaccinated,
+                'I': f_I * (self.demography - self.vaccinated),
+                'R': f_R * (self.demography - self.vaccinated)}
 
 class make_vaccination_function():
 
