@@ -37,7 +37,7 @@ stoch = False                       # ODE vs. tau-leap
 n_pso = 50                                                         # Number of PSO iterations
 multiplier_pso = 10                                                 # PSO swarm size
 ## bayesian
-identifier = 'USA_level'                                                 # Use waning as identifier of script output
+identifier = 'USA'                                                 # Use waning as identifier of script output
 n_mcmc = 300                                                        # Number of MCMC iterations
 multiplier_mcmc = 5                                                # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10                                                        # Print diagnostics every `print_n`` iterations
@@ -51,13 +51,13 @@ processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))    # Retrieve C
 if season == '2017-2018':
     start_calibration = datetime(2017, 8, 1)
     end_calibration = None
-    start_peakslice = datetime(2018, 1, 10)
-    end_peakslice = datetime(2018, 2, 10)
+    start_slice = datetime(2018, 1, 10)
+    end_slice = datetime(2018, 2, 10)
 elif season == '2019-2020':
     start_calibration = datetime(2019, 8, 1)
     end_calibration = datetime(2020, 3, 22)
-    start_peakslice = datetime(2020, 1, 1)
-    end_peakslice = datetime(2020, 3, 1)
+    start_slice = datetime(2020, 1, 1)
+    end_slice = datetime(2020, 3, 1)
 
 ###############
 ## Load data ##
@@ -71,7 +71,7 @@ df /= 7
 df.index.rename('date', inplace=True)
 # slice data until end
 df = df.loc[slice(None, end_calibration)]
-df_peak = df.loc[slice(start_peakslice, end_peakslice)]
+df_peak = df.loc[slice(start_slice, end_slice)]
 df_bump = df.loc[slice(datetime(2017, 8, 1), datetime(2017, 8, 16))]
 # replace `end_calibration` None --> datetime
 end_calibration = df.index.max()
@@ -116,9 +116,9 @@ if __name__ == '__main__':
     log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson, ll_poisson, ll_poisson, ll_poisson, ll_poisson] 
     log_likelihood_fnc_args = [[],[],[],[],[],[],[]]
     # parameters to calibrate and bounds
-    pars = ['beta', 'rho_h', 'rho_d', 'asc_case', 'f_I', 'f_R', 'T_r']
-    labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$', r'$f_I$', r'$f_R$', r'$T_r$']
-    bounds = [(0.01,0.048), (1e-4,0.1), (1e-4,1), (1e-4,0.1), (1e-7,1), (0.01,1), (210,3*365)]
+    pars = ['beta', 'rho_h', 'rho_d', 'asc_case', 'f_I', 'f_R']
+    labels = [r'$\beta$', r'$\rho_h$', r'$\rho_d$', r'$\alpha_{case}$', r'$f_I$', r'$f_R$']
+    bounds = [(0.01,0.048), (1e-4,0.1), (1e-4,1), (1e-4,0.1), (1e-7,1), (0.01,1)]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model,pars,bounds,data,states,log_likelihood_fnc,log_likelihood_fnc_args,
                                                     start_sim=start_calibration, weights=weights, labels=labels)
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 
     # Initial guess
     # season: 2017-2018
-    theta = [3.28198717e-02, 3.30001591e-03, 4.73800683e-02, 3.07795749e-03, 2.30198943e-05, 6.09976497e-01, 4.36667852e+02, 365]
+    theta = [0.0333, 0.00334, 0.0479, 0.00317, 2.33e-05, 0.603]
     
     # Perform optimization 
     #step = len(bounds)*[0.05,]
@@ -168,6 +168,8 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.show()
     plt.close()
+    import sys
+    sys.exit()
 
     ##########
     ## MCMC ##
