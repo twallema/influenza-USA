@@ -45,27 +45,27 @@ multiplier_pso = 10                                                             
 ## bayesian
 identifier = 'USA_states'                                                       # ID of run
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
-n_mcmc = 2000                                                                   # Number of MCMC iterations
+n_mcmc = 3000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 100                                                                   # Print diagnostics every `print_n`` iterations
-discard = 1600                                                                  # Discard first `discard` iterations as burn-in
-thin = 50                                                                       # Thinning factor emcee chains
+discard = 1200                                                                  # Discard first `discard` iterations as burn-in
+thin = 10                                                                       # Thinning factor emcee chains
 n = 200                                                                         # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))                # Retrieve CPU count
 ## continue run
-#run_date = '2024-10-09'                                                        # First date of run
-#backend_identifier = 'USA_states_strat_f_I'
-#backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+run_date = '2024-10-10'                                                        # First date of run
+backend_identifier = 'USA_states'
+backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 
 ## new run
-backend_path = None
-if not backend_path:
-    run_date = datetime.today().strftime("%Y-%m-%d")
-# national estimates
-beta = 0.0333
-rho_h = 0.00334
-f_I = 2.33e-05
-f_R = 0.60
+# backend_path = None
+# if not backend_path:
+#     run_date = datetime.today().strftime("%Y-%m-%d")
+# # national estimates
+# beta = 0.0333
+# rho_h = 0.00334
+# f_I = 2.33e-05
+# f_R = 0.60
 
 ###############################
 ## Load hospitalisation data ##
@@ -161,7 +161,8 @@ if __name__ == '__main__':
     #################
 
     # Initial guess
-    theta = (n_states+1)*[beta,] + [rho_h,] + (n_states+1)*[f_I,] + (n_states+1)*[f_R,] 
+    if not backend_path:
+        theta = (n_states+1)*[beta,] + [rho_h,] + (n_states+1)*[f_I,] + (n_states+1)*[f_R,] 
 
     # Perform optimization 
     #step = len(bounds)*[0.05,]
@@ -206,8 +207,6 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
-    import sys
-    sys.exit()
 
     ##########
     ## MCMC ##
@@ -239,14 +238,13 @@ if __name__ == '__main__':
     ## Visualize result ##
     ######################
  
-    def draw_fcn(parameters, initial_states, samples):
+    def draw_fcn(parameters, samples):
         # sample posterior distribution
         idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
         parameters['beta'] = np.array([slice[idx] for slice in samples['beta']])
         parameters['f_I'] = np.array([slice[idx] for slice in samples['f_I']])
         parameters['f_R'] = np.array([slice[idx] for slice in samples['f_R']])
-
-        return parameters, initial_states
+        return parameters
     
     # Simulate model
     out = model.sim([start_calibration, end_calibration], N=n,
