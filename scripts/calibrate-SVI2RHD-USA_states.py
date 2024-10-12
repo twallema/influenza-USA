@@ -35,22 +35,22 @@ dd = False                          # vary contact matrix by daytype
 stoch = False                       # ODE vs. tau-leap
 
 # optimization
-start_calibration = datetime(season_start, 8, 1)
+start_calibration = datetime(season_start, 8, 1)                                # simulations will start on this date
 end_calibration = None                                                          # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
-start_slice = datetime(season_start+1, 1, 1)
-end_slice = datetime(season_start+1, 2, 10)
+start_slice = datetime(season_start+1, 1, 1)                                    # add in a part of the dataset twice: in this case the peak in hosp.
+end_slice = datetime(season_start+1, 3, 1)
 ## frequentist
 n_pso = 500                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
 identifier = 'USA_states'                                                       # ID of run
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
-n_mcmc = 3000                                                                   # Number of MCMC iterations
+n_mcmc = 2000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 100                                                                   # Print diagnostics every `print_n`` iterations
-discard = 1200                                                                  # Discard first `discard` iterations as burn-in
-thin = 10                                                                       # Thinning factor emcee chains
-n = 200                                                                         # Repeated simulations used in visualisations
+discard = 2158                                                                  # Discard first `discard` iterations as burn-in
+thin = 1                                                                       # Thinning factor emcee chains
+n = 400                                                                         # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))                # Retrieve CPU count
 ## continue run
 run_date = '2024-10-10'                                                        # First date of run
@@ -79,13 +79,17 @@ df = df[df['season_start'] == str(season_start)][['date', 'location', 'H_inc']]
 df = df.groupby(by=['date', 'location']).sum().squeeze()
 # convert to daily incidence
 df /= 7
+# compute enddate of the dataset
+end_sim = df.index.get_level_values('date').unique().max()
 # slice data until end
-df = df.loc[slice(start_calibration, end_calibration), slice(None)]
+df_calibration = df.loc[slice(start_calibration, end_calibration), slice(None)]
 df_slice = df.loc[slice(start_slice, end_slice), slice(None)]
 # replace `end_calibration` None --> datetime
-end_calibration = df.index.get_level_values('date').unique().max()
+end_calibration = df_calibration.index.get_level_values('date').unique().max()
+# now slice out the remainder of the dataset
+df_validation = df.loc[slice(end_calibration, None), slice(None)]
 # variable we need a lot
-n_states = len(df.index.get_level_values('location').unique())
+n_states = len(df_calibration.index.get_level_values('location').unique())
 
 #####################################################
 ## Load previous sampler and extract last estimate ##
@@ -138,8 +142,8 @@ if __name__ == '__main__':
     states = []
     log_likelihood_fnc = []
     log_likelihood_fnc_args = []
-    for d_star, rel_weight in zip([df, df_slice], [0.05, 0.05]):
-        for state_fips in df.index.get_level_values('location').unique():
+    for d_star, rel_weight in zip([df_calibration, df_slice], [0.10, 0.10]):
+        for state_fips in df_calibration.index.get_level_values('location').unique():
             d = d_star.reset_index()[d_star.reset_index()['location'] == state_fips].groupby(by=['date', 'location']).sum()
             data.append(d)
             weights.append(1/max(d.squeeze()))
@@ -175,20 +179,23 @@ if __name__ == '__main__':
     # Assign results to model
     model.parameters = assign_theta(model.parameters, pars, theta)
     # Simulate model
-    out = model.sim([start_calibration, end_calibration])
+    out = model.sim([start_calibration, end_sim])
     # Visualize
     fig, ax = plt.subplots(n_states+1, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states+1)))
     props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
     ## Overall
-    x_data = df.index.get_level_values('date').unique().values
-    ax[0].scatter(x_data, 7*df.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    x_calibration_data = df_calibration.index.get_level_values('date').unique().values
+    x_validation_data = df_validation.index.get_level_values('date').unique().values
+    ax[0].scatter(x_calibration_data, 7*df_calibration.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    ax[0].scatter(x_validation_data, 7*df_validation.groupby(by='date').sum(), color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
     ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
     ax[0].set_title('USA')
     ax[0].grid(False)
 
     ## per state
     for i,loc in enumerate(df.index.get_level_values('location').unique().values):
-        ax[i+1].scatter(x_data, 7*df.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+1].scatter(x_calibration_data, 7*df_calibration.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+1].scatter(x_validation_data, 7*df_validation.loc[slice(None), loc], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc), color='blue', alpha=1, linewidth=2)
         ax[i+1].set_title(f"{fips2name(loc)} ({loc})")
         pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R(loc, model.coordinates['location'])
@@ -247,15 +254,17 @@ if __name__ == '__main__':
         return parameters
     
     # Simulate model
-    out = model.sim([start_calibration, end_calibration], N=n,
+    out = model.sim([start_calibration, end_sim], N=n,
                         draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
 
     # Visualize
     fig, ax = plt.subplots(n_states+1, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states+1)))
     props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
     ## Overall
-    x_data = df.index.get_level_values('date').unique().values
-    ax[0].scatter(x_data, 7*df.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    x_calibration_data = df_calibration.index.get_level_values('date').unique().values
+    x_validation_data = df_validation.index.get_level_values('date').unique().values
+    ax[0].scatter(x_calibration_data, 7*df_calibration.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    ax[0].scatter(x_validation_data, 7*df_validation.groupby(by='date').sum(), color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
     ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
     ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
                         7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
@@ -264,7 +273,8 @@ if __name__ == '__main__':
 
     ## per state
     for i,loc in enumerate(df.index.get_level_values('location').unique().values):
-        ax[i+1].scatter(x_data, 7*df.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+1].scatter(x_calibration_data, 7*df_calibration.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+1].scatter(x_validation_data, 7*df_validation.loc[slice(None), loc], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
         ax[i+1].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=0.05/2),
                              7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
