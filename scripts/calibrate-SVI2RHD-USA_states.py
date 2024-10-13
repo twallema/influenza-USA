@@ -43,18 +43,18 @@ end_slice = datetime(season_start+1, 3, 1)
 n_pso = 500                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'USA_states'                                                       # ID of run
+identifier = 'USA_states_cont'                                                       # ID of run
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
-n_mcmc = 2000                                                                   # Number of MCMC iterations
+n_mcmc = 1                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 100                                                                   # Print diagnostics every `print_n`` iterations
 discard = 2158                                                                  # Discard first `discard` iterations as burn-in
-thin = 1                                                                       # Thinning factor emcee chains
+thin = 10                                                                       # Thinning factor emcee chains
 n = 400                                                                         # Repeated simulations used in visualisations
 processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))                # Retrieve CPU count
 ## continue run
-run_date = '2024-10-10'                                                        # First date of run
-backend_identifier = 'USA_states'
+run_date = '2024-10-12'                                                        # First date of run
+backend_identifier = 'USA_states_cont'
 backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 
 ## new run
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     # labels in output figures
     labels = [r'$\beta$', r'$\rho_h$', r'$f_I$', r'$f_R$']
     # parameter bounds
-    bounds = [(0.001,0.06), (0.0001,0.1), (1e-9,1), (0,1)]
+    bounds = [(0.001,0.06), (0.0001,0.1), (0,1), (0,1)]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args, start_sim=start_calibration, weights=weights, labels=labels)
 
@@ -167,6 +167,42 @@ if __name__ == '__main__':
     # Initial guess
     if not backend_path:
         theta = (n_states+1)*[beta,] + [rho_h,] + (n_states+1)*[f_I,] + (n_states+1)*[f_R,] 
+
+    # # Connecticut
+    # pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R('09000', model.coordinates['location'])
+    # theta[pos_beta] *= 0.75
+    # theta[pos_f_I] *= 1e-6
+    # theta[pos_f_R] *= 0.60
+
+    # # Texas
+    # pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R('48000', model.coordinates['location'])
+    # theta[pos_beta] *= 0.9
+    # theta[pos_f_I] *= 5
+    # theta[pos_f_R] *= 0.97
+
+    # # Colorado
+    # pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R('08000', model.coordinates['location'])
+    # theta[pos_beta] *= 1
+    # theta[pos_f_I] *= 4
+    # theta[pos_f_R] *= 1.03
+
+    # # New York
+    # pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R('36000', model.coordinates['location'])
+    # theta[pos_beta] *= 1.06
+    # theta[pos_f_I] *= 1e-6
+    # theta[pos_f_R] *= 1
+
+    # # Montana
+    # pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R('30000', model.coordinates['location'])
+    # theta[pos_f_I] *= 4
+
+    # # Oklahoma
+    # pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R('40000', model.coordinates['location'])
+    # theta[pos_f_I] *= 5
+
+    # # Kansas
+    # pos_beta, pos_f_I, pos_f_R = get_pos_beta_f_I_f_R('20000', model.coordinates['location'])
+    # theta[pos_f_I] *= 5
 
     # Perform optimization 
     #step = len(bounds)*[0.05,]
