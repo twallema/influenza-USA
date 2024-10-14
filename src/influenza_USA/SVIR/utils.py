@@ -47,7 +47,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
             'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
             # initial condition function
-            'f_I': 1e-4*np.ones(52),                                                                                                # initial fraction of infected
+            'f_I': 1e-4,                                                                                                # initial fraction of infected
             'f_R': 0.5*np.ones(52),                                                                                                 # initial fraction of recovered
             # outcomes
             'asc_case': 0.004,

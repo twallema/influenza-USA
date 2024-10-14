@@ -42,7 +42,7 @@ class ODE_SVI2RHD(ODE):
         rho_h = (rho_h * CHR)[:, np.newaxis]
 
         # non-targeted vaccine campaign: only S receive vaccine
-        n_vacc = n_vacc * (S/(T-V))
+        n_vacc = n_vacc * (S/(T-V-I-Iv))
 
         # calculate state differentials
         dS = - n_vacc - l*S + (1/T_r)*R + (1/T_v)*V

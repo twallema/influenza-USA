@@ -6,6 +6,7 @@ __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
 import numpy as np
+import tensorflow as tf
 from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
@@ -123,7 +124,7 @@ class make_contact_function():
     def contact_function(self, t, states, param):
         """ pySODM compatible wrapper
         """
-        return self.__call__(t)
+        return tf.convert_to_tensor(self.__call__(t), dtype=float)
 
     @staticmethod
     def is_school_holiday(d):
@@ -143,6 +144,10 @@ class make_contact_function():
         is_school_holiday: bool
             True: date `d` is a school holiday for primary and secundary schools
         """
+
+        #########################
+        ## Fixed date holidays ##
+        #########################
 
         # summer vacation
         if d.month in [6, 7, 8]:  
@@ -179,6 +184,7 @@ class make_contact_function():
             holiday_weeks.append(w_christmas_current)
             if datetime(year=d.year, month=12, day=31).isocalendar().week == 53:
                 holiday_weeks.append(w_christmas_current+1)
+        holiday_weeks = [1,] # two weeks might be a huge overestimation of the impact of this holiday --> first week of year is most consistent with data
 
         # Spring break
         # Extract date of easter
