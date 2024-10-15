@@ -14,7 +14,8 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_beta=False,
+                       distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
 
     # model
     if stochastic:
@@ -47,7 +48,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
             'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
             # initial condition function
-            'f_I': 1e-4,                                                                                                # initial fraction of infected
+            'f_I': 1e-4,                                                                                                            # initial fraction of infected
             'f_R': 0.5*np.ones(52),                                                                                                 # initial fraction of recovered
             # outcomes
             'asc_case': 0.004,
@@ -69,6 +70,23 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     ### vaccine uptake
     from influenza_USA.SVIR.TDPF import make_vaccination_function
     TDPFs['n_vacc'] = make_vaccination_function(season, get_vaccination_data()).vaccination_function
+
+    # hierarchal beta
+    if hierarchal_beta:
+        # function constructing the hierarchal structure
+        from influenza_USA.SVIR.TDPF import hierarchal_beta_function
+        TDPFs['beta'] = hierarchal_beta_function()
+        # its parameters
+        params.update(
+            {
+                'beta_US': 0.03,
+                'delta_beta_states': np.zeros(52),
+                'delta_beta_Dec': 0,
+                'delta_beta_Jan': 0,
+                'delta_beta_Feb': 0,
+                'delta_beta_Mar': 0,
+            }
+        )
 
     return SVI2RHD(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 

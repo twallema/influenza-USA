@@ -11,39 +11,59 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
-from influenza_USA.SVIR.utils import construct_initial_susceptible, get_cumulative_vaccinated
-class make_initial_condition_function():
+##########
+## TDPF ##
+##########
 
-    def __init__(self, spatial_resolution, age_resolution, start_sim, season, vaccination_data):
-        # retrieve the demography (susceptible pool)
-        self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
-        # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
-        self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
-    
-    def initial_condition_function(self, f_I, f_R):
+class hierarchal_beta_function():
+
+    def __call__(self, t, states, param, beta_US, delta_beta_states, delta_beta_Dec, delta_beta_Jan, delta_beta_Feb, delta_beta_Mar):
         """
-        A function setting the model's initial condition
-        
+        A function constructing a spatio-temporal hierarchal transmission rate 'beta'
+
         input
         -----
 
-        f_I: float / np.ndarray
-            Fraction of the unvaccinated population infected at simulation start
+        t: datetime.datetime
+            current timestep in simulation
+
+        states: dict
+            current values of all model states
         
-        f_R: float / np.ndarray
-            Fraction of the unvaccinated population recovered at simulation start
+        param: dict
+            current values of all model parameters
+
+        beta_US: float
+            overall transmission rate
+
+        delta_beta_states: np.ndarray
+            a spatial modifier on the overall transmision rate for every US state. centered around zero.
+
+        delta_beta_Dec: float/np.ndarray
+            a temporal modifier on the overall transmission rate for december.
+            can be a float (the same temporal modifier in every US state) or np.ndarray (a unique temporal modifier in every US state)
 
         output
         ------
 
-        initial_condition: dict
-            Keys: 'S', 'V', 'I', 'R'. Values: np.ndarray (n_age x n_loc).
+        beta: np.ndarray
+            transmission rate per US state
         """
-        return {'S':  self.demography - (1 - f_I - f_R) * self.vaccinated - (f_I + f_R) * self.demography,
-                'V': (1 - f_I - f_R) * self.vaccinated,
-                'I': f_I * self.demography,
-                'R': f_R * self.demography}
 
+        # construct beta
+        if t.month == 12:
+            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Dec + 1)
+        elif t.month == 1:
+            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Jan + 1)
+        elif t.month == 2:
+            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Feb + 1)
+        elif t.month == 3:
+            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Mar + 1)
+        else:
+            beta = beta_US * (delta_beta_states + 1) 
+
+        return beta
+    
 class make_vaccination_function():
 
     def __init__(self, season, vaccination_data):
@@ -257,6 +277,44 @@ class make_contact_function():
             return True
         
         return False
+
+################################
+## Initial condition function ##
+################################
+
+from influenza_USA.SVIR.utils import construct_initial_susceptible, get_cumulative_vaccinated
+class make_initial_condition_function():
+
+    def __init__(self, spatial_resolution, age_resolution, start_sim, season, vaccination_data):
+        # retrieve the demography (susceptible pool)
+        self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
+        # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
+        self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
+    
+    def initial_condition_function(self, f_I, f_R):
+        """
+        A function setting the model's initial condition
+        
+        input
+        -----
+
+        f_I: float / np.ndarray
+            Fraction of the unvaccinated population infected at simulation start
+        
+        f_R: float / np.ndarray
+            Fraction of the unvaccinated population recovered at simulation start
+
+        output
+        ------
+
+        initial_condition: dict
+            Keys: 'S', 'V', 'I', 'R'. Values: np.ndarray (n_age x n_loc).
+        """
+        return {'S':  self.demography - (1 - f_I - f_R) * self.vaccinated - (f_I + f_R) * self.demography,
+                'V': (1 - f_I - f_R) * self.vaccinated,
+                'I': f_I * self.demography,
+                'R': f_R * self.demography}
+
 
 ################################################################
 ## PARKING: seasonality & exponential vaccine efficacy waning ##
