@@ -14,7 +14,7 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_beta=False,
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_transmission_rate=False,
                        distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
 
     # model
@@ -49,7 +49,8 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
             # initial condition function
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
-            'f_R': 0.5*np.ones(52),                                                                                                 # initial fraction of recovered
+            'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
+            'delta_f_R': np.zeros(52),                                                                                              # immunity modifier (US states)
             # outcomes
             'asc_case': 0.004,
             }
@@ -71,11 +72,11 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     from influenza_USA.SVIR.TDPF import make_vaccination_function
     TDPFs['n_vacc'] = make_vaccination_function(season, get_vaccination_data()).vaccination_function
 
-    # hierarchal beta
-    if hierarchal_beta:
+    # hierarchal transmission rate
+    if hierarchal_transmission_rate:
         # function constructing the hierarchal structure
-        from influenza_USA.SVIR.TDPF import hierarchal_beta_function
-        TDPFs['beta'] = hierarchal_beta_function()
+        from influenza_USA.SVIR.TDPF import hierarchal_transmission_rate_function
+        TDPFs['beta'] = hierarchal_transmission_rate_function()
         # its parameters
         params.update(
             {

@@ -11,11 +11,44 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
-##########
-## TDPF ##
-##########
+##########################
+## Hierarchal structure ##
+##########################
 
-class hierarchal_beta_function():
+class hierarchal_immunity_function():
+    def __call__(self, t, states, param, f_R_US, delta_f_R_states):
+        """
+        A function constructing a hierarchal initial immunity parameter (f_R)
+
+        input
+        -----
+
+        t: datetime.datetime
+            current timestep in simulation
+
+        states: dict
+            current values of all model states
+        
+        param: dict
+            current values of all model parameters
+
+        f_R_US: float
+            initial immunity of US
+        
+        delta_f_R_states: np.ndarray
+            initial immunity modifier of US states (centered around zero)
+
+        output
+        ------
+
+        f_R: np.ndarray
+            initial immunity of US states. computed as the product of the overall immunity 'f_R_US' and the state modifiers 'delta_f_R_states'. 
+        """
+
+        return f_R_US * delta_f_R_states
+
+
+class hierarchal_transmission_rate_function():
 
     def __call__(self, t, states, param, beta_US, delta_beta_states, delta_beta_Dec, delta_beta_Jan, delta_beta_Feb, delta_beta_Mar):
         """
@@ -64,6 +97,10 @@ class hierarchal_beta_function():
 
         return beta
     
+##############
+## Vaccines ##
+##############
+
 class make_vaccination_function():
 
     def __init__(self, season, vaccination_data):
@@ -117,6 +154,10 @@ class make_vaccination_function():
         """ pySODM compatible wrapper
         """
         return vaccine_incidence_modifier * self.get_vaccination_incidence(t - timedelta(days=vaccine_incidence_timedelta))
+
+#####################
+## Social contacts ##
+#####################
 
 class make_contact_function():
 
@@ -291,18 +332,21 @@ class make_initial_condition_function():
         # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
         self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
     
-    def initial_condition_function(self, f_I, f_R):
+    def initial_condition_function(self, f_I, f_R, delta_f_R):
         """
-        A function setting the model's initial condition
+        A function setting the model's initial condition. Uses a hierarchal structure for the initial immunity.
         
         input
         -----
 
         f_I: float / np.ndarray
-            Fraction of the unvaccinated population infected at simulation start
+            fraction of the unvaccinated population infected at simulation start
+
+        f_R: float
+            initial immunity of US (parent distribution)
         
-        f_R: float / np.ndarray
-            Fraction of the unvaccinated population recovered at simulation start
+        delta_f_R: np.ndarray
+            initial immunity modifier of US states (child distributions)
 
         output
         ------
@@ -310,11 +354,11 @@ class make_initial_condition_function():
         initial_condition: dict
             Keys: 'S', 'V', 'I', 'R'. Values: np.ndarray (n_age x n_loc).
         """
+        f_R = f_R * delta_f_R # hierarchal initial immunity
         return {'S':  self.demography - (1 - f_I - f_R) * self.vaccinated - (f_I + f_R) * self.demography,
                 'V': (1 - f_I - f_R) * self.vaccinated,
                 'I': f_I * self.demography,
                 'R': f_R * self.demography}
-
 
 ################################################################
 ## PARKING: seasonality & exponential vaccine efficacy waning ##
