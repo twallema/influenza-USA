@@ -354,7 +354,7 @@ class make_initial_condition_function():
         initial_condition: dict
             Keys: 'S', 'V', 'I', 'R'. Values: np.ndarray (n_age x n_loc).
         """
-        f_R = f_R * delta_f_R # hierarchal initial immunity
+        f_R = f_R * (1 + delta_f_R) # hierarchal initial immunity
         return {'S':  self.demography - (1 - f_I - f_R) * self.vaccinated - (f_I + f_R) * self.demography,
                 'V': (1 - f_I - f_R) * self.vaccinated,
                 'I': f_I * self.demography,
