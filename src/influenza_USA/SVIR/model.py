@@ -8,7 +8,7 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 
 import numpy as np
 import tensorflow as tf
-from pySODM.models.base import ODE, JumpProcess
+from pySODM.models.base import ODE
 
 ###################
 ## Deterministic ##
@@ -22,11 +22,11 @@ class ODE_SVI2RHD(ODE):
     states = ['S','V','I','Iv','R','H','D',     # states
               'I_inc', 'H_inc', 'D_inc'         # outcomes
               ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'CHR', 'T_h', 'rho_d', 'T_d', 'asc_case']
+    parameters = ['beta', 'f_v', 'N', 'M', 'n_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'CHR', 'T_h', 'rho_d', 'T_d', 'asc_case']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
+    def integrate(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, n_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
 
         # compute total population
         T = S+V+I+Iv+R+H
@@ -36,14 +36,17 @@ class ODE_SVI2RHD(ODE):
         T_v = np.matmul(T, M)
 
         # compute force of infection
-        l = beta * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
+        l = np.atleast_1d(beta)[np.newaxis, :] * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
 
         # u-shaped severity curve
         rho_h = (rho_h * CHR)[:, np.newaxis]
 
+        # non-targeted vaccine campaign: only S receive vaccine
+        n_vacc = n_vacc * (S/(T-V-I-Iv))
+
         # calculate state differentials
-        dS = - r_vacc*S - l*S + (1/T_r)*R + (1/T_v)*V
-        dV = r_vacc*S - (1-e_i)*l*V  - (1/T_v)*V
+        dS = - n_vacc - l*S + (1/T_r)*R + (1/T_v)*V
+        dV = n_vacc - (1-e_i)*l*V  - (1/T_v)*V
         dI = l*S - (1/T_h)*I
         dIv = (1-e_i)*l*V - (1/T_h)*Iv
         dR = (1-rho_h)*(1/T_h)*I + 1 - ((1-e_h)*rho_h)*(1/T_h)*Iv + (1-rho_d)*(1/T_d)*H - (1/T_r)*R
@@ -56,66 +59,3 @@ class ODE_SVI2RHD(ODE):
         dD_inc = dD - D_inc
 
         return dS, dV, dI, dIv, dR, dH, dD, dI_inc, dH_inc, dD_inc
-    
-################
-## Stochastic ##
-################
-
-class TL_SVI2RHD(JumpProcess):
-    """
-    Stochastic influenza model with vaccines and age/spatial stratification
-    """
-
-    states = ['S','V','I','Iv','R','H','D',     # states
-              'I_inc', 'H_inc', 'D_inc'         # outcomes
-              ]
-    parameters = ['beta', 'f_v', 'N', 'M', 'r_vacc', 'e_i', 'e_h', 'T_r', 'T_v', 'rho_h', 'CHR', 'T_h', 'rho_d', 'T_d', 'asc_case']
-    dimensions = ['age_group', 'location']
-
-    @staticmethod
-    def compute_rates(t, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
-
-        # compute total population
-        T = S+V+I+Iv+R+H
-
-        # compute visiting populations
-        I_v = (I+Iv) @ M
-        T_v = T @ M
-
-        # compute force of infection
-        l = beta * (tf.einsum ('lj, il -> ij', (I+Iv)/T, (1-f_v)*N) + tf.einsum ('jk, lk, il -> ij', M, I_v/T_v, f_v*N))
-
-        # u-shaped severity curve
-        rho_h = (rho_h * CHR)[:, np.newaxis]
-
-        # compute rates of transitionings
-        size_dummy = np.ones(S.shape, np.float64)
-        rates = {
-            'S': [l.numpy(), r_vacc], 
-            'V': [(1-e_i)*l.numpy(), size_dummy*(1/T_v)],
-            'I': [size_dummy*(1-rho_h)*(1/T_h), size_dummy*rho_h*(1/T_h)],
-            'Iv': [size_dummy*(1-((1-e_h)*rho_h)*(1/T_h)), size_dummy*rho_h*(1-e_h)*(1/T_h)],
-            'H': [size_dummy*(1-rho_d)*(1/T_d), size_dummy*rho_d*(1/T_d)],
-            'R': [size_dummy*(1/T_r),]
-            }
-        
-        return rates
-
-    @ staticmethod
-    def apply_transitionings(t, tau, transitionings, S, V, I, Iv, R, H, D, I_inc, H_inc, D_inc, beta, f_v, N, M, r_vacc, e_i, e_h, T_r, T_v, rho_h, CHR, T_h, rho_d, T_d, asc_case):
-        
-        # states
-        S_new = S - transitionings['S'][0] - tau*transitionings['S'][1] + transitionings['V'][1] + transitionings['R'][0]
-        V_new = V - transitionings['V'][0] - transitionings['V'][1] + tau*transitionings['S'][1]
-        I_new = I + transitionings['S'][0] - transitionings['I'][0] - transitionings['I'][1]
-        Iv_new = Iv + transitionings['V'][0] - transitionings['Iv'][0] - transitionings['Iv'][1]
-        R_new = R + transitionings['I'][0] + transitionings['Iv'][0] - transitionings['R'][0] + transitionings['H'][0]
-        H_new = H + transitionings['I'][1] + transitionings['Iv'][1] - transitionings['H'][0] - transitionings['H'][1] 
-        D_new = D + transitionings['H'][1] 
-        
-        # incidences
-        I_inc_new = (1/tau)*asc_case*(transitionings['S'][0] + transitionings['V'][0])
-        H_inc_new = (1/tau)*(transitionings['I'][1] + transitionings['Iv'][1])
-        D_inc_new = (1/tau)*transitionings['H'][1]
-
-        return(S_new, V_new, I_new, Iv_new, R_new, H_new, D_new, I_inc_new, H_inc_new, D_inc_new)

@@ -14,10 +14,12 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_beta=False,
+                       distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
 
     # model
     if stochastic:
+        # doesn't work
         from influenza_USA.SVIR.model import TL_SVI2RHD as SVI2RHD
     else:
         from influenza_USA.SVIR.model import ODE_SVI2RHD as SVI2RHD
@@ -28,48 +30,33 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     # parameters
     params = {
             # core parameters
-            'beta': 0.023,                                                                                                          # infectivity (-)
+            'beta': 0.03*np.ones(52),                                                                                               # infectivity (-)
             'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
             'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),               # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
-            'r_vacc': np.ones(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),                # vaccination rate (dummy)
+            'n_vacc': np.zeros(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),               # vaccination incidence (dummy)
             'e_i': 0.2,                                                                                                             # vaccine efficacy against infection
             'e_h': 0.5,                                                                                                             # vaccine efficacy against hospitalisation
-            'T_r': 365,                                                                                                             # average time to waning of natural immunity
-            'T_v': 10*365/2,                                                                                                        # average time to waning of vaccine immunity
+            'T_r': 365/np.log(2),                                                                                                   # average time to waning of natural immunity
+            'T_v': 10*365,                                                                                                          # average time to waning of vaccine immunity
             'rho_h': 0.014,                                                                                                         # hospitalised fraction (source: Josh)
             'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
-            'rho_d': 0.082,                                                                                                         # deceased in hospital fraction (source: Josh)
+            'rho_d': 0.06,                                                                                                          # deceased in hospital fraction (source: Josh)
             'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
+            'CHR': compute_case_hospitalisation_rate(season),                                                                       # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # time-dependencies
-            'vaccine_rate_modifier': 1.0,                                                                                           # used to modify vaccination rate
-            'vaccine_rate_timedelta': 0,                                                                                            # shift the vaccination season
+            'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
+            'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
+            # initial condition function
+            'f_I': 1e-4,                                                                                                            # initial fraction of infected
+            'f_R': 0.5*np.ones(52),                                                                                                 # initial fraction of recovered
             # outcomes
             'asc_case': 0.004,
             }
 
-    # season-specific case hospitalisation rate
-    if season == '2017-2018':
-        CDC_estimated_hosp = np.array([23750, 19636, 76819, 123601, 466766])                            # https://archive.cdc.gov/#/details?url=https://www.cdc.gov/flu/about/burden/2017-2018.htm
-    elif season == '2019-2020':
-        CDC_estimated_hosp = np.array([26376, 19276, 80866, 92391, 173012])                             # https://www.cdc.gov/flu-burden/php/data-vis/2019-2020.html?CDC_AAref_Val=https://www.cdc.gov/flu/about/burden/2019-2020.html
-    demo = np.array([18608139, 54722401, 141598551, 63172279, 60019216])                                # US demography
-    rel_contacts = np.array([17.4/19.8, 17.4/29.1, 17.4/18.6, 17.4/13.2, 17.4/7.8])                     # contacts in age groups relative to the population average
-    params.update({'CHR': rel_contacts * (CDC_estimated_hosp/demo) / (rel_contacts * (CDC_estimated_hosp/demo))[0]})
-
-    # initial condition
-    ## states
-    ic = load_initial_condition(season=season)
-    total_population = construct_initial_susceptible(spatial_resolution, age_resolution)
-    init_states = {}
-    for k,v in ic.items():
-        # no vaccines initially
-        if k != 'V':
-            init_states[k] = tf.convert_to_tensor(v * total_population)
-    ## outcomes
-    init_states['I_inc'] = 0 * total_population
-    init_states['H_inc'] = 0 * total_population
-    init_states['D_inc'] = 0 * total_population
+    # initial condition function
+    from influenza_USA.SVIR.TDPF import make_initial_condition_function
+    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season, get_vaccination_data()).initial_condition_function
 
     # time-dependencies
     TDPFs = {}
@@ -82,9 +69,26 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     ## vaccines
     ### vaccine uptake
     from influenza_USA.SVIR.TDPF import make_vaccination_function
-    TDPFs['r_vacc'] = make_vaccination_function(get_vaccination_data()).vaccination_function
+    TDPFs['n_vacc'] = make_vaccination_function(season, get_vaccination_data()).vaccination_function
 
-    return SVI2RHD(states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
+    # hierarchal beta
+    if hierarchal_beta:
+        # function constructing the hierarchal structure
+        from influenza_USA.SVIR.TDPF import hierarchal_beta_function
+        TDPFs['beta'] = hierarchal_beta_function()
+        # its parameters
+        params.update(
+            {
+                'beta_US': 0.03,
+                'delta_beta_states': np.zeros(52),
+                'delta_beta_Dec': 0,
+                'delta_beta_Jan': 0,
+                'delta_beta_Feb': 0,
+                'delta_beta_Mar': 0,
+            }
+        )
+
+    return SVI2RHD(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     """
@@ -123,12 +127,100 @@ def construct_coordinates_dictionary(spatial_resolution, age_resolution):
 
     return {'age_group': age_groups, 'location': list(demography['fips'].unique())}
 
+def compute_case_hospitalisation_rate(season):
+    """
+    A function to compute case hospitalisation rate per age group, corrected for the differences in the number of social contacts, and expressed relative to [0, 5) years old.
+    """
+
+    # get case hospitalisation rates published by CDC
+    CDC_estimated_hosp = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/cases/CDC_hosp-rate-age_2017-2020.csv'),
+                                        dtype={'season': str, 'age': str, 'hospitalisation_rate': float})
+
+    # check input season
+    if ((season not in CDC_estimated_hosp['season'].unique()) & (season != 'average')):
+        raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+
+    # slice right season out
+    if season != 'average':
+        CDC_estimated_hosp = CDC_estimated_hosp[CDC_estimated_hosp['season'] == season]['hospitalisation_rate'].values
+    else:
+        CDC_estimated_hosp = CDC_estimated_hosp.groupby(by=['age']).mean('hospitalisation_rate')['hospitalisation_rate'].values
+    
+    # get demography per age group
+    demography = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/demography/demography_collapsed_2023.csv'),
+                                dtype={'fips': str, 'age': str, 'population': int})['population'].values
+
+    # get social contact matrix
+    contacts = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/contacts/locations-all_daytype-all_avg-UK-DE-FI_polymod-2008.csv'), index_col=0, header=0)
+    
+    # normalise contacts per age group
+    rel_contacts = (np.mean(np.sum(contacts, axis=1)) / np.sum(contacts, axis=1)).values
+
+    # account for difference in contact rates
+    return rel_contacts * (CDC_estimated_hosp/demography) / (rel_contacts * (CDC_estimated_hosp/demography))[0]
+
+
 def get_vaccination_data():
     """
-    A function to retrieve the 2017-2018 vaccination data
+    A function to retrieve the 2010-2024 vaccination incidence data
+
+    output
+    ------
+
+    data: pd.DataFrame
+        Index: 'season' (str; '20xx-20xx')
+        Columns: 'date' (str; 'yyyy-mm-dd'), 'age' (str; '[0, 5('), 'state' (str; 'xx000'), 'vaccination_incidence' (float)
     """
-    rel_dir = f'../../../data/interim/vaccination/vaccination_rates_2017-2018.csv'
-    return pd.read_csv(os.path.join(abs_dir,rel_dir), index_col=0, header=0, parse_dates=True).reset_index()
+    rel_dir = f'../../../data/interim/vaccination/vaccination_incidences_2010-2024.csv'
+    data = pd.read_csv(os.path.join(abs_dir,rel_dir), dtype={'season': str, 'age': str, 'state': str, 'daily_incidence': float, 'cumulative': float})
+    data['date'] = pd.to_datetime(data['date'])
+    return data.set_index('season')
+
+def get_cumulative_vaccinated(t, season, vaccination_data):
+    """
+    A function returning the cumulative number of vaccinated individuals at date 't' in season 'season'
+
+    input
+    -----
+
+    output
+    ------
+
+    """
+
+    # get week number
+    week_number = t.isocalendar().week
+
+    # compute state sizes
+    n_age = len(vaccination_data['age'].unique())
+    n_loc = len(vaccination_data['state'].unique())
+
+    # check input season
+    if ((season not in vaccination_data.index.unique().values) & (season != 'average')):
+        raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+
+    # drop index
+    vaccination_data = vaccination_data.reset_index()
+
+    if season != 'average':
+        # slice out correct season
+        vaccination_data = vaccination_data[vaccination_data['season'] == season]
+        # add week number & remove date
+        vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
+        vaccination_data = vaccination_data[['week', 'age', 'state', 'cumulative']]
+        # sort age groups / spatial units --> are sorted in the model
+        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()
+    else:
+        # add week number & remove date
+        vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
+        vaccination_data = vaccination_data[['week', 'age', 'state', 'cumulative']]
+        # average out + sort
+        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).mean('cumulative').sort_index().reset_index()
+
+    try:
+        return np.array(vaccination_data[vaccination_data['week'] == week_number]['cumulative'].values, np.float64).reshape(n_age, n_loc) 
+    except:
+        return np.zeros([n_age, n_loc], np.float64)
 
 def get_contact_matrix(daytype, age_resolution):
     """
@@ -266,7 +358,8 @@ def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_
 
     *subtract_states: np.ndarray
         Other states that contain individuals at the start of the simulation.
-        Must must be substracted from the demographic data to compute the number of initial susceptible individuals
+        Substracted from the demographic data to compute the number of initial susceptible individuals
+        If not provided: function returns demography
 
     spatial_resolution: str
         US 'states' or 'counties'

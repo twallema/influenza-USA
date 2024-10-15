@@ -34,7 +34,7 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### Vaccination
 
-+ `vacc_Flu_2024_R1_agexxtoxx_dose1_reported_2017.csv`: Contains the rate of flu vaccination reported during the 2017 season. Rate proportional to the remaining number of unvaccinated individuals in the age group and state. File originally provided by Shaun Truelove. The vaccination rate for Puerto Rico (FIPS: 72) was added by Tijs Alleman, and is defined as the USA average vaccination rate within the age group.
++ `vacc_alldoses_age_Flu_2024_R1_allflu_allseasons.csv`: Contains, from the 2010-2011 to the 2023-2024 season, the weekly number of administered vaccines ('vacc_age'), per age group ('age_group'), per US state ('subpop').
 
 ### Contacts
 
@@ -59,6 +59,8 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 + `2019_2020_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2019-2020 Flu season. Obtained from Josh (#TODO: where did he get it from?).
 
 + `weekly_flu_incid_complete.csv`: Obtained from Shaun (#TODO: where did he get it from?).
+
++ `CDC_hosp-rate-age_2017-2020.csv`: Hospitalisation rate per age group as reported by the CDC. For the 2017-2018 and 2019-2020 season. #TODO: more seasons!
 
 ### initial condition
 
@@ -103,8 +105,8 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 ##### To state-level data
 
 ### Vaccination
-
-+ `vaccination_rates_2017-2018.csv`: A script to aggregate the age-and space stratified vaccination rates for 2017-2018 into one dataframe.
+ 
++ `vaccination_incidences_2010-2024.csv`: Formats the raw vaccination data from 2010-2024, `vacc_alldoses_age_Flu_2024_R1_allflu_allseasons.csv`, to use the naming conventions used in this software.
 
 ### FIPS codes
 
@@ -119,6 +121,10 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 + `locations-all_daytype-week_no-holiday_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for non-holiday weeks. Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
 
 + `locations-all_daytype-weekend_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weekends. Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
+
+### Cases
+
++ `hospitalisations_per_state.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
 
 ## Conversion
 
@@ -142,8 +148,12 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 ### Vaccination
 
-+ `build-vaccination.py`: A script that aggregates the vaccination rates of the 2017-2018 season, whose age component was spread over multiple files, into one long-format .csv file. 
++ `build-vaccination.py`: A script that formats the vaccination rates of the 2010-2024 season.
 
 ### FIPS codes
 
 + `build-FIPS-list.py`: A script formatting and merging the raw US state and county FIPS codes found in `national_state2020.txt` and `national_county2020.txt`. Corrects the Connecticut counties to the post 2020 counties and FIPS codes using the crosswalk file `ct_cou_to_cousub_crosswalk.xlsx`. Resulting file in interim folder contains a five-digit FIPS codes for both states and counties. State FIPS codes are assumed to have an 'xx000' format.
+
+### Cases
+
++ `build-hospitalisations_per_state.py`: A script formatting the weekly flu hospitalisation incidence data per US state from 2009-2024 in `data/raw/cases/weekly_flu_incid_complete.csv` into `data/interim/hospitalisations_per_state.csv`. Swaps the US state name for it's FIPS code and guarantees the data always start in week 40 of the year.
