@@ -49,7 +49,7 @@ identifier = 'USA_states_hierarchal'                                            
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
 n_mcmc = 2000                                                                      # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 100                                                                   # Print diagnostics every `print_n`` iterations
+print_n = 10                                                                   # Print diagnostics every `print_n`` iterations
 discard = 3500                                                                  # Discard first `discard` iterations as burn-in
 thin = 100                                                                       # Thinning factor emcee chains
 n = 500                                                                         # Repeated simulations used in visualisations
@@ -73,7 +73,7 @@ delta_beta_Mar = 0.01
 rho_h = 0.00334
 f_I = 1.5e-4
 f_R = 0.48
-delta_f_R = 0
+delta_f_R = 0.01
 
 ###############################
 ## Load hospitalisation data ##
@@ -199,9 +199,9 @@ if __name__ == '__main__':
         theta = [rho_h, f_I, beta_US, f_R, delta_beta_Dec, delta_beta_Jan, delta_beta_Feb, delta_beta_Mar] + (n_states+1)*[delta_beta_states,] + (n_states+1)*[delta_f_R,] 
 
     # Perform optimization 
-    step = len(objective_function.expanded_bounds)*[0.2,]
-    theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                  processes=1, max_iter=n_pso, no_improv_break=500)[0]
+    #step = len(objective_function.expanded_bounds)*[0.2,]
+    #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+    #                              processes=1, max_iter=n_pso, no_improv_break=500)[0]
 
     ######################
     ## Visualize result ##
@@ -253,8 +253,8 @@ if __name__ == '__main__':
     # Perturbate previously obtained estimate
     ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
     # Perturbation is relative --> zeros are difficult
-    pos[:, 3:7] = np.random.normal(loc=0, scale=0.10, size=(nwalkers, 4)) # --> temporal Delta beta
-    pos[:, 7:7+n_states+1] = np.random.normal(loc=0, scale=0.10, size=(nwalkers, n_states+1)) # --> 
+    pos[:, 4:8] = np.random.normal(loc=0, scale=0.10, size=(nwalkers, 4)) # --> temporal Delta beta
+    pos[:, 8:] = np.random.normal(loc=0, scale=0.10, size=(nwalkers, 2*(n_states+1))) # --> delta_beta_states and delta_f_R
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
