@@ -98,6 +98,7 @@ end_calibration = df_calibration.index.get_level_values('date').unique().max() +
 df_validation = df.loc[slice(end_calibration, None), slice(None)]
 # variable we need a lot
 n_states = len(df_calibration.index.get_level_values('location').unique())
+n_regions = 9
 
 #####################################################
 ## Load previous sampler and extract last estimate ##
@@ -196,7 +197,7 @@ if __name__ == '__main__':
 
     # Initial guess
     if not backend_path:
-        theta = [rho_h, f_I, beta_US, f_R, delta_beta_Dec, delta_beta_Jan, delta_beta_Feb, delta_beta_Mar] + (n_states+1)*[delta_beta_states,] + (n_states+1)*[delta_f_R,] 
+        theta = [rho_h, f_I, beta_US, f_R, delta_beta_Dec, delta_beta_Jan, delta_beta_Feb, delta_beta_Mar] + (n_states+1)*[delta_beta_states,] + n_regions*[delta_f_R,] 
 
     # Perform optimization 
     #step = len(objective_function.expanded_bounds)*[0.2,]
@@ -220,7 +221,7 @@ if __name__ == '__main__':
     ax[0].scatter(x_calibration_data, 7*df_calibration.groupby(by='date').sum(), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
     ax[0].scatter(x_validation_data, 7*df_validation.groupby(by='date').sum(), color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
     ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
-    ax[0].set_title(f'$\\beta = {theta[2]:.3f}$ (USA)\n$\\Delta \\beta (Dec)={100*theta[4]:.1f}$%, $\\Delta \\beta (Jan)={100*theta[5]:.1f}$%, $\\Delta \\beta (Feb)={100*theta[6]:.1f}$%, $\\Delta \\beta (Mar)={100*theta[7]:.1f}$%')
+    #ax[0].set_title(f'$\\beta = {theta[2]:.3f}$ (USA)\n$\\Delta \\beta (Dec)={100*theta[4]:.1f}$%, $\\Delta \\beta (Jan)={100*theta[5]:.1f}$%, $\\Delta \\beta (Feb)={100*theta[6]:.1f}$%, $\\Delta \\beta (Mar)={100*theta[7]:.1f}$%')
     ax[0].grid(False)
 
     ## per state
@@ -230,8 +231,8 @@ if __name__ == '__main__':
         ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc), color='blue', alpha=1, linewidth=2)
         ax[i+1].set_title(f"{fips2name(loc)} ({loc})")
         pos_beta, pos_f_R = get_pos_beta_f_R(loc, model.coordinates['location'])
-        ax[i+1].text(0.05, 0.95, f"$\\Delta \\beta_i$: {100*theta[pos_beta]:.1f}%, $f_R$: {theta[pos_f_R]:.2f}", transform=ax[i+1].transAxes, fontsize=12,
-            verticalalignment='top', bbox=props)
+        #ax[i+1].text(0.05, 0.95, f"$\\Delta \\beta_i$: {100*theta[pos_beta]:.1f}%, $f_R$: {theta[pos_f_R]:.2f}", transform=ax[i+1].transAxes, fontsize=12,
+        #    verticalalignment='top', bbox=props)
         ax[i+1].grid(False)
 
     ## format dates
@@ -245,6 +246,8 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
+    import sys
+    sys.exit()
 
     ##########
     ## MCMC ##

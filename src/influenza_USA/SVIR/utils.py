@@ -50,7 +50,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # initial condition function
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
             'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
-            'delta_f_R': np.zeros(52),                                                                                              # immunity modifier (US states)
+            'delta_f_R': np.zeros(9),                                                                                               # immunity modifier (US regions)
             # outcomes
             'asc_case': 0.004,
             }
