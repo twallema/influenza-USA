@@ -81,11 +81,13 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
         params.update(
             {
                 'beta_US': 0.03,
-                'delta_beta_states': np.zeros(52),
-                'delta_beta_Dec': 0,
-                'delta_beta_Jan': 0,
-                'delta_beta_Feb': 0,
-                'delta_beta_Mar': 0,
+                'delta_beta_spatial': np.zeros(9),
+                'delta_beta_temporal': np.zeros(5),
+                'delta_beta_spatial_Nov': np.zeros(9),
+                'delta_beta_spatial_Dec': np.zeros(9),
+                'delta_beta_spatial_Jan': np.zeros(9),
+                'delta_beta_spatial_Feb': np.zeros(9),
+                'delta_beta_spatial_Mar': np.zeros(9),
             }
         )
 

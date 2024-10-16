@@ -11,46 +11,70 @@ from functools import lru_cache
 from dateutil.easter import easter
 from datetime import datetime, timedelta
 
-##########################
-## Hierarchal structure ##
-##########################
-
-class hierarchal_immunity_function():
-    def __call__(self, t, states, param, f_R_US, delta_f_R_states):
-        """
-        A function constructing a hierarchal initial immunity parameter (f_R)
-
-        input
-        -----
-
-        t: datetime.datetime
-            current timestep in simulation
-
-        states: dict
-            current values of all model states
-        
-        param: dict
-            current values of all model parameters
-
-        f_R_US: float
-            initial immunity of US
-        
-        delta_f_R_states: np.ndarray
-            initial immunity modifier of US states (centered around zero)
-
-        output
-        ------
-
-        f_R: np.ndarray
-            initial immunity of US states. computed as the product of the overall immunity 'f_R_US' and the state modifiers 'delta_f_R_states'. 
-        """
-
-        return f_R_US * delta_f_R_states
-
+##################################
+## Hierarchal transmission rate ##
+##################################
 
 class hierarchal_transmission_rate_function():
 
-    def __call__(self, t, states, param, beta_US, delta_beta_states, delta_beta_Dec, delta_beta_Jan, delta_beta_Feb, delta_beta_Mar):
+    def __init__(self):
+
+        self.region_mapping = np.array([5,  # Alabama (01000) - East South Central
+                                        8,  # Alaska (02000) - Pacific
+                                        7,  # Arizona (04000) - Mountain
+                                        6,  # Arkansas (05000) - West South Central
+                                        8,  # California (06000) - Pacific
+                                        7,  # Colorado (08000) - Mountain
+                                        0,  # Connecticut (09000) - New England
+                                        4,  # Delaware (10000) - South Atlantic
+                                        4,  # District of Columbia (11000) - South Atlantic
+                                        4,  # Florida (12000) - South Atlantic
+                                        4,  # Georgia (13000) - South Atlantic
+                                        8,  # Hawaii (15000) - Pacific
+                                        7,  # Idaho (16000) - Mountain
+                                        2,  # Illinois (17000) - East North Central
+                                        2,  # Indiana (18000) - East North Central
+                                        3,  # Iowa (19000) - West North Central
+                                        3,  # Kansas (20000) - West North Central
+                                        5,  # Kentucky (21000) - East South Central
+                                        6,  # Louisiana (22000) - West South Central
+                                        0,  # Maine (23000) - New England
+                                        4,  # Maryland (24000) - South Atlantic
+                                        0,  # Massachusetts (25000) - New England
+                                        2,  # Michigan (26000) - East North Central
+                                        3,  # Minnesota (27000) - West North Central
+                                        5,  # Mississippi (28000) - East South Central
+                                        3,  # Missouri (29000) - West North Central
+                                        7,  # Montana (30000) - Mountain
+                                        3,  # Nebraska (31000) - West North Central
+                                        7,  # Nevada (32000) - Mountain
+                                        0,  # New Hampshire (33000) - New England
+                                        1,  # New Jersey (34000) - Mid-Atlantic
+                                        7,  # New Mexico (35000) - Mountain
+                                        1,  # New York (36000) - Mid-Atlantic
+                                        4,  # North Carolina (37000) - South Atlantic
+                                        3,  # North Dakota (38000) - West North Central
+                                        2,  # Ohio (39000) - East North Central
+                                        6,  # Oklahoma (40000) - West South Central
+                                        8,  # Oregon (41000) - Pacific
+                                        1,  # Pennsylvania (42000) - Mid-Atlantic
+                                        0,  # Rhode Island (44000) - New England
+                                        4,  # South Carolina (45000) - South Atlantic
+                                        3,  # South Dakota (46000) - West North Central
+                                        5,  # Tennessee (47000) - East South Central
+                                        6,  # Texas (48000) - West South Central
+                                        7,  # Utah (49000) - Mountain
+                                        0,  # Vermont (50000) - New England
+                                        4,  # Virginia (51000) - South Atlantic
+                                        8,  # Washington (53000) - Pacific
+                                        4,  # West Virginia (54000) - South Atlantic
+                                        2,  # Wisconsin (55000) - East North Central
+                                        7,  # Wyoming (56000) - Mountain
+                                        8,  # Puerto Rico (72000) - Assumed Pacific
+                                        ])
+
+    def __call__(self, t, states, param, beta_US, delta_beta_spatial, delta_beta_temporal,
+                 delta_beta_spatial_Nov, delta_beta_spatial_Dec, delta_beta_spatial_Jan, delta_beta_spatial_Feb, delta_beta_spatial_Mar):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -67,14 +91,16 @@ class hierarchal_transmission_rate_function():
             current values of all model parameters
 
         beta_US: float
-            overall transmission rate
+            overall transmission rate. hierarchal level 0.
 
-        delta_beta_states: np.ndarray
-            a spatial modifier on the overall transmision rate for every US state. centered around zero.
+        delta_beta_spatial: np.ndarray (len: 9)
+            a spatial modifier on the overall transmision rate for every US region. hierarchal level 1.
 
-        delta_beta_Dec: float/np.ndarray
-            a temporal modifier on the overall transmission rate for december.
-            can be a float (the same temporal modifier in every US state) or np.ndarray (a unique temporal modifier in every US state)
+        delta_beta_temporal: np.ndarray (len: 4)
+            a temporal modifier on the overall transmission rate for Dec, Jan, Feb, Mar. hierarchal level 1.
+
+        delta_beta_spatial_Nov: np.ndarray (len: 9)
+            a spatio-temporal modifier for every US region in Nov. hierarchal level 2.
 
         output
         ------
@@ -82,18 +108,27 @@ class hierarchal_transmission_rate_function():
         beta: np.ndarray
             transmission rate per US state
         """
+        # region to states
+        delta_beta_spatial = delta_beta_spatial[self.region_mapping]
+        delta_beta_spatial_Nov = delta_beta_spatial_Nov[self.region_mapping]
+        delta_beta_spatial_Dec = delta_beta_spatial_Dec[self.region_mapping]
+        delta_beta_spatial_Jan = delta_beta_spatial_Jan[self.region_mapping]
+        delta_beta_spatial_Feb = delta_beta_spatial_Feb[self.region_mapping]
+        delta_beta_spatial_Mar = delta_beta_spatial_Mar[self.region_mapping]
 
         # construct beta
-        if t.month == 12:
-            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Dec + 1)
+        if t.month == 11:
+            beta = beta_US * (delta_beta_temporal[0] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Nov + 1)
+        elif t.month == 12:
+            beta = beta_US * (delta_beta_temporal[1] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Dec + 1)
         elif t.month == 1:
-            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Jan + 1)
+            beta = beta_US * (delta_beta_temporal[2] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Jan + 1)
         elif t.month == 2:
-            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Feb + 1)
+            beta = beta_US * (delta_beta_temporal[3] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Feb + 1)
         elif t.month == 3:
-            beta = beta_US * (delta_beta_states + 1) * (delta_beta_Mar + 1)
+            beta = beta_US * (delta_beta_temporal[4] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Mar + 1)
         else:
-            beta = beta_US * (delta_beta_states + 1) 
+            beta = beta_US * (delta_beta_spatial + 1) 
 
         return beta
     
@@ -323,7 +358,7 @@ class make_contact_function():
 ## Initial condition function ##
 ################################
 
-from influenza_USA.SVIR.utils import construct_initial_susceptible, get_cumulative_vaccinated, construct_coordinates_dictionary
+from influenza_USA.SVIR.utils import construct_initial_susceptible, get_cumulative_vaccinated
 class make_initial_condition_function():
 
     def __init__(self, spatial_resolution, age_resolution, start_sim, season, vaccination_data):
