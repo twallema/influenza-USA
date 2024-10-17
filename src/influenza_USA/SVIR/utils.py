@@ -141,7 +141,7 @@ def compute_case_hospitalisation_rate(season):
 
     # check input season
     if ((season not in CDC_estimated_hosp['season'].unique()) & (season != 'average')):
-        raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+        raise ValueError(f"season '{season}' case hospitalisation data not found. provide a valid season (format '20xx-20xx') or 'average'.")
 
     # slice right season out
     if season != 'average':
