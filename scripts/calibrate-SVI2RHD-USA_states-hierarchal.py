@@ -37,45 +37,48 @@ stoch = False                           # ODE vs. tau-leap
 hierarchal_transmission_rate = True     # Hierarchal structure on transmission rate
 
 # optimization
-start_calibration = datetime(season_start, 10, 28)                               # simulations will start on this date
-end_calibration = datetime(season_start+1, 1, 15)                                # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
+start_calibration = datetime(season_start, 10, 15)                               # simulations will start on this date
+end_calibration = datetime(season_start+1, 2, 15)                                # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
 start_slice = datetime(season_start+1, 1, 1)                                     # add in a part of the dataset twice: in this case the peak in hosp.
 end_slice = datetime(season_start+1, 3, 1)
 ## frequentist
-n_pso = 100                                                                    # Number of PSO iterations
+n_pso = 200                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'USA_states_hierarchal'                                            # ID of run
+identifier = 'USA_regions_hierarchal_midFeb'                         # ID of run
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
-n_mcmc = 2000                                                                     # Number of MCMC iterations
+n_mcmc = 1                                                                  # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 500                                                                   # Print diagnostics every `print_n`` iterations
-discard = 7400                                                                  # Discard first `discard` iterations as burn-in
-thin = 5                                                                       # Thinning factor emcee chains
+discard = 1200                                                                     # Discard first `discard` iterations as burn-in
+thin = 40                                                                         # Thinning factor emcee chains
 n = 500                                                                         # Repeated simulations used in visualisations
-processes = int(os.getenv('SLURM_CPUS_ON_NODE', mp.cpu_count()))                # Retrieve CPU count
+processes = 4                                                                   # Retrieve CPU count
+## hierarchal hyperparameters                                                       
+L1_weight = 5
+rel_weight_level2 = 2
 
 ## continue run
-# run_date = '2024-10-15'                                                        # First date of run
-# backend_identifier = 'USA_states_hierarchal'
-# backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+run_date = '2024-10-17'                                                         # First date of run
+backend_identifier = 'USA_regions_hierarchal_midFeb'
+backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-backend_path = None
-if not backend_path:
-   run_date = datetime.today().strftime("%Y-%m-%d")
-# national estimates
-beta_US = 0.0333
-delta_beta_spatial = 0.01
-delta_beta_temporal = 0.01
-delta_beta_spatial_Nov = 0.01
-delta_beta_spatial_Dec = 0.01
-delta_beta_spatial_Jan = 0.01
-delta_beta_spatial_Feb = 0.01
-delta_beta_spatial_Mar = 0.01
-f_R = 0.48
-delta_f_R = 0.01
-rho_h = 0.00334
-f_I = 1.5e-4
+# backend_path = None
+# if not backend_path:
+#    run_date = datetime.today().strftime("%Y-%m-%d")
+# # national estimates
+# beta_US = 0.032
+# delta_beta_spatial = 0.01
+# delta_beta_temporal = 0.01
+# delta_beta_spatial_Nov = 0.01
+# delta_beta_spatial_Dec = 0.01
+# delta_beta_spatial_Jan = 0.01
+# delta_beta_spatial_Feb = 0.01
+# delta_beta_spatial_Mar = 0.01
+# f_R = 0.50
+# delta_f_R = 0.01
+# rho_h = 0.00334
+# f_I = 2e-4
 
 ###############################
 ## Load hospitalisation data ##
@@ -185,8 +188,6 @@ if __name__ == '__main__':
         log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2,
     ]
     stdev = 0.10
-    L1_weight = 10
-    rel_weight_level2 = 1
     log_prior_prob_fcn_args = [
         bounds[0], bounds[1], bounds[2], bounds[3],
         (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight),
@@ -253,10 +254,6 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
-
-    import sys
-    sys.exit()
-
 
     ##########
     ## MCMC ##
