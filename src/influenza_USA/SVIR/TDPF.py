@@ -77,10 +77,11 @@ class hierarchal_transmission_rate_function():
     def get_smoothed_modifier(self, modifiers, simulation_date, half_life_days=7, window_size=14):
         """
         Calculate the smoothed temporal modifier for all US states based on the current simulation date.
+        The modifiers are on a biweekly regimen.
         
         Parameters:
-        - modifiers: numpy array of shape (5, 52), where each row corresponds to a month or default:
-            Row 0 = November, Row 1 = December, Row 2 = January, Row 3 = February, Row 4 = Outside Nov-Mar.
+        - modifiers: numpy array of shape (10, 52), where each row corresponds to a biweekly period:
+            Rows 0-1: Nov (1-15, 16-end), Rows 2-3: Dec (1-15, 16-end), etc.
         - simulation_date: datetime object representing the current simulation date.
         - half_life_days: Half-life in days for the exponential smoothing (default: 7 days).
         - window_size: The number of days used in the smoothing window (default: 14 days).
@@ -93,12 +94,14 @@ class hierarchal_transmission_rate_function():
         # Convert the half-life to an exponential smoothing factor (alpha)
         alpha = 1 - np.exp(np.log(0.5) / half_life_days)
         
-        # Extract the current month and day
-        current_month = simulation_date.month
-        current_day = simulation_date.day
-        
-        # Create a mapping of month to corresponding row index in modifiers
-        month_to_row = {11: 0, 12: 1, 1: 2, 2: 3, 3: 4}
+        # Create a mapping of (month, half) to the corresponding row index in modifiers
+        biweekly_to_row = {
+            (11, 1): 0, (11, 2): 1,  # Nov
+            (12, 1): 2, (12, 2): 3,  # Dec
+            (1, 1): 4, (1, 2): 5,    # Jan
+            (2, 1): 6, (2, 2): 7,    # Feb
+            (3, 1): 8, (3, 2): 9     # Mar
+        }
         
         # Preallocate the modifier window and smoothing weights
         modifier_window = []
@@ -106,27 +109,36 @@ class hierarchal_transmission_rate_function():
         
         # Start filling the modifier window with the current day and go backwards for window_size days
         days_to_collect = window_size
-        month = current_month
-        day = current_day
+        month = simulation_date.month
+        day = simulation_date.day
         
         while days_to_collect > 0:
-            # Take as many days as we can from the current month
-            days_in_this_month = min(day, days_to_collect)
-            
-            # Retrieve the modifier for the current month (use row 4 for months outside Nov-Mar)
-            if month in month_to_row:
-                row = month_to_row[month]
+            # Determine the current biweekly period
+            if day <= 15:
+                biweekly_period = 1  # 1st half of the month
             else:
-                row = 4
+                biweekly_period = 2  # 2nd half of the month
             
+            # Retrieve the modifier for the current biweekly period (use row 10 for outside Nov-Mar)
+            if (month, biweekly_period) in biweekly_to_row:
+                row = biweekly_to_row[(month, biweekly_period)]
+            else:
+                row = 10  # Row for months outside Nov-Mar
+            
+            # Determine how many days can be taken from the current biweekly period
+            if biweekly_period == 1:
+                days_in_this_period = min(day, days_to_collect)
+            else:
+                days_in_this_period = min(day - 15, days_to_collect)
+
             # Append the modifier and the corresponding weight
-            for _ in range(days_in_this_month):
+            for _ in range(days_in_this_period):
                 modifier_window.append(modifiers[row, :])
                 smoothing_weights.append((1 - alpha)**(window_size - days_to_collect))  # Exponential decay
                 days_to_collect -= 1
                 day -= 1
             
-            # If we run out of days in the current month, move to the previous month
+            # If we run out of days in the current biweekly period, move to the previous period
             if day == 0:
                 month -= 1
                 if month == 0:  # Wrap around from January to December
@@ -146,7 +158,9 @@ class hierarchal_transmission_rate_function():
         return smoothed_modifier
 
     def __call__(self, t, states, param, beta_US, delta_beta_spatial, delta_beta_temporal,
-                 delta_beta_spatial_Nov, delta_beta_spatial_Dec, delta_beta_spatial_Jan, delta_beta_spatial_Feb, delta_beta_spatial_Mar):
+                 delta_beta_spatial_Nov1, delta_beta_spatial_Nov2, delta_beta_spatial_Dec1,  delta_beta_spatial_Dec2,
+                 delta_beta_spatial_Jan1, delta_beta_spatial_Jan2, delta_beta_spatial_Feb1, delta_beta_spatial_Feb2,
+                 delta_beta_spatial_Mar1, delta_beta_spatial_Mar2):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -171,8 +185,8 @@ class hierarchal_transmission_rate_function():
         delta_beta_temporal: np.ndarray (len: 4)
             a temporal modifier on the overall transmission rate for Dec, Jan, Feb, Mar. hierarchal level 1.
 
-        delta_beta_spatial_Nov: np.ndarray (len: 9)
-            a spatio-temporal modifier for every US region in Nov. hierarchal level 2.
+        delta_beta_spatial_Nov1: np.ndarray (len: 9)
+            a spatio-temporal modifier for every US region in 1-15 Nov. hierarchal level 2.
 
         output
         ------
@@ -183,24 +197,39 @@ class hierarchal_transmission_rate_function():
 
         # region to states
         delta_beta_spatial = delta_beta_spatial[self.region_mapping]
-        delta_beta_spatial_Nov = delta_beta_spatial_Nov[self.region_mapping]
-        delta_beta_spatial_Dec = delta_beta_spatial_Dec[self.region_mapping]
-        delta_beta_spatial_Jan = delta_beta_spatial_Jan[self.region_mapping]
-        delta_beta_spatial_Feb = delta_beta_spatial_Feb[self.region_mapping]
-        delta_beta_spatial_Mar = delta_beta_spatial_Mar[self.region_mapping]
+        delta_beta_spatial_Nov1 = delta_beta_spatial_Nov1[self.region_mapping]
+        delta_beta_spatial_Nov2 = delta_beta_spatial_Nov2[self.region_mapping]
+        delta_beta_spatial_Dec1 = delta_beta_spatial_Dec1[self.region_mapping]
+        delta_beta_spatial_Dec2 = delta_beta_spatial_Dec2[self.region_mapping]
+        delta_beta_spatial_Jan1 = delta_beta_spatial_Jan1[self.region_mapping]
+        delta_beta_spatial_Jan2 = delta_beta_spatial_Jan2[self.region_mapping]
+        delta_beta_spatial_Feb1 = delta_beta_spatial_Feb1[self.region_mapping]
+        delta_beta_spatial_Feb2 = delta_beta_spatial_Feb2[self.region_mapping]
+        delta_beta_spatial_Mar1 = delta_beta_spatial_Mar1[self.region_mapping]
+        delta_beta_spatial_Mar2 = delta_beta_spatial_Mar2[self.region_mapping]
 
         # construct modifiers (time x US state)
         modifiers = beta_US * np.array([
-                        (delta_beta_temporal[0] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Nov + 1),
-                        (delta_beta_temporal[1] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Dec + 1),
-                        (delta_beta_temporal[2] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Jan + 1),
-                        (delta_beta_temporal[3] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Feb + 1),
-                        (delta_beta_temporal[4] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Mar + 1),
+                        (delta_beta_temporal[0] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Nov1 + 1),
+                        (delta_beta_temporal[1] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Nov2 + 1),
+
+                        (delta_beta_temporal[2] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Dec1 + 1),
+                        (delta_beta_temporal[3] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Dec2 + 1),
+
+                        (delta_beta_temporal[4] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Jan1 + 1),
+                        (delta_beta_temporal[5] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Jan2 + 1),
+
+                        (delta_beta_temporal[6] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Feb1 + 1),
+                        (delta_beta_temporal[7] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Feb2 + 1),
+
+                        (delta_beta_temporal[8] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Mar1 + 1),
+                        (delta_beta_temporal[9] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Mar2 + 1),
+
                         (delta_beta_spatial + 1) 
                     ])
-        
+
         # compute smoothed modifier
-        return self.get_smoothed_modifier(modifiers, t, half_life_days=5, window_size=15)
+        return self.get_smoothed_modifier(modifiers, t, half_life_days=5, window_size=30)
     
 ##############
 ## Vaccines ##

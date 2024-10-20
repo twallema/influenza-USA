@@ -82,12 +82,17 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             {
                 'beta_US': 0.03,
                 'delta_beta_spatial': np.zeros(9),
-                'delta_beta_temporal': np.zeros(5),
-                'delta_beta_spatial_Nov': np.zeros(9),
-                'delta_beta_spatial_Dec': np.zeros(9),
-                'delta_beta_spatial_Jan': np.zeros(9),
-                'delta_beta_spatial_Feb': np.zeros(9),
-                'delta_beta_spatial_Mar': np.zeros(9),
+                'delta_beta_temporal': np.zeros(10),
+                'delta_beta_spatial_Nov1': np.zeros(9),
+                'delta_beta_spatial_Nov2': np.zeros(9),
+                'delta_beta_spatial_Dec1': np.zeros(9),
+                'delta_beta_spatial_Dec2': np.zeros(9),
+                'delta_beta_spatial_Jan1': np.zeros(9),
+                'delta_beta_spatial_Jan2': np.zeros(9),
+                'delta_beta_spatial_Feb1': np.zeros(9),
+                'delta_beta_spatial_Feb2': np.zeros(9),
+                'delta_beta_spatial_Mar1': np.zeros(9),
+                'delta_beta_spatial_Mar2': np.zeros(9),
             }
         )
 
