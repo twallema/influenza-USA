@@ -38,31 +38,32 @@ hierarchal_transmission_rate = True     # Hierarchal structure on transmission r
 
 # optimization
 start_calibration = datetime(season_start, 10, 15)                               # simulations will start on this date
-end_calibration = datetime(season_start+1, 2, 1)                                # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
+end_calibration = datetime(season_start+1, 2, 15)                                # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
 start_slice = datetime(season_start+1, 1, 1)                                     # add in a part of the dataset twice: in this case the peak in hosp.
 end_slice = datetime(season_start+1, 3, 1)
 ## frequentist
-n_pso = 300                                                                     # Number of PSO iterations
+n_pso = 500                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'USA_regions_hierarchal_Feb'                         # ID of run
+identifier = 'USA_regions_hierarchal_midFeb'                         # ID of run
 samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
 n_mcmc = 1                                                                 # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 1                                                                   # Print diagnostics every `print_n`` iterations
-discard = 1600                                                                     # Discard first `discard` iterations as burn-in
-thin = 50                                                                         # Thinning factor emcee chains
-n = 400                                                                         # Repeated simulations used in visualisations
-processes = 4                                                                   # Retrieve CPU count
+print_n = 1000                                                                   # Print diagnostics every `print_n`` iterations
+discard = 4600                                                                     # Discard first `discard` iterations as burn-in
+thin = 200                                                                         # Thinning factor emcee chains
+n = 500                                                                         # Repeated simulations used in visualisations
+processes = 16                                                                   # Retrieve CPU count
 ## hierarchal hyperparameters                                                       
 L1_weight = 5
 rel_weight_level2 = 2
 n_regions = 9
+n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-run_date = '2024-10-18'                                                         # First date of run
-backend_identifier = 'USA_regions_hierarchal_Feb'
+run_date = '2024-10-20'                                                         # First date of run
+backend_identifier = 'USA_regions_hierarchal_midFeb'
 backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
 # backend_path = None
@@ -70,20 +71,22 @@ backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{back
 #    run_date = datetime.today().strftime("%Y-%m-%d")
 # # national estimates
 # beta_US = 0.0325
-# delta_beta_spatial = 0.01
+# delta_beta_regions = 0.01
+# delta_beta_states = 0.01
 # delta_beta_temporal = 0.01
-# delta_beta_spatial_Nov1 = 0.01
-# delta_beta_spatial_Nov2 = 0.01
-# delta_beta_spatial_Dec1 = 0.01
-# delta_beta_spatial_Dec2 = 0.01
-# delta_beta_spatial_Jan1 = 0.01
-# delta_beta_spatial_Jan2 = 0.01
-# delta_beta_spatial_Feb1 = 0.01
-# delta_beta_spatial_Feb2 = 0.01
-# delta_beta_spatial_Mar1 = 0.01
-# delta_beta_spatial_Mar2 = 0.01
+# delta_beta_regions_Nov1 = 0.01
+# delta_beta_regions_Nov2 = 0.01
+# delta_beta_regions_Dec1 = 0.01
+# delta_beta_regions_Dec2 = 0.01
+# delta_beta_regions_Jan1 = 0.01
+# delta_beta_regions_Jan2 = 0.01
+# delta_beta_regions_Feb1 = 0.01
+# delta_beta_regions_Feb2 = 0.01
+# delta_beta_regions_Mar1 = 0.01
+# delta_beta_regions_Mar2 = 0.01
 # f_R = 0.50
-# delta_f_R = 0.01
+# delta_f_R_states = 0.01
+# delta_f_R_regions = 0.01
 # rho_h = 0.00334
 # f_I = 2e-4
 
@@ -108,8 +111,6 @@ df_slice = df.loc[slice(start_slice, end_slice), slice(None)]
 end_calibration = df_calibration.index.get_level_values('date').unique().max() + timedelta(days=1)
 # now slice out the remainder of the dataset
 df_validation = df.loc[slice(end_calibration, None), slice(None)]
-# variables we need a lot
-n_states = len(df_calibration.index.get_level_values('location').unique())
 
 #####################################################
 ## Load previous sampler and extract last estimate ##
@@ -120,7 +121,7 @@ if backend_path:
     backend_path = os.path.join(os.getcwd(), backend_path)
     backend = emcee.backends.HDFBackend(backend_path)
     # Get last position
-    pos = backend.get_chain(discard=0, thin=1, flat=False)[-1, ...]
+    pos = backend.get_chain(discard=discard, thin=thin, flat=False)[-1, ...]
     # Average out all walkers/parameter
     theta = np.mean(pos, axis=0)
 
@@ -174,25 +175,28 @@ if __name__ == '__main__':
         weights = list(rel_weight * np.array(weights) / np.mean(weights))
     # parameters to calibrate
     pars = ['rho_h', 'f_I', 'beta_US', 'f_R',                                                                                                       # top level
-            'delta_beta_spatial', 'delta_beta_temporal', 'delta_f_R',                                                                               # mid level
-            'delta_beta_spatial_Nov1', 'delta_beta_spatial_Nov2',
-            'delta_beta_spatial_Dec1', 'delta_beta_spatial_Dec2',
-            'delta_beta_spatial_Jan1', 'delta_beta_spatial_Jan2',
-            'delta_beta_spatial_Feb1', 'delta_beta_spatial_Feb2',
-            'delta_beta_spatial_Mar1', 'delta_beta_spatial_Mar2',   
+            'delta_beta_regions', 'delta_beta_temporal', 'delta_f_R_regions',                                                                       # mid level
+            'delta_beta_states', 'delta_f_R_states',                                                                                                # bottom level
+            'delta_beta_regions_Nov1', 'delta_beta_regions_Nov2',
+            'delta_beta_regions_Dec1', 'delta_beta_regions_Dec2',
+            'delta_beta_regions_Jan1', 'delta_beta_regions_Jan2',
+            'delta_beta_regions_Feb1', 'delta_beta_regions_Feb2',
+            'delta_beta_regions_Mar1', 'delta_beta_regions_Mar2',   
             ]
     # labels in output figures
     labels = [r'$\rho_h$', r'$f_I$', r'$\beta_{US}$', r'$f_R$',
-                r'$\Delta \beta_{spatial}$',  r'$\Delta \beta_{temporal}$', r'$\Delta f_R$',
-                r'$\Delta \beta_{spatial, Nov 1}$', r'$\Delta \beta_{spatial, Nov 2}$',
-                r'$\Delta \beta_{spatial, Dec 1}$', r'$\Delta \beta_{spatial, Dec 2}$', 
-                r'$\Delta \beta_{spatial, Jan 1}$', r'$\Delta \beta_{spatial, Jan 2}$',
-                r'$\Delta \beta_{spatial, Feb 1}$', r'$\Delta \beta_{spatial, Feb 2}$',
-                r'$\Delta \beta_{spatial, Mar 1}$', r'$\Delta \beta_{spatial, Mar 2}$',
+                r'$\Delta \beta_{regions}$',  r'$\Delta \beta_{temporal}$', r'$\Delta f_{R, regions}$',
+                r'$\Delta \beta_{states}$', r'$\Delta f_{R, states}$',
+                r'$\Delta \beta_{regions, Nov 1}$', r'$\Delta \beta_{regions, Nov 2}$',
+                r'$\Delta \beta_{regions, Dec 1}$', r'$\Delta \beta_{regions, Dec 2}$', 
+                r'$\Delta \beta_{regions, Jan 1}$', r'$\Delta \beta_{regions, Jan 2}$',
+                r'$\Delta \beta_{regions, Feb 1}$', r'$\Delta \beta_{regions, Feb 2}$',
+                r'$\Delta \beta_{regions, Mar 1}$', r'$\Delta \beta_{regions, Mar 2}$',
                 ]
     # parameter bounds
-    bounds = [(1e-9,0.01), (1e-8,1e-3), (0.01,0.060), (0.01,0.99),
+    bounds = [(1e-9,0.01), (1e-8,1e-3), (0.02,0.050), (0.05,0.95),
               (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),
+              (-0.5,0.5), (-0.5,0.5),
               (-0.5,0.5), (-0.5,0.5), 
               (-0.5,0.5), (-0.5,0.5), 
               (-0.5,0.5), (-0.5,0.5), 
@@ -208,11 +212,16 @@ if __name__ == '__main__':
         log_prior_normal_L2, log_prior_normal_L2,
         log_prior_normal_L2, log_prior_normal_L2,
         log_prior_normal_L2, log_prior_normal_L2,
+        log_prior_normal_L2, log_prior_normal_L2,
     ]
     stdev = 0.10
     log_prior_prob_fcn_args = [
+        # top level
         bounds[0], bounds[1], bounds[2], bounds[3],
+        # mid level
         (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight),
+        # bottom level
+        (0, stdev,  rel_weight_level2*L1_weight), (0, stdev,  rel_weight_level2*L1_weight),
         (0, stdev,  rel_weight_level2*L1_weight), (0, stdev,  rel_weight_level2*L1_weight),
         (0, stdev,  rel_weight_level2*L1_weight), (0, stdev,  rel_weight_level2*L1_weight),
         (0, stdev,  rel_weight_level2*L1_weight), (0, stdev,  rel_weight_level2*L1_weight),
@@ -230,12 +239,13 @@ if __name__ == '__main__':
 
     # Initial guess
     if not backend_path:
-        theta = [rho_h, f_I, beta_US, f_R,] + n_regions*[delta_beta_spatial,] + n_temporal_modifiers*[delta_beta_temporal,] + n_regions*[delta_f_R,] + \
-                    n_regions*[delta_beta_spatial_Nov1,] + n_regions*[delta_beta_spatial_Nov2,] + \
-                        n_regions*[delta_beta_spatial_Dec1,] + n_regions*[delta_beta_spatial_Dec2,] + \
-                            n_regions*[delta_beta_spatial_Jan1] + n_regions*[delta_beta_spatial_Jan2,] + \
-                                n_regions*[delta_beta_spatial_Feb1] + n_regions*[delta_beta_spatial_Feb2,] +\
-                                    n_regions*[delta_beta_spatial_Mar1] + n_regions*[delta_beta_spatial_Mar2,]
+        theta = [rho_h, f_I, beta_US, f_R,] + n_regions*[delta_beta_regions,] + n_temporal_modifiers*[delta_beta_temporal,] + n_regions*[delta_f_R_states,] + \
+                    n_states * [delta_beta_states,] + n_states * [delta_f_R_states,] + \
+                    n_regions*[delta_beta_regions_Nov1,] + n_regions*[delta_beta_regions_Nov2,] + \
+                        n_regions*[delta_beta_regions_Dec1,] + n_regions*[delta_beta_regions_Dec2,] + \
+                            n_regions*[delta_beta_regions_Jan1] + n_regions*[delta_beta_regions_Jan2,] + \
+                                n_regions*[delta_beta_regions_Feb1] + n_regions*[delta_beta_regions_Feb2,] +\
+                                    n_regions*[delta_beta_regions_Mar1] + n_regions*[delta_beta_regions_Mar2,]
 
     # Perform optimization 
     #step = len(objective_function.expanded_bounds)*[0.2,]
@@ -251,7 +261,7 @@ if __name__ == '__main__':
     # Simulate model
     out = model.sim([start_calibration, end_sim])
     # Visualize
-    fig, ax = plt.subplots(n_states+1, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states+1)))
+    fig, ax = plt.subplots(n_states, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states)))
     props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
     ## Overall
     x_calibration_data = df_calibration.index.get_level_values('date').unique().values
@@ -290,9 +300,9 @@ if __name__ == '__main__':
     ##########
 
     # Perturbate previously obtained estimate
-    ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
+    ndim, nwalkers, pos = perturbate_theta(theta, pert=0.05*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
     # Perturbation is relative --> zeros are difficult
-    pos[:, 4:] = np.random.normal(loc=0, scale=0.10, size=(nwalkers, pos[:, 4:].shape[1])) # --> modifiers
+    pos[:, 4:] = np.random.normal(loc=0, scale=0.05, size=(nwalkers, pos[:, 4:].shape[1])) # --> modifiers
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -312,24 +322,29 @@ if __name__ == '__main__':
     ######################
  
     def draw_fcn(parameters, samples):
-        # sample posterior distribution
+        # top level
         idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
         parameters['f_I'] = samples['f_I'][idx]
         parameters['beta_US'] = samples['beta_US'][idx]
         parameters['f_R'] = samples['f_R'][idx]
-        parameters['delta_beta_spatial'] = np.array([slice[idx] for slice in samples['delta_beta_spatial']])
+        # mid level
+        parameters['delta_f_R_regions'] = np.array([slice[idx] for slice in samples['delta_f_R_regions']])
+        parameters['delta_beta_regions'] = np.array([slice[idx] for slice in samples['delta_beta_regions']])
         parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
-        parameters['delta_beta_spatial_Nov1'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Nov1']])
-        parameters['delta_beta_spatial_Nov2'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Nov2']])
-        parameters['delta_beta_spatial_Dec1'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Dec1']])
-        parameters['delta_beta_spatial_Dec2'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Dec2']])
-        parameters['delta_beta_spatial_Jan1'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Jan1']])
-        parameters['delta_beta_spatial_Jan2'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Jan2']])
-        parameters['delta_beta_spatial_Feb1'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Feb1']])
-        parameters['delta_beta_spatial_Feb2'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Feb2']])
-        parameters['delta_beta_spatial_Mar1'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Mar1']])
-        parameters['delta_beta_spatial_Mar2'] = np.array([slice[idx] for slice in samples['delta_beta_spatial_Mar2']])
-        parameters['delta_f_R'] = np.array([slice[idx] for slice in samples['delta_f_R']])
+        # bottom level
+        parameters['delta_beta_states'] = np.array([slice[idx] for slice in samples['delta_beta_states']])
+        parameters['delta_f_R_states'] = np.array([slice[idx] for slice in samples['delta_f_R_states']])
+        parameters['delta_beta_regions_Nov1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Nov1']])
+        parameters['delta_beta_regions_Nov2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Nov2']])
+        parameters['delta_beta_regions_Dec1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Dec1']])
+        parameters['delta_beta_regions_Dec2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Dec2']])
+        parameters['delta_beta_regions_Jan1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Jan1']])
+        parameters['delta_beta_regions_Jan2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Jan2']])
+        parameters['delta_beta_regions_Feb1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Feb1']])
+        parameters['delta_beta_regions_Feb2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Feb2']])
+        parameters['delta_beta_regions_Mar1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Mar1']])
+        parameters['delta_beta_regions_Mar2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Mar2']])
+        
         return parameters
     
     # Simulate model
@@ -337,7 +352,7 @@ if __name__ == '__main__':
                         draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
 
     # Visualize
-    fig, ax = plt.subplots(n_states+1, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states+1)))
+    fig, ax = plt.subplots(n_states, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states)))
     props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
     ## Overall
     x_calibration_data = df_calibration.index.get_level_values('date').unique().values

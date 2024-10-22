@@ -50,7 +50,8 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # initial condition function
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
             'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
-            'delta_f_R': np.zeros(9),                                                                                               # immunity modifier (US regions)
+            'delta_f_R_regions': np.zeros(9),                                                                                       # immunity modifier (US regions)
+            'delta_f_R_states': np.zeros(52),                                                                                       # immunity modifier (US states)
             # outcomes
             'asc_case': 0.004,
             }
@@ -81,18 +82,19 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
         params.update(
             {
                 'beta_US': 0.03,
-                'delta_beta_spatial': np.zeros(9),
+                'delta_beta_regions': np.zeros(9),
+                'delta_beta_states': np.zeros(52),
                 'delta_beta_temporal': np.zeros(10),
-                'delta_beta_spatial_Nov1': np.zeros(9),
-                'delta_beta_spatial_Nov2': np.zeros(9),
-                'delta_beta_spatial_Dec1': np.zeros(9),
-                'delta_beta_spatial_Dec2': np.zeros(9),
-                'delta_beta_spatial_Jan1': np.zeros(9),
-                'delta_beta_spatial_Jan2': np.zeros(9),
-                'delta_beta_spatial_Feb1': np.zeros(9),
-                'delta_beta_spatial_Feb2': np.zeros(9),
-                'delta_beta_spatial_Mar1': np.zeros(9),
-                'delta_beta_spatial_Mar2': np.zeros(9),
+                'delta_beta_regions_Nov1': np.zeros(9),
+                'delta_beta_regions_Nov2': np.zeros(9),
+                'delta_beta_regions_Dec1': np.zeros(9),
+                'delta_beta_regions_Dec2': np.zeros(9),
+                'delta_beta_regions_Jan1': np.zeros(9),
+                'delta_beta_regions_Jan2': np.zeros(9),
+                'delta_beta_regions_Feb1': np.zeros(9),
+                'delta_beta_regions_Feb2': np.zeros(9),
+                'delta_beta_regions_Mar1': np.zeros(9),
+                'delta_beta_regions_Mar2': np.zeros(9),
             }
         )
 

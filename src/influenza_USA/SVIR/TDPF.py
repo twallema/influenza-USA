@@ -157,10 +157,10 @@ class hierarchal_transmission_rate_function():
         
         return smoothed_modifier
 
-    def __call__(self, t, states, param, beta_US, delta_beta_spatial, delta_beta_temporal,
-                 delta_beta_spatial_Nov1, delta_beta_spatial_Nov2, delta_beta_spatial_Dec1,  delta_beta_spatial_Dec2,
-                 delta_beta_spatial_Jan1, delta_beta_spatial_Jan2, delta_beta_spatial_Feb1, delta_beta_spatial_Feb2,
-                 delta_beta_spatial_Mar1, delta_beta_spatial_Mar2):
+    def __call__(self, t, states, param, beta_US, delta_beta_regions, delta_beta_states, delta_beta_temporal,
+                 delta_beta_regions_Nov1, delta_beta_regions_Nov2, delta_beta_regions_Dec1,  delta_beta_regions_Dec2,
+                 delta_beta_regions_Jan1, delta_beta_regions_Jan2, delta_beta_regions_Feb1, delta_beta_regions_Feb2,
+                 delta_beta_regions_Mar1, delta_beta_regions_Mar2):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -179,13 +179,16 @@ class hierarchal_transmission_rate_function():
         beta_US: float
             overall transmission rate. hierarchal level 0.
 
-        delta_beta_spatial: np.ndarray (len: 9)
+        delta_beta_regions: np.ndarray (len: 9)
             a spatial modifier on the overall transmision rate for every US region. hierarchal level 1.
+
+        delta_beta_states: np.ndarray (len: 52)
+            a spatial modifier on the overall transmision rate for every US state. hierarchal level 2.
 
         delta_beta_temporal: np.ndarray (len: 4)
             a temporal modifier on the overall transmission rate for Dec, Jan, Feb, Mar. hierarchal level 1.
 
-        delta_beta_spatial_Nov1: np.ndarray (len: 9)
+        delta_beta_regions_Nov1: np.ndarray (len: 9)
             a spatio-temporal modifier for every US region in 1-15 Nov. hierarchal level 2.
 
         output
@@ -196,36 +199,36 @@ class hierarchal_transmission_rate_function():
         """
 
         # region to states
-        delta_beta_spatial = delta_beta_spatial[self.region_mapping]
-        delta_beta_spatial_Nov1 = delta_beta_spatial_Nov1[self.region_mapping]
-        delta_beta_spatial_Nov2 = delta_beta_spatial_Nov2[self.region_mapping]
-        delta_beta_spatial_Dec1 = delta_beta_spatial_Dec1[self.region_mapping]
-        delta_beta_spatial_Dec2 = delta_beta_spatial_Dec2[self.region_mapping]
-        delta_beta_spatial_Jan1 = delta_beta_spatial_Jan1[self.region_mapping]
-        delta_beta_spatial_Jan2 = delta_beta_spatial_Jan2[self.region_mapping]
-        delta_beta_spatial_Feb1 = delta_beta_spatial_Feb1[self.region_mapping]
-        delta_beta_spatial_Feb2 = delta_beta_spatial_Feb2[self.region_mapping]
-        delta_beta_spatial_Mar1 = delta_beta_spatial_Mar1[self.region_mapping]
-        delta_beta_spatial_Mar2 = delta_beta_spatial_Mar2[self.region_mapping]
+        delta_beta_regions = delta_beta_regions[self.region_mapping]
+        delta_beta_regions_Nov1 = delta_beta_regions_Nov1[self.region_mapping]
+        delta_beta_regions_Nov2 = delta_beta_regions_Nov2[self.region_mapping]
+        delta_beta_regions_Dec1 = delta_beta_regions_Dec1[self.region_mapping]
+        delta_beta_regions_Dec2 = delta_beta_regions_Dec2[self.region_mapping]
+        delta_beta_regions_Jan1 = delta_beta_regions_Jan1[self.region_mapping]
+        delta_beta_regions_Jan2 = delta_beta_regions_Jan2[self.region_mapping]
+        delta_beta_regions_Feb1 = delta_beta_regions_Feb1[self.region_mapping]
+        delta_beta_regions_Feb2 = delta_beta_regions_Feb2[self.region_mapping]
+        delta_beta_regions_Mar1 = delta_beta_regions_Mar1[self.region_mapping]
+        delta_beta_regions_Mar2 = delta_beta_regions_Mar2[self.region_mapping]
 
         # construct modifiers (time x US state)
         modifiers = beta_US * np.array([
-                        (delta_beta_temporal[0] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Nov1 + 1),
-                        (delta_beta_temporal[1] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Nov2 + 1),
+                        (delta_beta_temporal[0] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Nov1 + 1),
+                        (delta_beta_temporal[1] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Nov2 + 1),
 
-                        (delta_beta_temporal[2] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Dec1 + 1),
-                        (delta_beta_temporal[3] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Dec2 + 1),
+                        (delta_beta_temporal[2] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Dec1 + 1),
+                        (delta_beta_temporal[3] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Dec2 + 1),
 
-                        (delta_beta_temporal[4] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Jan1 + 1),
-                        (delta_beta_temporal[5] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Jan2 + 1),
+                        (delta_beta_temporal[4] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Jan1 + 1),
+                        (delta_beta_temporal[5] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Jan2 + 1),
 
-                        (delta_beta_temporal[6] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Feb1 + 1),
-                        (delta_beta_temporal[7] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Feb2 + 1),
+                        (delta_beta_temporal[6] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Feb1 + 1),
+                        (delta_beta_temporal[7] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Feb2 + 1),
 
-                        (delta_beta_temporal[8] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Mar1 + 1),
-                        (delta_beta_temporal[9] + 1) * (delta_beta_spatial + 1)  * (delta_beta_spatial_Mar2 + 1),
+                        (delta_beta_temporal[8] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Mar1 + 1),
+                        (delta_beta_temporal[9] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Mar2 + 1),
 
-                        (delta_beta_spatial + 1) 
+                        (delta_beta_regions + 1) * (delta_beta_states + 1)
                     ])
 
         # compute smoothed modifier
@@ -520,7 +523,7 @@ class make_initial_condition_function():
             8,  # Puerto Rico (72000) - Assumed Pacific
             ])
         
-    def initial_condition_function(self, f_I, f_R, delta_f_R):
+    def initial_condition_function(self, f_I, f_R, delta_f_R_states, delta_f_R_regions):
         """
         A function setting the model's initial condition. Uses a hierarchal structure for the initial immunity.
         
@@ -533,8 +536,11 @@ class make_initial_condition_function():
         f_R: float
             initial immunity of US (parent distribution)
         
-        delta_f_R: np.ndarray (len: 9)
-            initial immunity modifier of US regions (child distributions)
+        delta_f_R_regions: np.ndarray (len: 9)
+            initial immunity modifier of US regions (child distributions; level 1)
+        
+        delta_f_R_states: np.ndarray (len: 52)
+            initial immunity modifier of US regions (child distributions; level 2)
 
         output
         ------
@@ -544,10 +550,10 @@ class make_initial_condition_function():
         """
 
         # convert delta_f_R from region to state level
-        delta_f_R = delta_f_R[self.region_mapping]
+        delta_f_R_regions = delta_f_R_regions[self.region_mapping]
 
         # construct hierarchal initial immunity
-        f_R = f_R * (1 + delta_f_R) 
+        f_R = f_R * (1 + delta_f_R_regions) * (1 + delta_f_R_states) 
 
         return {'S':  self.demography - (1 - f_I - f_R) * self.vaccinated - (f_I + f_R) * self.demography,
                 'V': (1 - f_I - f_R) * self.vaccinated,
