@@ -15,7 +15,7 @@ from datetime import datetime as datetime
 abs_dir = os.path.dirname(__file__)
 
 def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_transmission_rate=False,
-                       distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
+                       hierarchal_immunity=False, distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
 
     # model
     if stochastic:
@@ -95,6 +95,19 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
                 'delta_beta_regions_Feb2': np.zeros(9),
                 'delta_beta_regions_Mar1': np.zeros(9),
                 'delta_beta_regions_Mar2': np.zeros(9),
+            }
+        )
+    
+    # hierarchal natural immunity
+    if hierarchal_immunity:
+        # function constructing the hierarchal structure
+        from influenza_USA.SVIR.TDPF import hierarchal_waning_natural_immunity
+        TDPFs['T_r'] = hierarchal_waning_natural_immunity()
+        # its parameters
+        params.update(
+            {
+                'T_r_US': 365/np.log(2),
+                'delta_T_r_regions': np.zeros(9)
             }
         )
 

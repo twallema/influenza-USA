@@ -5,7 +5,9 @@ This script contains the time-dependent parameter functions associated with the 
 __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
+import os
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from functools import lru_cache
 from dateutil.easter import easter
@@ -15,64 +17,20 @@ from datetime import datetime, timedelta
 ## Hierarchal transmission rate ##
 ##################################
 
+class hierarchal_waning_natural_immunity():
+
+    def __init__(self):
+        self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
+        pass
+
+    def __call__(self, t, states, param, T_r_US, delta_T_r_regions):
+        return T_r_US * (1 + delta_T_r_regions[self.region_mapping]) 
+
 class hierarchal_transmission_rate_function():
 
     def __init__(self):
-
-        # hardcoded region mapping #TODO: load from excel
-        self.region_mapping = np.array([5,  # Alabama (01000) - East South Central
-                                        8,  # Alaska (02000) - Pacific
-                                        7,  # Arizona (04000) - Mountain
-                                        6,  # Arkansas (05000) - West South Central
-                                        8,  # California (06000) - Pacific
-                                        7,  # Colorado (08000) - Mountain
-                                        0,  # Connecticut (09000) - New England
-                                        4,  # Delaware (10000) - South Atlantic
-                                        4,  # District of Columbia (11000) - South Atlantic
-                                        4,  # Florida (12000) - South Atlantic
-                                        4,  # Georgia (13000) - South Atlantic
-                                        8,  # Hawaii (15000) - Pacific
-                                        7,  # Idaho (16000) - Mountain
-                                        2,  # Illinois (17000) - East North Central
-                                        2,  # Indiana (18000) - East North Central
-                                        3,  # Iowa (19000) - West North Central
-                                        3,  # Kansas (20000) - West North Central
-                                        5,  # Kentucky (21000) - East South Central
-                                        6,  # Louisiana (22000) - West South Central
-                                        0,  # Maine (23000) - New England
-                                        4,  # Maryland (24000) - South Atlantic
-                                        0,  # Massachusetts (25000) - New England
-                                        2,  # Michigan (26000) - East North Central
-                                        3,  # Minnesota (27000) - West North Central
-                                        5,  # Mississippi (28000) - East South Central
-                                        3,  # Missouri (29000) - West North Central
-                                        7,  # Montana (30000) - Mountain
-                                        3,  # Nebraska (31000) - West North Central
-                                        7,  # Nevada (32000) - Mountain
-                                        0,  # New Hampshire (33000) - New England
-                                        1,  # New Jersey (34000) - Mid-Atlantic
-                                        7,  # New Mexico (35000) - Mountain
-                                        1,  # New York (36000) - Mid-Atlantic
-                                        4,  # North Carolina (37000) - South Atlantic
-                                        3,  # North Dakota (38000) - West North Central
-                                        2,  # Ohio (39000) - East North Central
-                                        6,  # Oklahoma (40000) - West South Central
-                                        8,  # Oregon (41000) - Pacific
-                                        1,  # Pennsylvania (42000) - Mid-Atlantic
-                                        0,  # Rhode Island (44000) - New England
-                                        4,  # South Carolina (45000) - South Atlantic
-                                        3,  # South Dakota (46000) - West North Central
-                                        5,  # Tennessee (47000) - East South Central
-                                        6,  # Texas (48000) - West South Central
-                                        7,  # Utah (49000) - Mountain
-                                        0,  # Vermont (50000) - New England
-                                        4,  # Virginia (51000) - South Atlantic
-                                        8,  # Washington (53000) - Pacific
-                                        4,  # West Virginia (54000) - South Atlantic
-                                        2,  # Wisconsin (55000) - East North Central
-                                        7,  # Wyoming (56000) - Mountain
-                                        8,  # Puerto Rico (72000) - Assumed Pacific
-                                        ])
+        self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
+        pass
 
     def get_smoothed_modifier(self, modifiers, simulation_date, half_life_days=7, window_size=14):
         """
@@ -468,61 +426,9 @@ class make_initial_condition_function():
         self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
         # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
         self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
-        self.region_mapping = np.array([
-            5,  # Alabama (01000) - East South Central
-            8,  # Alaska (02000) - Pacific
-            7,  # Arizona (04000) - Mountain
-            6,  # Arkansas (05000) - West South Central
-            8,  # California (06000) - Pacific
-            7,  # Colorado (08000) - Mountain
-            0,  # Connecticut (09000) - New England
-            4,  # Delaware (10000) - South Atlantic
-            4,  # District of Columbia (11000) - South Atlantic
-            4,  # Florida (12000) - South Atlantic
-            4,  # Georgia (13000) - South Atlantic
-            8,  # Hawaii (15000) - Pacific
-            7,  # Idaho (16000) - Mountain
-            2,  # Illinois (17000) - East North Central
-            2,  # Indiana (18000) - East North Central
-            3,  # Iowa (19000) - West North Central
-            3,  # Kansas (20000) - West North Central
-            5,  # Kentucky (21000) - East South Central
-            6,  # Louisiana (22000) - West South Central
-            0,  # Maine (23000) - New England
-            4,  # Maryland (24000) - South Atlantic
-            0,  # Massachusetts (25000) - New England
-            2,  # Michigan (26000) - East North Central
-            3,  # Minnesota (27000) - West North Central
-            5,  # Mississippi (28000) - East South Central
-            3,  # Missouri (29000) - West North Central
-            7,  # Montana (30000) - Mountain
-            3,  # Nebraska (31000) - West North Central
-            7,  # Nevada (32000) - Mountain
-            0,  # New Hampshire (33000) - New England
-            1,  # New Jersey (34000) - Mid-Atlantic
-            7,  # New Mexico (35000) - Mountain
-            1,  # New York (36000) - Mid-Atlantic
-            4,  # North Carolina (37000) - South Atlantic
-            3,  # North Dakota (38000) - West North Central
-            2,  # Ohio (39000) - East North Central
-            6,  # Oklahoma (40000) - West South Central
-            8,  # Oregon (41000) - Pacific
-            1,  # Pennsylvania (42000) - Mid-Atlantic
-            0,  # Rhode Island (44000) - New England
-            4,  # South Carolina (45000) - South Atlantic
-            3,  # South Dakota (46000) - West North Central
-            5,  # Tennessee (47000) - East South Central
-            6,  # Texas (48000) - West South Central
-            7,  # Utah (49000) - Mountain
-            0,  # Vermont (50000) - New England
-            4,  # Virginia (51000) - South Atlantic
-            8,  # Washington (53000) - Pacific
-            4,  # West Virginia (54000) - South Atlantic
-            2,  # Wisconsin (55000) - East North Central
-            7,  # Wyoming (56000) - Mountain
-            8,  # Puerto Rico (72000) - Assumed Pacific
-            ])
-        
+        self.region_mapping = self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
+        pass
+
     def initial_condition_function(self, f_I, f_R, delta_f_R_states, delta_f_R_regions):
         """
         A function setting the model's initial condition. Uses a hierarchal structure for the initial immunity.
