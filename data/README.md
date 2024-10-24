@@ -112,6 +112,8 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `fips_state_county.csv`: Contains for a five-digit FIPS code for every US state and county. The first two numbers represent the state, the last three numbers represent the county. Post-2020 FIPS codes, contains the reshuffled Connecticut counties. Made using `build-FIPS-list.py`.
 
++ `fips_region_mapping.csv`: Contains a mapping from a US state FIPS code to a US region (column: 'fips_to_region'). The order of the US regions is: 0 (New England), 1 (Mid-Atlantic), 2 (East North Central), 3 (West North Central), 4 (South Atlantic), 5 (East South Central), 6 (West South Central), 7 (Mountain), 8 (Pacific).  
+
 ### Contacts
 
 + `locations-all_daytype-all_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of contacts in all locations (home, work, school, leisure, others) and averaged over all daytypes (week, weekend, holiday). Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
