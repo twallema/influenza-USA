@@ -33,7 +33,6 @@ waning = 'no_waning'                    # 'no_waning' vs. 'waning_180'
 sr = 'states'                           # spatial resolution: 'collapsed', 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd = False                              # vary contact matrix by daytype
-stoch = False                           # ODE vs. tau-leap
 hierarchal_transmission_rate = True     # Hierarchal structure on transmission rate
 hierarchal_immunity = True              # Hierarchal structure on the waning of the natural immunity
 
@@ -139,7 +138,7 @@ def get_pos_beta_f_R(fips, model_coordinates):
 #################
 
 model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, hierarchal_transmission_rate=hierarchal_transmission_rate,
-                           hierarchal_immunity=hierarchal_immunity, distinguish_daytype=dd, stochastic=stoch, start_sim=start_calibration)
+                           hierarchal_immunity=hierarchal_immunity, distinguish_daytype=dd, start_sim=start_calibration)
 
 # set up right waning parameters
 if waning == 'no_waning':

@@ -15,14 +15,10 @@ from datetime import datetime as datetime
 abs_dir = os.path.dirname(__file__)
 
 def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_transmission_rate=False,
-                       hierarchal_immunity=False, distinguish_daytype=True, stochastic=False, start_sim=datetime(2024,8,1)):
+                       hierarchal_immunity=False, distinguish_daytype=True, start_sim=datetime(2024,8,1)):
 
     # model
-    if stochastic:
-        # doesn't work
-        from influenza_USA.SVIR.model import TL_SVI2RHD as SVI2RHD
-    else:
-        from influenza_USA.SVIR.model import ODE_SVI2RHD as SVI2RHD
+    from influenza_USA.SVIR.model import ODE_SVI2RHD as SVI2RHD
 
     # coordinates
     coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
