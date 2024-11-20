@@ -43,7 +43,7 @@ end_calibration = datetime(season_start+1, 5, 2)                                
 start_slice = datetime(season_start+1, 1, 1)                                    # add in a part of the dataset twice: in this case the peak in hosp.
 end_slice = datetime(season_start+1, 3, 1)
 ## frequentist
-n_pso = 5000                                                                    # Number of PSO iterations
+n_pso = 500                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
 identifier = 'USA_regions_hierarchal_May-waning'                                # ID of run
@@ -114,9 +114,6 @@ df_slice = df.loc[slice(start_slice, end_slice), slice(None)]
 end_calibration = df_calibration.index.get_level_values('date').unique().max() + timedelta(days=1)
 # now slice out the remainder of the dataset
 df_validation = df.loc[slice(end_calibration, None), slice(None)]
-
-print(df_calibration)
-print(df_validation)
 
 #####################################################
 ## Load previous sampler and extract last estimate ##
