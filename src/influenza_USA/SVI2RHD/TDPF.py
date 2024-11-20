@@ -418,7 +418,7 @@ class make_contact_function():
 ## Initial condition function ##
 ################################
 
-from influenza_USA.SVIR.utils import construct_initial_susceptible, get_cumulative_vaccinated
+from influenza_USA.SVI2RHD.utils import construct_initial_susceptible, get_cumulative_vaccinated
 class make_initial_condition_function():
 
     def __init__(self, spatial_resolution, age_resolution, start_sim, season, vaccination_data):

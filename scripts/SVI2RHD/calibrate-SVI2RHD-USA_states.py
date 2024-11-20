@@ -7,18 +7,16 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 
 import os
 import random
-import corner
 import emcee
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.SVIR.utils import initialise_SVI2RHD, fips2name # influenza model
+from influenza_USA.SVI2RHD.utils import initialise_SVI2RHD, fips2name # influenza model
 # pySODM packages
-from pySODM.optimization import nelder_mead, pso
-from pySODM.optimization.utils import add_poisson_noise, assign_theta
+from pySODM.optimization import nelder_mead
+from pySODM.optimization.utils import assign_theta
 from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal_L2, log_prior_uniform, log_prior_gamma
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
 
@@ -46,7 +44,7 @@ n_pso = 500                                                                     
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
 identifier = 'USA_regions_hierarchal_May-waning'                                # ID of run
-samples_path=fig_path=f'../data/interim/calibration/{season}/{identifier}/'     # Path to backend
+samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
 n_mcmc = 5000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 1000                                                                  # Print diagnostics every `print_n`` iterations
@@ -64,40 +62,44 @@ n_temporal_modifiers = 10
 ## continue run
 # run_date = '2024-10-30'                                                         # First date of run
 # backend_identifier = 'USA_regions_hierarchal_May-waning'
-# backend_path = f"../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
 backend_path = None
 if not backend_path:
-   run_date = datetime.today().strftime("%Y-%m-%d")
-# national estimates
-beta_US = 0.035
-delta_beta_regions = 0.01
-delta_beta_states = 0.01
-delta_beta_temporal = 0.01
-delta_beta_regions_Nov1 = 0.01
-delta_beta_regions_Nov2 = 0.01
-delta_beta_regions_Dec1 = 0.01
-delta_beta_regions_Dec2 = 0.01
-delta_beta_regions_Jan1 = 0.01
-delta_beta_regions_Jan2 = 0.01
-delta_beta_regions_Feb1 = 0.01
-delta_beta_regions_Feb2 = 0.01
-delta_beta_regions_Mar1 = 0.01
-delta_beta_regions_Mar2 = 0.01
-f_R = 0.50
-delta_f_R_states = 0.01
-delta_f_R_regions = 0.01
-T_r_US = 365/np.log(2)
-delta_T_r_regions = 0.01
-rho_h = 0.0026
-f_I = 2e-4
+    # get run date
+    run_date = datetime.today().strftime("%Y-%m-%d")
+    # check if samples folder exists, if not, make it
+    if not os.path.exists(samples_path):
+        os.makedirs(samples_path)
+    # set some ballpark national estimates
+    beta_US = 0.035
+    delta_beta_regions = 0.01
+    delta_beta_states = 0.01
+    delta_beta_temporal = 0.01
+    delta_beta_regions_Nov1 = 0.01
+    delta_beta_regions_Nov2 = 0.01
+    delta_beta_regions_Dec1 = 0.01
+    delta_beta_regions_Dec2 = 0.01
+    delta_beta_regions_Jan1 = 0.01
+    delta_beta_regions_Jan2 = 0.01
+    delta_beta_regions_Feb1 = 0.01
+    delta_beta_regions_Feb2 = 0.01
+    delta_beta_regions_Mar1 = 0.01
+    delta_beta_regions_Mar2 = 0.01
+    f_R = 0.50
+    delta_f_R_states = 0.01
+    delta_f_R_regions = 0.01
+    T_r_US = 365/np.log(2)
+    delta_T_r_regions = 0.01
+    rho_h = 0.0026
+    f_I = 2e-4
 
 ###############################
 ## Load hospitalisation data ##
 ###############################
 
 # load dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../data/interim/cases/hospitalisations_per_state.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
+df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/hospitalisations_per_state.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
 # slice right season
 df = df[df['season_start'] == str(season_start)][['date', 'location', 'H_inc']]
 # set a multiindex: 'date' + 'location' --> pySODM will align 'location' with model
@@ -126,12 +128,6 @@ if backend_path:
     pos = backend.get_chain(discard=discard, thin=thin, flat=False)[-1, ...]
     # Average out all walkers/parameter
     theta = np.mean(pos, axis=0)
-
-# Function to get indices of a states fips
-def get_pos_beta_f_R(fips, model_coordinates):
-    n = len(model_coordinates)                  # number of states
-    i = model_coordinates.index(fips)           # index of desired state
-    return i+8, n+8+i
 
 #################
 ## Setup model ##
@@ -241,6 +237,7 @@ if __name__ == '__main__':
 
     # Initial guess
     if not backend_path:
+        # set ballpark theta
         theta = [rho_h, f_I, beta_US, f_R, T_r_US] + n_regions*[delta_beta_regions,] + n_temporal_modifiers*[delta_beta_temporal,] + \
                     n_regions*[delta_f_R_states,] + n_regions * [delta_T_r_regions,] + \
                         n_states * [delta_beta_states,] + n_states * [delta_f_R_states,] + \
@@ -249,11 +246,10 @@ if __name__ == '__main__':
                                     n_regions*[delta_beta_regions_Jan1] + n_regions*[delta_beta_regions_Jan2,] + \
                                         n_regions*[delta_beta_regions_Feb1] + n_regions*[delta_beta_regions_Feb2,] +\
                                             n_regions*[delta_beta_regions_Mar1] + n_regions*[delta_beta_regions_Mar2,]
-
-    # Perform optimization 
-    #step = len(objective_function.expanded_bounds)*[0.2,]
-    #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-    #                              processes=1, max_iter=n_pso, no_improv_break=500)[0]
+        # perform optimization 
+        #step = len(objective_function.expanded_bounds)*[0.2,]
+        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        #                          processes=1, max_iter=n_pso, no_improv_break=500)[0]
 
     ######################
     ## Visualize result ##
@@ -282,7 +278,6 @@ if __name__ == '__main__':
             ax[i+1].scatter(x_validation_data, 7*df_validation.loc[slice(None), loc], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc), color='blue', alpha=1, linewidth=2)
         ax[i+1].set_title(f"{fips2name(loc)} ({loc})")
-        pos_beta, pos_f_R = get_pos_beta_f_R(loc, model.coordinates['location'])
         ax[i+1].grid(False)
 
     ## format dates
@@ -292,7 +287,7 @@ if __name__ == '__main__':
 
     ## Print to screen
     plt.tight_layout()
-    fig_path=f'../data/interim/calibration/{season}/{identifier}/'
+    fig_path=f'../../data/interim/calibration/{season}/{identifier}/'
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
@@ -308,7 +303,7 @@ if __name__ == '__main__':
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
-              'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd, 'stochastic': stoch}
+              'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd}
     # Sample n_mcmc iterations
     sampler = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=backend_path, processes=processes, progress=True, 
                                         moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1),
@@ -378,7 +373,6 @@ if __name__ == '__main__':
         ax[i+1].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=0.05/2),
                              7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
         ax[i+1].set_title(f"{fips2name(loc)} ({loc})")
-        pos_beta, pos_f_R = get_pos_beta_f_R(loc, model.coordinates['location'])
         ax[i+1].grid(False)
 
     ## format dates
@@ -388,6 +382,6 @@ if __name__ == '__main__':
 
     ## Print to screen
     plt.tight_layout()
-    fig_path=f'../data/interim/calibration/{season}/{identifier}/'
+    fig_path=f'../../data/interim/calibration/{season}/{identifier}/'
     plt.savefig(fig_path+'goodness-fit-MCMC.pdf')
     plt.close()

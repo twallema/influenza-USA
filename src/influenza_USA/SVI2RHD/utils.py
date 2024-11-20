@@ -18,7 +18,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
                        hierarchal_immunity=False, distinguish_daytype=True, start_sim=datetime(2024,8,1)):
 
     # model
-    from influenza_USA.SVIR.model import ODE_SVI2RHD as SVI2RHD
+    from influenza_USA.SVI2RHD.model import ODE_SVI2RHD as SVI2RHD
 
     # coordinates
     coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
@@ -53,26 +53,26 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             }
 
     # initial condition function
-    from influenza_USA.SVIR.TDPF import make_initial_condition_function
+    from influenza_USA.SVI2RHD.TDPF import make_initial_condition_function
     initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season, get_vaccination_data()).initial_condition_function
 
     # time-dependencies
     TDPFs = {}
     ## contacts
     if distinguish_daytype:
-        from influenza_USA.SVIR.TDPF import make_contact_function
+        from influenza_USA.SVI2RHD.TDPF import make_contact_function
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
     ## vaccines
     ### vaccine uptake
-    from influenza_USA.SVIR.TDPF import make_vaccination_function
+    from influenza_USA.SVI2RHD.TDPF import make_vaccination_function
     TDPFs['n_vacc'] = make_vaccination_function(season, get_vaccination_data()).vaccination_function
 
     # hierarchal transmission rate
     if hierarchal_transmission_rate:
         # function constructing the hierarchal structure
-        from influenza_USA.SVIR.TDPF import hierarchal_transmission_rate_function
+        from influenza_USA.SVI2RHD.TDPF import hierarchal_transmission_rate_function
         TDPFs['beta'] = hierarchal_transmission_rate_function()
         # its parameters
         params.update(
@@ -97,7 +97,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     # hierarchal natural immunity
     if hierarchal_immunity:
         # function constructing the hierarchal structure
-        from influenza_USA.SVIR.TDPF import hierarchal_waning_natural_immunity
+        from influenza_USA.SVI2RHD.TDPF import hierarchal_waning_natural_immunity
         TDPFs['T_r'] = hierarchal_waning_natural_immunity()
         # its parameters
         params.update(
