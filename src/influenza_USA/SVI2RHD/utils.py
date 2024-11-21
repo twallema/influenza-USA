@@ -39,7 +39,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
             'rho_d': 0.06,                                                                                                          # deceased in hospital fraction (source: Josh)
             'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
-            'CHR': compute_case_hospitalisation_rate(season),                                                                       # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
+            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # time-dependencies
             'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
             'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
@@ -47,11 +47,11 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
             'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
             'delta_f_R_regions': np.zeros(9),                                                                                       # immunity modifier (US regions)
-            'delta_f_R_states': np.zeros(G),                                                                                       # immunity modifier (US states)
+            'delta_f_R_states': np.zeros(G),                                                                                        # immunity modifier (US states)
             # outcomes
             'asc_case': 0.004,
             }
-
+    
     # initial condition function
     from influenza_USA.SVI2RHD.TDPF import make_initial_condition_function
     initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season, get_vaccination_data()).initial_condition_function
@@ -120,7 +120,7 @@ def construct_coordinates_dictionary(spatial_resolution, age_resolution):
         USA 'collapsed', 'states' or 'counties'
 
     age_resolution: str
-        'collapsed', 'full' (0-5, 5-18, 18-50, 50-65, 65+)
+        'collapsed' or 'full' (0-5, 5-18, 18-50, 50-65, 65+)
 
     output
     ------
@@ -151,20 +151,39 @@ def construct_coordinates_dictionary(spatial_resolution, age_resolution):
 
     return len(age_groups), len(list(demography['fips'].unique())), {'age_group': age_groups, 'location': list(demography['fips'].unique())}
 
-def compute_case_hospitalisation_rate(season):
+def compute_case_hospitalisation_rate(season, age_resolution):
     """
-    A function to compute case hospitalisation rate per age group, corrected for the differences in the number of social contacts, and expressed relative to [0, 5) years old.
+    A function to compute the influenza case hospitalisation rate per age group
+    
+    - corrected for the differences in the number of social contacts
+    - expressed relative to [0, 5) years old (= 1)
+
+    input
+    -----
+    season: str
+        '20xx-20xx': either a specific season in the format
+        'average': the average case hospitalisation rate across all seasons
+    
+    age_resolution: str
+        'collapsed': (0-100)
+        'full': (0-5, 5-18, 18-50, 50-65, 65+) 
+
+    output
+    ------
+
+    CHR: np.ndarray
+        case hospitalisation rate
     """
 
     # get case hospitalisation rates published by CDC
-    CDC_estimated_hosp = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/cases/CDC_hosp-rate-age_2017-2020.csv'),
+    CDC_estimated_hosp = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/cases/CDC_hosp-rate-age_2010-2023.csv'),
                                         dtype={'season': str, 'age': str, 'hospitalisation_rate': float})
 
     # check input season
     if ((season not in CDC_estimated_hosp['season'].unique()) & (season != 'average')):
         raise ValueError(f"season '{season}' case hospitalisation data not found. provide a valid season (format '20xx-20xx') or 'average'.")
 
-    # slice right season out
+    # slice right season out / average over all seasons
     if season != 'average':
         CDC_estimated_hosp = CDC_estimated_hosp[CDC_estimated_hosp['season'] == season]['hospitalisation_rate'].values
     else:
@@ -181,7 +200,14 @@ def compute_case_hospitalisation_rate(season):
     rel_contacts = (np.mean(np.sum(contacts, axis=1)) / np.sum(contacts, axis=1)).values
 
     # account for difference in contact rates
-    return rel_contacts * (CDC_estimated_hosp/demography) / (rel_contacts * (CDC_estimated_hosp/demography))[0]
+    CHR = rel_contacts * (CDC_estimated_hosp/demography) / (rel_contacts * (CDC_estimated_hosp/demography))[0]
+
+    # collapse age groups if necessary
+    check_age_resolution(age_resolution)
+    if age_resolution == 'collapsed':
+        return np.ones(shape=(1,1)) * np.sum(CHR * demography / np.sum(demography))
+
+    return CHR
 
 
 def get_vaccination_data():
