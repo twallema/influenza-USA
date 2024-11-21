@@ -347,26 +347,6 @@ def get_mobility_matrix(spatial_resolution, dataset='cellphone_03092020'):
 
     return mobility_matrix
 
-def load_initial_condition(season='2017-2018'):
-    """
-    A function to load the initial condition of the Influenza model, as calibrated by Josh to the 17-18 and 18-19 seasons
-    """
-    # get initial condition
-    rel_dir = f'../../../data/raw/initial_condition/initial_condition_{season}.csv'
-    ic = pd.read_csv(os.path.join(abs_dir,rel_dir), header=0)[['S_0', 'I_0', 'IV_0', 'V_0', 'H_0', 'R_0', 'D_0']]
-    # rename columns
-    ic = ic.rename(columns={'S_0': 'S', 'I_0': 'I', 'IV_0': 'Iv', 'V_0': 'V', 'H_0': 'H', 'R_0': 'R', 'D_0': 'D'})
-    # compute average
-    ic = ic.div(ic.sum(axis=1), axis=0)
-    ic = ic.mean(axis=0)
-    # verify sum of average is one
-    #assert ic.sum(axis=0) == 1.0, 'initial condition should sum to one'
-    # we start without any vaccines administered
-    ic['S'] += (ic['S'] / (ic['S'] + ic['R'])) * ic['V']
-    ic['R'] += (ic['R'] / (ic['S'] + ic['R'])) * ic['V']
-    ic = ic.drop(columns='V')
-    # return output
-    return ic
 
 def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_states):
     """
