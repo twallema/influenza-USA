@@ -17,16 +17,16 @@ abs_dir = os.path.dirname(__file__)
 def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_transmission_rate=False,
                        hierarchal_immunity=False, distinguish_daytype=True, start_sim=datetime(2024,8,1)):
 
-    # model
+    # load model
     from influenza_USA.SVI2RHD.model import ODE_SVI2RHD as SVI2RHD
 
-    # coordinates
-    coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
+    # construct coordinates
+    N, G, coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
 
     # parameters
     params = {
             # core parameters
-            'beta': 0.03*np.ones(52),                                                                                               # infectivity (-)
+            'beta': 0.03*np.ones(G),                                                                                                # infectivity (-)
             'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
             'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),               # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
@@ -47,7 +47,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
             'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
             'delta_f_R_regions': np.zeros(9),                                                                                       # immunity modifier (US regions)
-            'delta_f_R_states': np.zeros(52),                                                                                       # immunity modifier (US states)
+            'delta_f_R_states': np.zeros(G),                                                                                       # immunity modifier (US states)
             # outcomes
             'asc_case': 0.004,
             }
@@ -79,7 +79,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             {
                 'beta_US': 0.03,
                 'delta_beta_regions': np.zeros(9),
-                'delta_beta_states': np.zeros(52),
+                'delta_beta_states': np.zeros(G),
                 'delta_beta_temporal': np.zeros(10),
                 'delta_beta_regions_Nov1': np.zeros(9),
                 'delta_beta_regions_Nov2': np.zeros(9),
@@ -111,7 +111,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
 
 def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     """
-    A function returning the model's coordinates for the dimension 'age_group' and 'location'.
+    A function returning the model's coordinates for the dimension 'age_group' and 'location', as well as the number of coordinates for each dimension
 
     input
     -----
@@ -124,6 +124,11 @@ def construct_coordinates_dictionary(spatial_resolution, age_resolution):
 
     output
     ------
+    N: int
+        number of age groups
+    
+    G: int
+        number of spatial units
 
     coordinates: dict
         Keys: 'age_group', 'location'. Values: Str representing age groups, Str representing US FIPS code of spatial unit
@@ -144,7 +149,7 @@ def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     else:
         age_groups = list(demography['age'].unique())
 
-    return {'age_group': age_groups, 'location': list(demography['fips'].unique())}
+    return len(age_groups), len(list(demography['fips'].unique())), {'age_group': age_groups, 'location': list(demography['fips'].unique())}
 
 def compute_case_hospitalisation_rate(season):
     """
@@ -346,7 +351,6 @@ def get_mobility_matrix(spatial_resolution, dataset='cellphone_03092020'):
     assert np.all(mobility_matrix >= 0)
 
     return mobility_matrix
-
 
 def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_states):
     """
