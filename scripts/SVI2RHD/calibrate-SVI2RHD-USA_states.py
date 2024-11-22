@@ -25,8 +25,8 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season_start = 2014                     # '2017' or '2019'
-season = '2014-2015'                    # '2017-2018' or '2019-2020'
+season_start = 2023                     # '2017' or '2019'
+season = '2023-2024'                    # '2017-2018' or '2019-2020'
 vaccine_waning = 'off'                  # 'on': wanes in 180d on average, efficacy 80% at t0 ;'off' no waning, efficacy 40%. 
 sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
@@ -34,11 +34,12 @@ dd = False                              # vary contact matrix by daytype
 
 # optimization
 start_calibration = datetime(season_start, 10, 15)                              # simulations will start on this date
-end_calibration = datetime(season_start+1, 2, 15)                                # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
+end_calibration = datetime(season_start+1, 2, 15)                               # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
+end_validation = datetime(season_start+1, 5, 1)                                 # alternative: None
 start_slice = datetime(season_start+1, 1, 1)                                    # add in a part of the dataset twice: in this case the peak in hosp.
 end_slice = datetime(season_start+1, 3, 1)
 ## frequentist
-n_pso = 500                                                                     # Number of PSO iterations
+n_pso = 1000                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
 identifier = 'USA_regions_hierarchal_midFeb-waning'                                # ID of run
@@ -58,39 +59,39 @@ n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-run_date = '2024-11-20'                                                         # First date of run
-backend_identifier = 'USA_regions_hierarchal_midFeb-waning'
-backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+# run_date = '2024-11-20'                                                         # First date of run
+# backend_identifier = 'USA_regions_hierarchal_midFeb-waning'
+# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-# backend_path = None
-# if not backend_path:
-#     # get run date
-#     run_date = datetime.today().strftime("%Y-%m-%d")
-#     # check if samples folder exists, if not, make it
-#     if not os.path.exists(samples_path):
-#         os.makedirs(samples_path)
-#     # set some ballpark national estimates
-#     beta_US = 0.035
-#     delta_beta_regions = 0.01
-#     delta_beta_states = 0.01
-#     delta_beta_temporal = 0.01
-#     delta_beta_regions_Nov1 = 0.01
-#     delta_beta_regions_Nov2 = 0.01
-#     delta_beta_regions_Dec1 = 0.01
-#     delta_beta_regions_Dec2 = 0.01
-#     delta_beta_regions_Jan1 = 0.01
-#     delta_beta_regions_Jan2 = 0.01
-#     delta_beta_regions_Feb1 = 0.01
-#     delta_beta_regions_Feb2 = 0.01
-#     delta_beta_regions_Mar1 = 0.01
-#     delta_beta_regions_Mar2 = 0.01
-#     f_R = 0.50
-#     delta_f_R_states = 0.01
-#     delta_f_R_regions = 0.01
-#     T_r_US = 365/np.log(2)
-#     delta_T_r_regions = 0.01
-#     rho_h = 0.0026
-#     f_I = 2e-4
+backend_path = None
+if not backend_path:
+    # get run date
+    run_date = datetime.today().strftime("%Y-%m-%d")
+    # check if samples folder exists, if not, make it
+    if not os.path.exists(samples_path):
+        os.makedirs(samples_path)
+    # set some ballpark national estimates
+    beta_US = 0.035
+    delta_beta_regions = 0.01
+    delta_beta_states = 0.01
+    delta_beta_temporal = 0.01
+    delta_beta_regions_Nov1 = 0.01
+    delta_beta_regions_Nov2 = 0.01
+    delta_beta_regions_Dec1 = 0.01
+    delta_beta_regions_Dec2 = 0.01
+    delta_beta_regions_Jan1 = 0.01
+    delta_beta_regions_Jan2 = 0.01
+    delta_beta_regions_Feb1 = 0.01
+    delta_beta_regions_Feb2 = 0.01
+    delta_beta_regions_Mar1 = 0.01
+    delta_beta_regions_Mar2 = 0.01
+    f_R = 0.50
+    delta_f_R_states = 0.01
+    delta_f_R_regions = 0.01
+    T_r_US = 365/np.log(2)
+    delta_T_r_regions = 0.01
+    rho_h = 0.0026
+    f_I = 2e-4
 
 ###############################
 ## Load hospitalisation data ##
@@ -104,15 +105,15 @@ df = df[df['season_start'] == str(season_start)][['date', 'location', 'H_inc']]
 df = df.groupby(by=['date', 'location']).sum().squeeze()
 # convert to daily incidence
 df /= 7
-# compute enddate of the dataset
-end_sim = df.index.get_level_values('date').unique().max()
 # slice data until end
 df_calibration = df.loc[slice(start_calibration, end_calibration), slice(None)]
 df_slice = df.loc[slice(start_slice, end_slice), slice(None)]
 # replace `end_calibration` None --> datetime
 end_calibration = df_calibration.index.get_level_values('date').unique().max() + timedelta(days=1)
 # now slice out the remainder of the dataset
-df_validation = df.loc[slice(end_calibration, None), slice(None)]
+df_validation = df.loc[slice(end_calibration, end_validation), slice(None)]
+# compute enddate of the dataset
+end_sim = df_validation.index.get_level_values('date').unique().max()
 
 #####################################################
 ## Load previous sampler and extract last estimate ##
@@ -234,9 +235,9 @@ if __name__ == '__main__':
                                         n_regions*[delta_beta_regions_Feb1] + n_regions*[delta_beta_regions_Feb2,] +\
                                             n_regions*[delta_beta_regions_Mar1] + n_regions*[delta_beta_regions_Mar2,]
         # perform optimization 
-        #step = len(objective_function.expanded_bounds)*[0.2,]
-        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-        #                          processes=1, max_iter=n_pso, no_improv_break=500)[0]
+        step = len(objective_function.expanded_bounds)*[0.2,]
+        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+                                  processes=1, max_iter=n_pso, no_improv_break=500)[0]
 
     ######################
     ## Visualize result ##
@@ -278,9 +279,7 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
-    import sys
-    sys.exit()
-    
+
     ##########
     ## MCMC ##
     ##########
