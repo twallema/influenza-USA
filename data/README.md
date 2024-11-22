@@ -110,9 +110,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 ### FIPS codes
 
-+ `fips_state_county.csv`: Contains for a five-digit FIPS code for every US state and county. The first two numbers represent the state, the last three numbers represent the county. Post-2020 FIPS codes, contains the reshuffled Connecticut counties. Made using `build-FIPS-list.py`.
-
-+ `fips_region_mapping.csv`: Contains a mapping from a US state FIPS code to a US region (column: 'fips_to_region'). The order of the US regions is: 0 (New England), 1 (Mid-Atlantic), 2 (East North Central), 3 (West North Central), 4 (South Atlantic), 5 (East South Central), 6 (West South Central), 7 (Mountain), 8 (Pacific).  
++ `fips_names_mappings.csv`: Contains for a five-digit FIPS code for every US state and county. The first two numbers represent the state, the last three numbers represent the county. Post-2020 FIPS codes, contains the reshuffled Connecticut counties. Made using `build-FIPS-list.py`. After making the initial file, the corresponding region names were added, as well with a mapping that can be used to convert arrays where entries represent a US region (9) or US state (52) to an array of length US counties. The order of the US regions is: 0 (New England), 1 (Mid-Atlantic), 2 (East North Central), 3 (West North Central), 4 (South Atlantic), 5 (East South Central), 6 (West South Central), 7 (Mountain), 8 (Pacific).   
 
 ### Contacts
 

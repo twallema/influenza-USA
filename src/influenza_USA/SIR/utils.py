@@ -272,7 +272,7 @@ def construct_initial_infected(seed_loc=('',''), n=1, agedist='demographic', spa
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
 
     # load fips codes
-    fips_codes = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
+    fips_codes = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_names_mappings.csv'), dtype={'fips_state': str, 'fips_county': str})
 
     # input checks on seed location
     assert isinstance(seed_loc, tuple), "`seed_loc` must be of type 'tpl'"
@@ -401,7 +401,7 @@ def name2fips(name_state, name_county=None):
     """
 
     # load FIPS-name list (fips_state (2 digits), fips_county (3 digits), name_state, name_county)
-    df = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
+    df = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_names_mappings.csv'), dtype={'fips_state': str, 'fips_county': str})
 
     # state name only
     if not isinstance(name_state, str):
@@ -456,7 +456,7 @@ def fips2name(fips_code):
     fips_county = fips_code[2:]
 
     # load FIPS-name list
-    df = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_state_county.csv'), dtype={'fips_state': str, 'fips_county': str})
+    df = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/fips_codes/fips_names_mappings.csv'), dtype={'fips_state': str, 'fips_county': str})
 
     # look up name
     if fips_county == '000':

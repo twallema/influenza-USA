@@ -27,23 +27,21 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 # model settings
 season_start = 2014                     # '2017' or '2019'
 season = '2014-2015'                    # '2017-2018' or '2019-2020'
-waning = 'no_waning'                    # 'no_waning' vs. 'waning_180'
-sr = 'states'                           # spatial resolution: 'collapsed', 'states' or 'counties'
+vaccine_waning = 'off'                  # 'on': wanes in 180d on average, efficacy 80% at t0 ;'off' no waning, efficacy 40%. 
+sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd = False                              # vary contact matrix by daytype
-hierarchal_transmission_rate = True     # Hierarchal structure on transmission rate
-hierarchal_immunity = True              # Hierarchal structure on the waning of the natural immunity
 
 # optimization
 start_calibration = datetime(season_start, 10, 15)                              # simulations will start on this date
-end_calibration = datetime(season_start+1, 5, 2)                                # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
+end_calibration = datetime(season_start+1, 2, 15)                                # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
 start_slice = datetime(season_start+1, 1, 1)                                    # add in a part of the dataset twice: in this case the peak in hosp.
 end_slice = datetime(season_start+1, 3, 1)
 ## frequentist
 n_pso = 500                                                                     # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'USA_regions_hierarchal_May-waning'                                # ID of run
+identifier = 'USA_regions_hierarchal_midFeb-waning'                                # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
 n_mcmc = 5000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
@@ -60,39 +58,39 @@ n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-# run_date = '2024-10-30'                                                         # First date of run
-# backend_identifier = 'USA_regions_hierarchal_May-waning'
-# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+run_date = '2024-11-20'                                                         # First date of run
+backend_identifier = 'USA_regions_hierarchal_midFeb-waning'
+backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-backend_path = None
-if not backend_path:
-    # get run date
-    run_date = datetime.today().strftime("%Y-%m-%d")
-    # check if samples folder exists, if not, make it
-    if not os.path.exists(samples_path):
-        os.makedirs(samples_path)
-    # set some ballpark national estimates
-    beta_US = 0.035
-    delta_beta_regions = 0.01
-    delta_beta_states = 0.01
-    delta_beta_temporal = 0.01
-    delta_beta_regions_Nov1 = 0.01
-    delta_beta_regions_Nov2 = 0.01
-    delta_beta_regions_Dec1 = 0.01
-    delta_beta_regions_Dec2 = 0.01
-    delta_beta_regions_Jan1 = 0.01
-    delta_beta_regions_Jan2 = 0.01
-    delta_beta_regions_Feb1 = 0.01
-    delta_beta_regions_Feb2 = 0.01
-    delta_beta_regions_Mar1 = 0.01
-    delta_beta_regions_Mar2 = 0.01
-    f_R = 0.50
-    delta_f_R_states = 0.01
-    delta_f_R_regions = 0.01
-    T_r_US = 365/np.log(2)
-    delta_T_r_regions = 0.01
-    rho_h = 0.0026
-    f_I = 2e-4
+# backend_path = None
+# if not backend_path:
+#     # get run date
+#     run_date = datetime.today().strftime("%Y-%m-%d")
+#     # check if samples folder exists, if not, make it
+#     if not os.path.exists(samples_path):
+#         os.makedirs(samples_path)
+#     # set some ballpark national estimates
+#     beta_US = 0.035
+#     delta_beta_regions = 0.01
+#     delta_beta_states = 0.01
+#     delta_beta_temporal = 0.01
+#     delta_beta_regions_Nov1 = 0.01
+#     delta_beta_regions_Nov2 = 0.01
+#     delta_beta_regions_Dec1 = 0.01
+#     delta_beta_regions_Dec2 = 0.01
+#     delta_beta_regions_Jan1 = 0.01
+#     delta_beta_regions_Jan2 = 0.01
+#     delta_beta_regions_Feb1 = 0.01
+#     delta_beta_regions_Feb2 = 0.01
+#     delta_beta_regions_Mar1 = 0.01
+#     delta_beta_regions_Mar2 = 0.01
+#     f_R = 0.50
+#     delta_f_R_states = 0.01
+#     delta_f_R_regions = 0.01
+#     T_r_US = 365/np.log(2)
+#     delta_T_r_regions = 0.01
+#     rho_h = 0.0026
+#     f_I = 2e-4
 
 ###############################
 ## Load hospitalisation data ##
@@ -133,18 +131,7 @@ if backend_path:
 ## Setup model ##
 #################
 
-model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, hierarchal_transmission_rate=hierarchal_transmission_rate,
-                           hierarchal_immunity=hierarchal_immunity, distinguish_daytype=dd, start_sim=start_calibration)
-
-# set up right waning parameters
-if waning == 'no_waning':
-    model.parameters['e_i'] = 0.2
-    model.parameters['e_h'] = 0.5
-    model.parameters['T_v'] = 10*365
-elif waning == 'waning_180':
-    model.parameters['e_i'] = 0.2
-    model.parameters['e_h'] = 0.75
-    model.parameters['T_v'] = 365/2
+model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, start_sim=start_calibration)
 
 #####################
 ## Calibrate model ##
@@ -291,7 +278,9 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
-
+    import sys
+    sys.exit()
+    
     ##########
     ## MCMC ##
     ##########

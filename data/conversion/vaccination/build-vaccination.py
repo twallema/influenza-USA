@@ -39,7 +39,7 @@ for season in vaccination['season'].unique():
     dates = [x for x in dates if str(x) != 'nan'] # season 2018-2019 contains a nan date
     # pre-allocate output
     out = pd.DataFrame(0, columns=['daily_incidence', 'cumulative'],
-                        index=pd.MultiIndex.from_product([[season,], dates, ages, states],names=['season', 'date', 'age', 'state']),
+                        index=pd.MultiIndex.from_product([[season,], dates, ages, states],names=['season', 'date', 'age', 'fips']),
                         dtype=np.float64)
     # fill out data (I know there's probably a better way to do this blabla)
     for date in dates:
