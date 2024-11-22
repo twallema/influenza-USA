@@ -19,8 +19,9 @@ from datetime import datetime, timedelta
 
 class hierarchal_waning_natural_immunity():
 
-    def __init__(self):
-        self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
+    def __init__(self, spatial_resolution):
+        # retrieve region/state --> state/county parameter  mapping
+        self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
         pass
 
     def __call__(self, t, states, param, T_r_US, delta_T_r_regions):
@@ -28,8 +29,9 @@ class hierarchal_waning_natural_immunity():
 
 class hierarchal_transmission_rate_function():
 
-    def __init__(self):
-        self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
+    def __init__(self, spatial_resolution):
+        # retrieve region/state --> state/county parameter  mapping
+        self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
         pass
 
     def get_smoothed_modifier(self, modifiers, simulation_date, half_life_days=7, window_size=14):
@@ -156,7 +158,9 @@ class hierarchal_transmission_rate_function():
             transmission rate per US state
         """
 
-        # region to states
+        # state parameter mapping
+        delta_beta_states = delta_beta_states[self.state_mapping]
+        # regional parameter mapping
         delta_beta_regions = delta_beta_regions[self.region_mapping]
         delta_beta_regions_Nov1 = delta_beta_regions_Nov1[self.region_mapping]
         delta_beta_regions_Nov2 = delta_beta_regions_Nov2[self.region_mapping]
@@ -420,7 +424,7 @@ class make_contact_function():
 ## Initial condition function ##
 ################################
 
-from influenza_USA.SVI2RHD.utils import construct_initial_susceptible, get_cumulative_vaccinated, get_vaccination_data, convert_vaccination_data
+from influenza_USA.SVI2RHD.utils import construct_initial_susceptible, get_cumulative_vaccinated, get_vaccination_data, convert_vaccination_data, get_spatial_mappings
 class make_initial_condition_function():
 
     def __init__(self, spatial_resolution, age_resolution, start_sim, season):
@@ -432,9 +436,8 @@ class make_initial_condition_function():
         self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
         # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
         self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
-        # retrieve region to state mapping
-        self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
-        pass
+        # retrieve region/state --> state/county parameter  mapping
+        self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
 
     def initial_condition_function(self, f_I, f_R, delta_f_R_states, delta_f_R_regions):
         """
@@ -462,8 +465,9 @@ class make_initial_condition_function():
             Keys: 'S', 'V', 'I', 'R'. Values: np.ndarray (n_age x n_loc).
         """
 
-        # convert delta_f_R from region to state level
+        # convert all delta_f_R from region/state to state/county level
         delta_f_R_regions = delta_f_R_regions[self.region_mapping]
+        delta_f_R_states = delta_f_R_states[self.state_mapping]
 
         # construct hierarchal initial immunity
         f_R = f_R * (1 + delta_f_R_regions) * (1 + delta_f_R_states) 

@@ -21,18 +21,15 @@ start_sim = datetime(2014, 11, 1)
 end_sim = datetime(2015, 5, 1)
 season = '2014-2015'                    # '2017-2018' or '2019-2020'
 waning = 'no_waning'                    # 'no_waning' vs. 'waning_180'
-sr = 'states'                         # spatial resolution: 'collapsed', 'states' or 'counties'
-ar = 'full'                        # age resolution: 'collapsed' or 'full'
+sr = 'counties'                           # spatial resolution: 'states' or 'counties'
+ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd = False                              # vary contact matrix by daytype
-hierarchal_transmission_rate = True     # Hierarchal structure on transmission rate
-hierarchal_immunity = True              # Hierarchal structure on the waning of the natural immunity
 
 #################
 ## Setup model ##
 #################
 
-model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, hierarchal_transmission_rate=hierarchal_transmission_rate,
-                           hierarchal_immunity=hierarchal_immunity, distinguish_daytype=dd, start_sim=start_sim)
+model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, start_sim=start_sim)
 
 # set up right waning parameters
 if waning == 'no_waning':

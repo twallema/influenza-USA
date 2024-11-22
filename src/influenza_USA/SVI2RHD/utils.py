@@ -14,8 +14,10 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', hierarchal_transmission_rate=False,
-                       hierarchal_immunity=False, distinguish_daytype=True, start_sim=datetime(2024,8,1)):
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', distinguish_daytype=True, start_sim=datetime(2024,8,1)):
+
+    if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
+        raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
 
     # load model
     from influenza_USA.SVI2RHD.model import ODE_SVI2RHD as SVI2RHD
@@ -47,7 +49,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
             'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
             'delta_f_R_regions': np.zeros(9),                                                                                       # immunity modifier (US regions)
-            'delta_f_R_states': np.zeros(G),                                                                                        # immunity modifier (US states)
+            'delta_f_R_states': np.zeros(52),                                                                                       # immunity modifier (US states)
             # outcomes
             'asc_case': 0.004,
             }
@@ -64,48 +66,43 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
-    ## vaccines
-    ### vaccine uptake
+    ## vaccine uptake
     from influenza_USA.SVI2RHD.TDPF import make_vaccination_function
     TDPFs['n_vacc'] = make_vaccination_function(season, spatial_resolution, age_resolution).vaccination_function
 
-    # hierarchal transmission rate
-    if hierarchal_transmission_rate:
-        # function constructing the hierarchal structure
-        from influenza_USA.SVI2RHD.TDPF import hierarchal_transmission_rate_function
-        TDPFs['beta'] = hierarchal_transmission_rate_function()
-        # its parameters
-        params.update(
-            {
-                'beta_US': 0.03,
-                'delta_beta_regions': np.zeros(9),
-                'delta_beta_states': np.zeros(G),
-                'delta_beta_temporal': np.zeros(10),
-                'delta_beta_regions_Nov1': np.zeros(9),
-                'delta_beta_regions_Nov2': np.zeros(9),
-                'delta_beta_regions_Dec1': np.zeros(9),
-                'delta_beta_regions_Dec2': np.zeros(9),
-                'delta_beta_regions_Jan1': np.zeros(9),
-                'delta_beta_regions_Jan2': np.zeros(9),
-                'delta_beta_regions_Feb1': np.zeros(9),
-                'delta_beta_regions_Feb2': np.zeros(9),
-                'delta_beta_regions_Mar1': np.zeros(9),
-                'delta_beta_regions_Mar2': np.zeros(9),
-            }
-        )
-    
+    ## hierarchal transmission rate
+    from influenza_USA.SVI2RHD.TDPF import hierarchal_transmission_rate_function
+    TDPFs['beta'] = hierarchal_transmission_rate_function(spatial_resolution)
+    # its parameters
+    params.update(
+        {
+            'beta_US': 0.03,
+            'delta_beta_regions': np.zeros(9),
+            'delta_beta_states': np.zeros(52),
+            'delta_beta_temporal': np.zeros(10),
+            'delta_beta_regions_Nov1': np.zeros(9),
+            'delta_beta_regions_Nov2': np.zeros(9),
+            'delta_beta_regions_Dec1': np.zeros(9),
+            'delta_beta_regions_Dec2': np.zeros(9),
+            'delta_beta_regions_Jan1': np.zeros(9),
+            'delta_beta_regions_Jan2': np.zeros(9),
+            'delta_beta_regions_Feb1': np.zeros(9),
+            'delta_beta_regions_Feb2': np.zeros(9),
+            'delta_beta_regions_Mar1': np.zeros(9),
+            'delta_beta_regions_Mar2': np.zeros(9),
+        }
+    )
+
     # hierarchal natural immunity
-    if hierarchal_immunity:
-        # function constructing the hierarchal structure
-        from influenza_USA.SVI2RHD.TDPF import hierarchal_waning_natural_immunity
-        TDPFs['T_r'] = hierarchal_waning_natural_immunity()
-        # its parameters
-        params.update(
-            {
-                'T_r_US': 365/np.log(2),
-                'delta_T_r_regions': np.zeros(9)
-            }
-        )
+    from influenza_USA.SVI2RHD.TDPF import hierarchal_waning_natural_immunity
+    TDPFs['T_r'] = hierarchal_waning_natural_immunity(spatial_resolution)
+    # its parameters
+    params.update(
+        {
+            'T_r_US': 365/np.log(2),
+            'delta_T_r_regions': np.zeros(9)
+        }
+    )
 
     return SVI2RHD(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
@@ -698,7 +695,7 @@ def get_spatial_mappings(spatial_resolution):
     region_mapping: np.ndarray
         A (52,) or (3222,) map of states to states or counties
     """
-    
+
     # input check on spatial resolution
     check_spatial_resolution(spatial_resolution)
     # get mapping data file
