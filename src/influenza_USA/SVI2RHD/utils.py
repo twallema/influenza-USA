@@ -14,19 +14,20 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', vaccine_waning='off', distinguish_daytype=True, start_sim=datetime(2024,8,1)):
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', vaccine_waning='off',
+                       distinguish_daytype=True, start_sim=datetime(2024,8,1)):
 
     # model works at US state or county level
     if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
         raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
 
-    # load model
+    # load model object
     from influenza_USA.SVI2RHD.model import ODE_SVI2RHD as SVI2RHD
 
     # construct coordinates
     N, G, coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
 
-    # parameters
+    # define parameters
     params = {
             # core parameters
             'beta': 0.03*np.ones(G),                                                                                                # infectivity (-)
@@ -84,17 +85,8 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'beta_US': 0.03,
             'delta_beta_regions': np.zeros(9),
             'delta_beta_states': np.zeros(52),
-            'delta_beta_temporal': np.zeros(10),
-            'delta_beta_regions_Nov1': np.zeros(9),
-            'delta_beta_regions_Nov2': np.zeros(9),
-            'delta_beta_regions_Dec1': np.zeros(9),
-            'delta_beta_regions_Dec2': np.zeros(9),
-            'delta_beta_regions_Jan1': np.zeros(9),
-            'delta_beta_regions_Jan2': np.zeros(9),
-            'delta_beta_regions_Feb1': np.zeros(9),
-            'delta_beta_regions_Feb2': np.zeros(9),
-            'delta_beta_regions_Mar1': np.zeros(9),
-            'delta_beta_regions_Mar2': np.zeros(9),
+            'delta_beta_temporal': np.zeros(5),
+            'delta_beta_spatiotemporal': np.zeros(shape=[5,9])
         }
     )
 

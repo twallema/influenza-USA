@@ -40,14 +40,14 @@ class hierarchal_transmission_rate_function():
         Supports 'biweekly' or 'monthly' frequencies for the modifiers.
 
         Parameters:
-        - modifiers: numpy array of shape (10, 52) or (5, 52), depending on freq ('biweekly' or 'monthly').
+        - modifiers: numpy array of shape (10, 9) or (5, 9), depending on freq ('biweekly' or 'monthly').
         - simulation_date: datetime object representing the current simulation date.
         - half_life_days: Half-life in days for the exponential smoothing (default: 5 days).
         - window_size: The number of days used in the smoothing window (default: 30 days).
         - freq: 'biweekly' (default) or 'monthly'. Determines the structure of the modifiers.
 
         Returns:
-        - smoothed_modifier: numpy array of shape (1, 52), representing the smoothed temporal modifier.
+        - smoothed_modifier: numpy array of shape (1, 9), representing the smoothed temporal modifier.
         """
         # Exponential smoothing factor (alpha)
         alpha = 1 - np.exp(np.log(0.5) / half_life_days)
@@ -124,11 +124,7 @@ class hierarchal_transmission_rate_function():
 
         return smoothed_modifier
 
-
-    def __call__(self, t, states, param, beta_US, delta_beta_regions, delta_beta_states, delta_beta_temporal,
-                 delta_beta_regions_Nov1, delta_beta_regions_Nov2, delta_beta_regions_Dec1,  delta_beta_regions_Dec2,
-                 delta_beta_regions_Jan1, delta_beta_regions_Jan2, delta_beta_regions_Feb1, delta_beta_regions_Feb2,
-                 delta_beta_regions_Mar1, delta_beta_regions_Mar2):
+    def __call__(self, t, states, param, beta_US, delta_beta_regions, delta_beta_states, delta_beta_temporal, delta_beta_spatiotemporal):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -156,7 +152,7 @@ class hierarchal_transmission_rate_function():
         delta_beta_temporal: np.ndarray (len: 4)
             a temporal modifier on the overall transmission rate for Dec, Jan, Feb, Mar. hierarchal level 1.
 
-        delta_beta_regions_Nov1: np.ndarray (len: 9)
+        delta_beta_spatiotemporal: np.ndarray (shape: 10, 9)
             a spatio-temporal modifier for every US region in 1-15 Nov. hierarchal level 2.
 
         output
@@ -167,42 +163,17 @@ class hierarchal_transmission_rate_function():
         """
 
         # state parameter mapping
-        delta_beta_states = delta_beta_states[self.state_mapping]
+        delta_beta_states = 1 + delta_beta_states[self.state_mapping]
         # regional parameter mapping
-        delta_beta_regions = delta_beta_regions[self.region_mapping]
-        delta_beta_regions_Nov1 = delta_beta_regions_Nov1[self.region_mapping]
-        delta_beta_regions_Nov2 = delta_beta_regions_Nov2[self.region_mapping]
-        delta_beta_regions_Dec1 = delta_beta_regions_Dec1[self.region_mapping]
-        delta_beta_regions_Dec2 = delta_beta_regions_Dec2[self.region_mapping]
-        delta_beta_regions_Jan1 = delta_beta_regions_Jan1[self.region_mapping]
-        delta_beta_regions_Jan2 = delta_beta_regions_Jan2[self.region_mapping]
-        delta_beta_regions_Feb1 = delta_beta_regions_Feb1[self.region_mapping]
-        delta_beta_regions_Feb2 = delta_beta_regions_Feb2[self.region_mapping]
-        delta_beta_regions_Mar1 = delta_beta_regions_Mar1[self.region_mapping]
-        delta_beta_regions_Mar2 = delta_beta_regions_Mar2[self.region_mapping]
-
-        # construct modifiers (time x US state)
-        modifiers = beta_US * np.array([
-                        (delta_beta_temporal[0] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Nov1 + 1),
-                        (delta_beta_temporal[1] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Nov2 + 1),
-
-                        (delta_beta_temporal[2] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Dec1 + 1),
-                        (delta_beta_temporal[3] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Dec2 + 1),
-
-                        (delta_beta_temporal[4] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Jan1 + 1),
-                        (delta_beta_temporal[5] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Jan2 + 1),
-
-                        (delta_beta_temporal[6] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Feb1 + 1),
-                        (delta_beta_temporal[7] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Feb2 + 1),
-
-                        (delta_beta_temporal[8] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Mar1 + 1),
-                        (delta_beta_temporal[9] + 1) * (delta_beta_regions + 1) * (delta_beta_states + 1) * (delta_beta_regions_Mar2 + 1),
-
-                        (delta_beta_regions + 1) * (delta_beta_states + 1)
-                    ])
+        delta_beta_regions = 1 + delta_beta_regions[self.region_mapping]
+        delta_beta_spatiotemporal = 1 + delta_beta_spatiotemporal[:, self.region_mapping]
+        # temporal betas
+        delta_beta_temporal = 1 + delta_beta_temporal
+        # construct modifiers (time x space; typically 10x52)
+        modifiers = beta_US * delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis] * delta_beta_regions[np.newaxis, :] * delta_beta_states[np.newaxis, :]
 
         # compute smoothed modifier
-        return self.get_smoothed_modifier(modifiers, t, half_life_days=5, window_size=30, freq='biweekly')
+        return self.get_smoothed_modifier(modifiers, t, half_life_days=5, window_size=30, freq='monthly')
     
 ##############
 ## Vaccines ##
