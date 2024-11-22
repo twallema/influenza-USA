@@ -673,6 +673,49 @@ def check_contact_daytype(daytype):
     assert isinstance(daytype, str), "daytype must be a str"
     assert daytype in ['all', 'week_holiday', 'week_no-holiday', 'weekend'], f"invalid daytype '{daytype}'. valid options are: 'all', 'week_holiday', 'week_no-holiday', 'weekend'"
 
+def get_spatial_mappings(spatial_resolution):
+    """
+    A function retrieving spatial mappings for regional/state parameters
+        - For a model running at the US state level (52):
+            - For a parameter at the US regional level (9) --> maps parameter in a region to all US states within that region
+            - For a parameter at the US state level(52) --> does nothing
+        - For a model running at the US county level (3222):
+            - For a parameter at the US regional level (9) --> maps parameter in a US region to all US counties within that region
+            - For a parameter at the US state level(52) --> maps parameter in a US state to all US counties within that region
+    
+    input
+    -----
+
+    spatial_resolution: str
+        'states' or 'counties'; 'collapsed' will return an error
+    
+    output
+    ------
+
+    region_mapping: np.ndarray
+        A (52,) or (3222,) map of regions to states or counties
+
+    region_mapping: np.ndarray
+        A (52,) or (3222,) map of states to states or counties
+    """
+    
+    # input check on spatial resolution
+    check_spatial_resolution(spatial_resolution)
+    # get mapping data file
+    mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_names_mappings.csv'), dtype={'fips_state': str, 'fips_county': str})
+    if spatial_resolution == 'states':
+        region_mapping = mapping.groupby(by=['fips_state']).last()['region_mapping'].values
+        state_mapping = mapping.groupby(by=['fips_state']).last()['state_mapping'].values
+        assert region_mapping.shape == state_mapping.shape
+    elif spatial_resolution == 'counties':
+        region_mapping = mapping['region_mapping'].values
+        state_mapping = mapping['state_mapping'].values
+        assert region_mapping.shape == state_mapping.shape
+    else:
+        raise ValueError("mapping is nonsensical for spatial_resolution='collapsed'.")
+    
+    return region_mapping, state_mapping
+
 def name2fips(name_state, name_county=None):
     """
     A function to convert a US state, or US state and county name into a FIPS code
