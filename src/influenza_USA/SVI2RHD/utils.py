@@ -28,9 +28,9 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # core parameters
             'beta': 0.03*np.ones(G),                                                                                                # infectivity (-)
             'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
-            'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),               # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
-            'M': tf.convert_to_tensor(get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'), dtype=float),    # origin-destination mobility matrix          
-            'n_vacc': np.zeros(shape=(len(coordinates['age_group']), len(coordinates['location'])),dtype=np.float64),               # vaccination incidence (dummy)
+            'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
+            'M': get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'),                          # origin-destination mobility matrix          
+            'n_vacc': np.zeros(shape=(N, G),dtype=np.float64),                                                                      # vaccination incidence (dummy)
             'e_i': 0.2,                                                                                                             # vaccine efficacy against infection
             'e_h': 0.5,                                                                                                             # vaccine efficacy against hospitalisation
             'T_r': 365/np.log(2),                                                                                                   # average time to waning of natural immunity
@@ -54,7 +54,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     
     # initial condition function
     from influenza_USA.SVI2RHD.TDPF import make_initial_condition_function
-    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season, get_vaccination_data()).initial_condition_function
+    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season).initial_condition_function
 
     # time-dependencies
     TDPFs = {}
@@ -67,7 +67,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     ## vaccines
     ### vaccine uptake
     from influenza_USA.SVI2RHD.TDPF import make_vaccination_function
-    TDPFs['n_vacc'] = make_vaccination_function(season, get_vaccination_data()).vaccination_function
+    TDPFs['n_vacc'] = make_vaccination_function(season, spatial_resolution, age_resolution).vaccination_function
 
     # hierarchal transmission rate
     if hierarchal_transmission_rate:
@@ -161,7 +161,7 @@ def compute_case_hospitalisation_rate(season, age_resolution):
     input
     -----
     season: str
-        '20xx-20xx': either a specific season in the format
+        '20xx-20xx': a specific season
         'average': the average case hospitalisation rate across all seasons
     
     age_resolution: str
@@ -209,22 +209,86 @@ def compute_case_hospitalisation_rate(season, age_resolution):
 
     return CHR
 
-
 def get_vaccination_data():
     """
-    A function to retrieve the 2010-2024 vaccination incidence data
+    A function to retrieve the 2010-2024 vaccination incidence data per age group and US state
 
     output
     ------
 
     data: pd.DataFrame
         Index: 'season' (str; '20xx-20xx')
-        Columns: 'date' (str; 'yyyy-mm-dd'), 'age' (str; '[0, 5('), 'state' (str; 'xx000'), 'vaccination_incidence' (float)
+        Columns: 'date' (str; 'yyyy-mm-dd'), 'age' (str; '[0, 5('), 'fips' (str; 'xx000'), 'vaccination_incidence' (float)
     """
     rel_dir = f'../../../data/interim/vaccination/vaccination_incidences_2010-2024.csv'
-    data = pd.read_csv(os.path.join(abs_dir,rel_dir), dtype={'season': str, 'age': str, 'state': str, 'daily_incidence': float, 'cumulative': float})
+    data = pd.read_csv(os.path.join(abs_dir,rel_dir), dtype={'season': str, 'age': str, 'fips': str, 'daily_incidence': float, 'cumulative': float})
     data['date'] = pd.to_datetime(data['date'])
-    return data.set_index('season')
+    return data
+
+def convert_vaccination_data(vaccination_data, spatial_resolution, age_resolution):
+    """
+    A function converting the vaccination data to the right spatial and age resolution
+
+    Native resolution of the data: 5 age groups, US states
+
+    input
+    -----
+
+    vaccination_data: pd.DataFrame
+        weekly vaccination incidence from 2010-2024 per age group and US state
+
+    spatial_resolution: str
+        'collapsed', 'states' or 'counties'
+    
+    age_resolution: str
+        'collapsed' or 'full'
+
+    output
+    ------
+
+    vaccination_data: pd.Dataframe
+        weekly vaccination incidence from 2010-2024 with/without age groups, and for the US, US states or US counties
+    """
+    check_spatial_resolution(spatial_resolution)
+    check_age_resolution(age_resolution)
+    
+    # aggregation or expansion of spatial units
+    if spatial_resolution == 'collapsed':
+        # sum the vaccination data
+        vaccination_data = vaccination_data.groupby(['season', 'date', 'age'], as_index=False).agg({'daily_incidence': 'sum', 'cumulative': 'sum'})
+        # re-insert the USA fips code
+        vaccination_data['fips'] = '00000'
+    elif spatial_resolution == 'counties':
+        # perform an expansion from state --> county based on the demography
+        # 1. load demography
+        demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+        # 2. compute each county+age population's share in the state+age population
+        # add state fips
+        demography['state_fips'] = demography['fips'].str[:2] + '000'
+        # aggregate state-level population by age group
+        state_population = demography.groupby(['state_fips', 'age'], as_index=False)['population'].sum()
+        state_population.rename(columns={'population': 'state_population'}, inplace=True)
+        # merge state population back to the county-level demography data
+        demography = demography.merge(state_population, on=['state_fips', 'age'])
+        # compute each county's proportional share in that age group
+        demography['county_share'] = demography['population'] / demography['state_population']
+        # 3. expand vaccination data by merging
+        expanded_df = vaccination_data.merge(demography, left_on=['fips', 'age'], right_on=['state_fips', 'age'])
+        # 4. multiply the county+age population's share with the state+age vaccination incidence/cumulative vaccinations
+        expanded_df['county_daily_incidence'] = expanded_df['daily_incidence'] * expanded_df['county_share']
+        expanded_df['county_cumulative'] = expanded_df['cumulative'] * expanded_df['county_share']
+        # 5. drop unnecessary columns and clean up
+        expanded_df = expanded_df[['season', 'date', 'age', 'fips_y', 'county_daily_incidence', 'county_cumulative']]
+        vaccination_data = expanded_df.rename(columns={'fips_y': 'fips', 'county_daily_incidence': 'daily_incidence', 'county_cumulative': 'cumulative'})
+
+    # aggregation of age groups
+    if age_resolution == 'collapsed':
+        # sum the vaccination data
+        vaccination_data = vaccination_data.groupby(['season', 'date', 'fips'], as_index=False).agg({'daily_incidence': 'sum', 'cumulative': 'sum'})
+        # re-insert the age group
+        vaccination_data['age'] = '[0, 100)'
+
+    return vaccination_data
 
 def get_cumulative_vaccinated(t, season, vaccination_data):
     """
@@ -232,10 +296,17 @@ def get_cumulative_vaccinated(t, season, vaccination_data):
 
     input
     -----
+    season: str
+        '20xx-20xx': a specific season
+        'average': the average vaccination incidence across all seasons
+
+    vaccination_data: pd.DataFrame
+        weekly vaccination incidence per age group and US state
 
     output
     ------
-
+    cumulative_vaccinated: np.ndarray
+        number of individuals vaccinated per age group and US state; shape: (5,52)
     """
 
     # get week number
@@ -243,29 +314,26 @@ def get_cumulative_vaccinated(t, season, vaccination_data):
 
     # compute state sizes
     n_age = len(vaccination_data['age'].unique())
-    n_loc = len(vaccination_data['state'].unique())
+    n_loc = len(vaccination_data['fips'].unique())
 
     # check input season
-    if ((season not in vaccination_data.index.unique().values) & (season != 'average')):
+    if ((season not in vaccination_data.season.unique()) & (season != 'average')):
         raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
-
-    # drop index
-    vaccination_data = vaccination_data.reset_index()
 
     if season != 'average':
         # slice out correct season
         vaccination_data = vaccination_data[vaccination_data['season'] == season]
         # add week number & remove date
         vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
-        vaccination_data = vaccination_data[['week', 'age', 'state', 'cumulative']]
+        vaccination_data = vaccination_data[['week', 'age', 'fips', 'cumulative']]
         # sort age groups / spatial units --> are sorted in the model
-        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()
+        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'fips']).last().sort_index().reset_index()
     else:
         # add week number & remove date
         vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
-        vaccination_data = vaccination_data[['week', 'age', 'state', 'cumulative']]
+        vaccination_data = vaccination_data[['week', 'age', 'fips', 'cumulative']]
         # average out + sort
-        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).mean('cumulative').sort_index().reset_index()
+        vaccination_data = vaccination_data.groupby(by=['week', 'age', 'fips']).mean('cumulative').sort_index().reset_index()
 
     try:
         return np.array(vaccination_data[vaccination_data['week'] == week_number]['cumulative'].values, np.float64).reshape(n_age, n_loc) 

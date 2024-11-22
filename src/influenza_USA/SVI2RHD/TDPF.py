@@ -198,33 +198,35 @@ class hierarchal_transmission_rate_function():
 
 class make_vaccination_function():
 
-    def __init__(self, season, vaccination_data):
+    def __init__(self, season, spatial_resolution, age_resolution):
         """ Format the vaccination data
         """
 
-        # check input season
-        if ((season not in vaccination_data.index.unique().values) & (season != 'average')):
-            raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+        # retrieve the vaccination data
+        vaccination_data = get_vaccination_data()
+        # convert the vaccination data to the right age and spatial resolution
+        vaccination_data = convert_vaccination_data(vaccination_data, spatial_resolution, age_resolution)
 
-        # drop index
-        vaccination_data = vaccination_data.reset_index()
+        # check input season
+        if ((season not in vaccination_data['season'].unique()) & (season != 'average')):
+            raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
 
         if season != 'average':
             # slice out correct season
             vaccination_data = vaccination_data[vaccination_data['season'] == season]
             # add week number & remove date
             vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
-            vaccination_data = vaccination_data[['week', 'age', 'state', 'daily_incidence']]
+            vaccination_data = vaccination_data[['week', 'age', 'fips', 'daily_incidence']]
             # sort age groups / spatial units --> are sorted in the model
-            vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).last().sort_index().reset_index()
+            vaccination_data = vaccination_data.groupby(by=['week', 'age', 'fips']).last().sort_index().reset_index()
             # remove negative entries (there may be some in the first week(s) of the season)
             vaccination_data['daily_incidence'] = np.where(vaccination_data['daily_incidence'] < 0, 0, vaccination_data['daily_incidence'])
         else:
             # add week number & remove date
             vaccination_data['week'] = vaccination_data['date'].dt.isocalendar().week.values
-            vaccination_data = vaccination_data[['week', 'age', 'state', 'daily_incidence']]
+            vaccination_data = vaccination_data[['week', 'age', 'fips', 'daily_incidence']]
             # average out + sort
-            vaccination_data = vaccination_data.groupby(by=['week', 'age', 'state']).mean('daily_incidence').sort_index().reset_index()
+            vaccination_data = vaccination_data.groupby(by=['week', 'age', 'fips']).mean('daily_incidence').sort_index().reset_index()
             # remove negative entries (there may be some in the first week(s) of the season)
             vaccination_data['daily_incidence'] = np.where(vaccination_data['daily_incidence'] < 0, 0, vaccination_data['daily_incidence'])
 
@@ -233,7 +235,7 @@ class make_vaccination_function():
 
         # compute state sizes
         self.n_age = len(self.vaccination_data['age'].unique())
-        self.n_loc = len(self.vaccination_data['state'].unique())
+        self.n_loc = len(self.vaccination_data['fips'].unique())
 
     @lru_cache() # avoid heavy IO while simulating
     def get_vaccination_incidence(self, t):
@@ -418,15 +420,20 @@ class make_contact_function():
 ## Initial condition function ##
 ################################
 
-from influenza_USA.SVI2RHD.utils import construct_initial_susceptible, get_cumulative_vaccinated
+from influenza_USA.SVI2RHD.utils import construct_initial_susceptible, get_cumulative_vaccinated, get_vaccination_data, convert_vaccination_data
 class make_initial_condition_function():
 
-    def __init__(self, spatial_resolution, age_resolution, start_sim, season, vaccination_data):
+    def __init__(self, spatial_resolution, age_resolution, start_sim, season):
+        # retrieve the vaccination data
+        vaccination_data = get_vaccination_data()
+        # convert the vaccination data to the right age and spatial resolution
+        vaccination_data = convert_vaccination_data(vaccination_data, spatial_resolution, age_resolution)
         # retrieve the demography (susceptible pool)
         self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
         # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
         self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
-        self.region_mapping = self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
+        # retrieve region to state mapping
+        self.region_mapping = pd.read_csv(os.path.join(os.path.dirname(__file__), '../../../data/interim/fips_codes/fips_region_mapping.csv'), dtype={'state_fips': str})['fips_to_region'].values
         pass
 
     def initial_condition_function(self, f_I, f_R, delta_f_R_states, delta_f_R_regions):
