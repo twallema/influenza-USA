@@ -27,7 +27,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 # model settings
 season_start = 2014                     # '2017' or '2019'
 season = '2014-2015'                    # '2017-2018' or '2019-2020'
-waning = 'no_waning'                    # 'no_waning' vs. 'waning_180'
+vaccine_waning = 'off'                  # 'on': wanes in 180d on average, efficacy 80% at t0 ;'off' no waning, efficacy 40%. 
 sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd = False                              # vary contact matrix by daytype
@@ -132,16 +132,6 @@ if backend_path:
 #################
 
 model = initialise_SVI2RHD(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd, start_sim=start_calibration)
-
-# set up right waning parameters
-if waning == 'no_waning':
-    model.parameters['e_i'] = 0.2
-    model.parameters['e_h'] = 0.5
-    model.parameters['T_v'] = 10*365
-elif waning == 'waning_180':
-    model.parameters['e_i'] = 0.2
-    model.parameters['e_h'] = 0.75
-    model.parameters['T_v'] = 365/2
 
 #####################
 ## Calibrate model ##

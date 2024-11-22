@@ -14,8 +14,9 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', distinguish_daytype=True, start_sim=datetime(2024,8,1)):
+def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', vaccine_waning='off', distinguish_daytype=True, start_sim=datetime(2024,8,1)):
 
+    # model works at US state or county level
     if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
         raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
 
@@ -54,6 +55,10 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'asc_case': 0.004,
             }
     
+    # vaccine waning on/off
+    if vaccine_waning == 'on':
+        params.update({'e_i': 0.2, 'e_h': 0.75, 'T_v': 365/2})
+
     # initial condition function
     from influenza_USA.SVI2RHD.TDPF import make_initial_condition_function
     initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season).initial_condition_function
@@ -73,7 +78,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     ## hierarchal transmission rate
     from influenza_USA.SVI2RHD.TDPF import hierarchal_transmission_rate_function
     TDPFs['beta'] = hierarchal_transmission_rate_function(spatial_resolution)
-    # its parameters
+    # append its parameters
     params.update(
         {
             'beta_US': 0.03,
@@ -96,13 +101,8 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     # hierarchal natural immunity
     from influenza_USA.SVI2RHD.TDPF import hierarchal_waning_natural_immunity
     TDPFs['T_r'] = hierarchal_waning_natural_immunity(spatial_resolution)
-    # its parameters
-    params.update(
-        {
-            'T_r_US': 365/np.log(2),
-            'delta_T_r_regions': np.zeros(9)
-        }
-    )
+    # append its parameters
+    params.update({'T_r_US': 365/np.log(2), 'delta_T_r_regions': np.zeros(9)})
 
     return SVI2RHD(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
