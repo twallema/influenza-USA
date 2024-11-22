@@ -319,6 +319,9 @@ def get_cumulative_vaccinated(t, season, vaccination_data):
     # check input season
     if ((season not in vaccination_data.season.unique()) & (season != 'average')):
         raise ValueError(f"season '{season}' vaccination data not found. provide a valid season (format '20xx-20xx') or 'average'.")
+    
+    # drop index
+    vaccination_data = vaccination_data.reset_index()
 
     if season != 'average':
         # slice out correct season
