@@ -44,45 +44,45 @@ multiplier_pso = 10                                                             
 ## bayesian
 identifier = 'USA_regions_hierarchal_midFeb-waning'                                # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
-n_mcmc = 5000                                                                   # Number of MCMC iterations
+n_mcmc = 1                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 1000                                                                  # Print diagnostics every `print_n`` iterations
 discard = 0                                                                     # Discard first `discard` iterations as burn-in
-thin = 100                                                                      # Thinning factor emcee chains
-n = 500                                                                         # Repeated simulations used in visualisations
+thin = 1                                                                         # Thinning factor emcee chains
+n = 50                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
 ## hierarchal hyperparameters                                                       
 L1_weight = 2
 rel_weight_level2 = 2
 n_regions = 9
 n_states = 52
-n_temporal_modifiers = 10
+n_temporal_modifiers = 5
 
 ## continue run
-# run_date = '2024-11-20'                                                         # First date of run
-# backend_identifier = 'USA_regions_hierarchal_midFeb-waning'
-# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+run_date = '2024-11-22'                                                         # First date of run
+backend_identifier = 'USA_regions_hierarchal_midFeb-waning'
+backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-backend_path = None
-if not backend_path:
-    # get run date
-    run_date = datetime.today().strftime("%Y-%m-%d")
-    # check if samples folder exists, if not, make it
-    if not os.path.exists(samples_path):
-        os.makedirs(samples_path)
-    # set some ballpark national estimates
-    beta_US = 0.035
-    delta_beta_regions = 0.01
-    delta_beta_states = 0.01
-    delta_beta_temporal = 0.01
-    delta_beta_spatiotemporal = 0.01
-    f_R = 0.50
-    delta_f_R_states = 0.01
-    delta_f_R_regions = 0.01
-    T_r_US = 365/np.log(2)
-    delta_T_r_regions = 0.01
-    rho_h = 0.0026
-    f_I = 2e-4
+# backend_path = None
+# if not backend_path:
+#     # get run date
+#     run_date = datetime.today().strftime("%Y-%m-%d")
+#     # check if samples folder exists, if not, make it
+#     if not os.path.exists(samples_path):
+#         os.makedirs(samples_path)
+#     # set some ballpark national estimates
+#     beta_US = 0.035
+#     delta_beta_regions = 0.01
+#     delta_beta_states = 0.01
+#     delta_beta_temporal = 0.01
+#     delta_beta_spatiotemporal = 0.01
+#     f_R = 0.50
+#     delta_f_R_states = 0.01
+#     delta_f_R_regions = 0.01
+#     T_r_US = 365/np.log(2)
+#     delta_T_r_regions = 0.01
+#     rho_h = 0.0026
+#     f_I = 2e-4
 
 ###############################
 ## Load hospitalisation data ##
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args,
                                                    log_prior_prob_fnc=log_prior_prob_fcn, log_prior_prob_fnc_args=log_prior_prob_fcn_args,
                                                     start_sim=start_calibration, weights=weights, labels=labels)
-
+    
     #################
     ## Nelder-Mead ##
     #################
@@ -237,8 +237,6 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
-    import sys
-    sys.exit()
 
     ##########
     ## MCMC ##
@@ -246,8 +244,6 @@ if __name__ == '__main__':
 
     # Perturbate previously obtained estimate
     ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
-    # Perturbation is relative --> zeros are difficult
-    #pos[:, 5:] = np.random.normal(loc=0, scale=0.05, size=(nwalkers, pos[:, 5:].shape[1])) # --> modifiers
     # Append some usefull settings to the samples dictionary
     settings={'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_calibration.strftime('%Y-%m-%d'),
               'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -267,31 +263,21 @@ if __name__ == '__main__':
     ######################
  
     def draw_fcn(parameters, samples):
-        # top level
+        # level 0
         idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
         parameters['f_I'] = samples['f_I'][idx]
         parameters['beta_US'] = samples['beta_US'][idx]
         parameters['f_R'] = samples['f_R'][idx]
         parameters['T_r_US'] = samples['T_r_US'][idx]
-        # mid level
+        # level 1
         parameters['delta_f_R_regions'] = np.array([slice[idx] for slice in samples['delta_f_R_regions']])
         parameters['delta_beta_regions'] = np.array([slice[idx] for slice in samples['delta_beta_regions']])
         parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
         parameters['delta_T_r_regions'] = np.array([slice[idx] for slice in samples['delta_T_r_regions']])
-        # bottom level
+        # level 2
         parameters['delta_beta_states'] = np.array([slice[idx] for slice in samples['delta_beta_states']])
         parameters['delta_f_R_states'] = np.array([slice[idx] for slice in samples['delta_f_R_states']])
-        parameters['delta_beta_regions_Nov1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Nov1']])
-        parameters['delta_beta_regions_Nov2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Nov2']])
-        parameters['delta_beta_regions_Dec1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Dec1']])
-        parameters['delta_beta_regions_Dec2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Dec2']])
-        parameters['delta_beta_regions_Jan1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Jan1']])
-        parameters['delta_beta_regions_Jan2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Jan2']])
-        parameters['delta_beta_regions_Feb1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Feb1']])
-        parameters['delta_beta_regions_Feb2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Feb2']])
-        parameters['delta_beta_regions_Mar1'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Mar1']])
-        parameters['delta_beta_regions_Mar2'] = np.array([slice[idx] for slice in samples['delta_beta_regions_Mar2']])
-        
+        parameters['delta_beta_spatiotemporal'] = np.array([slice[idx] for slice in samples['delta_beta_spatiotemporal']]).reshape(parameters['delta_beta_spatiotemporal'].shape)
         return parameters
     
     # Simulate model
