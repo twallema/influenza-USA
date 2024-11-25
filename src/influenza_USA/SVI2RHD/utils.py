@@ -50,8 +50,6 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             # initial condition function
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
             'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
-            'delta_f_R_regions': np.zeros(9),                                                                                       # immunity modifier (US regions)
-            'delta_f_R_states': np.zeros(52),                                                                                       # immunity modifier (US states)
             # outcomes
             'asc_case': 0.004,
             }
@@ -63,7 +61,11 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     # initial condition function
     from influenza_USA.SVI2RHD.TDPF import make_initial_condition_function
     initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season).initial_condition_function
-
+    params.update({
+        'delta_f_R_regions': np.zeros(9),
+        'delta_f_R_states': np.zeros(52),        
+    })
+                                                                                 
     # time-dependencies
     TDPFs = {}
     ## contacts
