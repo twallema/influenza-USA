@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 class hierarchal_waning_natural_immunity():
 
     def __init__(self, spatial_resolution):
-        # retrieve region/state --> state/county parameter  mapping
+        # retrieve region/state --> state/county parameter mapping
         self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
         pass
 
@@ -30,7 +30,7 @@ class hierarchal_waning_natural_immunity():
 class hierarchal_transmission_rate_function():
 
     def __init__(self, spatial_resolution):
-        # retrieve region/state --> state/county parameter  mapping
+        # retrieve region/state --> state/county parameter mapping
         self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
         pass
     
@@ -49,6 +49,7 @@ class hierarchal_transmission_rate_function():
         Returns:
         - smoothed_modifier: numpy array of shape (1, 9), representing the smoothed temporal modifier.
         """
+
         # Exponential smoothing factor (alpha)
         alpha = 1 - np.exp(np.log(0.5) / half_life_days)
 
@@ -81,32 +82,38 @@ class hierarchal_transmission_rate_function():
         current_date = simulation_date
 
         while days_to_collect > 0:
+            
+            # Determine the day and month
             month = current_date.month
             day = current_date.day
 
-            # Determine the period row based on frequency
+            # Determine the period row; if outside Nov-Mar --> assume modifier is none
             if freq == 'biweekly':
                 biweekly_period = 1 if day <= 15 else 2
                 row = period_mapping.get((month, biweekly_period), None)
             elif freq == 'monthly':
                 row = period_mapping.get(month, None)
+            
+            # Get current date modifier values
+            if row == None:
+                modifier_values = np.ones(modifiers.shape[1])
+            else:
+                modifier_values = modifiers[row, :]
 
-            # Skip if the month is outside Nov-Mar
-            if row is not None:
-                # Calculate the number of days in the current period
-                if freq == 'biweekly' and biweekly_period == 1:
-                    days_in_this_period = min(day, days_to_collect)
-                elif freq == 'biweekly' and biweekly_period == 2:
-                    days_in_this_period = min(day - 15, days_to_collect)
-                else:  # Monthly case
-                    days_in_this_period = min(day, days_to_collect)
+            # Calculate the number of days in the current period
+            if freq == 'biweekly' and biweekly_period == 1:
+                days_in_this_period = min(day, days_to_collect)
+            elif freq == 'biweekly' and biweekly_period == 2:
+                days_in_this_period = min(day - 15, days_to_collect)
+            else:  # Monthly case
+                days_in_this_period = min(day, days_to_collect)
 
-                # Append the modifiers and weights for each day
-                for _ in range(days_in_this_period):
-                    modifier_window.append(modifiers[row, :])
-                    smoothing_weights.append((1 - alpha) ** (window_size - days_to_collect))
-                    days_to_collect -= 1
-                    current_date -= timedelta(days=1)
+            # Append the modifiers and weights for each day
+            for _ in range(days_in_this_period):
+                modifier_window.append(modifier_values)
+                smoothing_weights.append((1 - alpha) ** (window_size - days_to_collect))
+                days_to_collect -= 1
+                current_date -= timedelta(days=1)
 
             # Move to the previous day
             else:
@@ -166,14 +173,14 @@ class hierarchal_transmission_rate_function():
         delta_beta_states = 1 + delta_beta_states[self.state_mapping]
         # regional parameter mapping
         delta_beta_regions = 1 + delta_beta_regions[self.region_mapping]
-        delta_beta_spatiotemporal = 1 + delta_beta_spatiotemporal[:, self.region_mapping]
+        # spatiotemporal betas
+        delta_beta_spatiotemporal = 1 + delta_beta_spatiotemporal[:, self.region_mapping] # --> if spatiotemporal components at regional level
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
-        # construct modifiers (time x space; typically 10x52)
-        modifiers = beta_US * delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis] * delta_beta_regions[np.newaxis, :] * delta_beta_states[np.newaxis, :]
-
-        # compute smoothed modifier
-        return self.get_smoothed_modifier(modifiers, t, half_life_days=5, window_size=30, freq='monthly')
+        # get smoothed temporal components
+        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
+        # construct modifiers
+        return beta_US * temporal_modifiers_smooth * delta_beta_regions * delta_beta_states
     
 ##############
 ## Vaccines ##

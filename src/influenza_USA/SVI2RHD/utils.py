@@ -85,8 +85,8 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
             'beta_US': 0.03,
             'delta_beta_regions': np.zeros(9),
             'delta_beta_states': np.zeros(52),
-            'delta_beta_temporal': np.zeros(5),
-            'delta_beta_spatiotemporal': np.zeros(shape=[5,9])
+            'delta_beta_temporal': np.zeros(10),
+            'delta_beta_spatiotemporal': np.zeros(shape=[10,9])
         }
     )
 
