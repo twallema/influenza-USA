@@ -347,7 +347,7 @@ class make_initial_condition_function():
         # retrieve region/state --> state/county parameter  mapping
         self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
 
-    def initial_condition_function(self, f_I1, f_I2, f_R1, f_R2, delta_f_R1_regions, delta_f_R2_regions):
+    def initial_condition_function(self, f_I1, f_I2, f_R1_R2, f_R1, delta_f_I1_regions, delta_f_I2_regions, delta_f_R1_regions, delta_f_R2_regions):
         """
         A function setting the model's initial condition. Uses a hierarchal structure for the initial immunity.
         
@@ -361,16 +361,25 @@ class make_initial_condition_function():
             Keys: 'S', ... . Values: np.ndarray (n_age x n_loc).
         """
 
-        # convert all delta_f_R from region/state to state/county level
+        # compute initial fractions in R1 and R2
+        # --> modeled in this way so we can constraint f_R1_R2 between 0 and 1.
+        f_R2 = (1-f_R1) * f_R1_R2
+        f_R1 = f_R1 * f_R1_R2
+        
+        # convert all delta_f_R/delta_f_I from region/state to state/county level
+        delta_f_I1_regions = delta_f_I1_regions[self.region_mapping]
+        delta_f_I2_regions = delta_f_I2_regions[self.region_mapping]
         delta_f_R1_regions = delta_f_R1_regions[self.region_mapping]
         delta_f_R2_regions = delta_f_R2_regions[self.region_mapping]
 
         # construct hierarchal initial immunity
+        f_I1 = f_I1 * (1 + delta_f_I1_regions) 
+        f_I2 = f_I2 * (1 + delta_f_I2_regions) 
         f_R1 = f_R1 * (1 + delta_f_R1_regions)  
         f_R2 = f_R2 * (1 + delta_f_R2_regions)
 
         return {'S':  (1 - f_I1 - f_I2 - f_R1 - f_R2) * self.demography,
-                'I1': 0.5 * f_I1 * self.demography,
+                'I1': 0.5 * f_I1 * self.demography,     # assumption 50/50 I1 versus I21
                 'I2': 0.5 * f_I2 * self.demography,
                 'R1': f_R1 * self.demography,
                 'R2': f_R2 * self.demography,

@@ -34,18 +34,20 @@ def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full
             'T_r': 3.5,                                                                                                             # average time to recovery 
             'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
-            'rho_h': 0.014,                                                                                                         # hospitalised fraction (source: Josh)
+            'rho_h': 0.001,                                                                                                         # hospitalised fraction (source: Josh)
             # initial condition function
             'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
             'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
-            'f_R1': 0.40,                                                                                                           # initial fraction of recovered to strain 1
-            'f_R2': 0.45,                                                                                                           # initial fraction of recovered to strain 2
+            'f_R1_R2': 0.5,                                                                                                         # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
+            'f_R1': 0.5,                                                                                                              # fraction of f_R1_R2 recovered from strain 1
             }
     
     # initial condition function
     from influenza_USA.SIRHD_TwoStrain.TDPF import make_initial_condition_function
     initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution).initial_condition_function
     params.update({
+        'delta_f_I1_regions': np.zeros(9),
+        'delta_f_I2_regions': np.zeros(9),
         'delta_f_R1_regions': np.zeros(9),
         'delta_f_R2_regions': np.zeros(9),
     })
