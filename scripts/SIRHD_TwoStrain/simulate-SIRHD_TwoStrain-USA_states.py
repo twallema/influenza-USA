@@ -44,7 +44,7 @@ fig, ax = plt.subplots(2, 1, sharex=True, figsize=(8.3, 11.7/2))
 ax[0].plot(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2, label='strain I')
 ax[0].plot(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']), color='red', alpha=1, linewidth=2, label='strain II')
 ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']), color='black', alpha=1, linewidth=2, label = 'sum')
-ax[0].set_ylabel('Daily hospitalisations (-)')
+ax[0].set_ylabel('Weekly hospitalisations (-)')
 ax[0].legend()
 # ratios
 ax[1].plot(out['date'], 100*out['H1_inc'].sum(dim=['age_group', 'location']) / (out['H1_inc'].sum(dim=['age_group', 'location'])+out['H2_inc'].sum(dim=['age_group', 'location'])),
