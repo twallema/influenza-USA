@@ -28,18 +28,19 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
     # define parameters
     params = {
             # core parameters
-            'beta1': 0.028*np.ones(G),                                                                                               # infectivity strain 1 (-)
-            'beta2': 0.028*np.ones(G),                                                                                               # infectivity strain 2 (-)
+            'beta1': 0.028*np.ones(G),                                                                                              # infectivity strain 1 (-)
+            'beta2': 0.028*np.ones(G),                                                                                              # infectivity strain 2 (-)
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
             'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
-            'rho_h': 0.001,                                                                                                         # hospitalised fraction (source: Josh)
+            'rho_h1': 0.001,                                                                                                        # hospitalised fraction (source: Josh)
+            'rho_h2': 0.001,                                                                                                        # hospitalised fraction (source: Josh)
             # initial condition function
             'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
             'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
-            'f_R1_R2': 0.75,                                                                                                         # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
-            'f_R1': 0.45,                                                                                                              # fraction of f_R1_R2 recovered from strain 1
+            'f_R1_R2': 0.75,                                                                                                        # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
+            'f_R1': 0.45,                                                                                                           # fraction of f_R1_R2 recovered from strain 1
             }
     
     # initial condition function
