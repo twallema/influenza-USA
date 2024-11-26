@@ -119,7 +119,7 @@ class hierarchal_transmission_rate_function():
 
         return smoothed_modifier
 
-    def __call__(self, t, states, param, beta_US, delta_beta_regions, delta_beta_states, delta_beta_temporal, delta_beta_spatiotemporal):
+    def strain1_function(self, t, states, param, beta1_US, delta_beta1_regions, delta_beta1_states, delta_beta_temporal):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -135,20 +135,39 @@ class hierarchal_transmission_rate_function():
         param: dict
             current values of all model parameters
 
-        beta_US: float
-            overall transmission rate. hierarchal level 0.
+        output
+        ------
 
-        delta_beta_regions: np.ndarray (len: 9)
-            a spatial modifier on the overall transmision rate for every US region. hierarchal level 1.
+        beta: np.ndarray
+            transmission rate per US state
+        """
 
-        delta_beta_states: np.ndarray (len: 52)
-            a spatial modifier on the overall transmision rate for every US state. hierarchal level 2.
+        # state parameter mapping
+        delta_beta1_states = 1 + delta_beta1_states[self.state_mapping]
+        # regional parameter mapping
+        delta_beta1_regions = 1 + delta_beta1_regions[self.region_mapping]
+        # temporal betas
+        delta_beta_temporal = 1 + delta_beta_temporal
+        # get smoothed temporal components
+        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
+        # construct modifiers
+        return beta1_US * temporal_modifiers_smooth * delta_beta1_regions * delta_beta1_states
 
-        delta_beta_temporal: np.ndarray (len: 4)
-            a temporal modifier on the overall transmission rate for Dec, Jan, Feb, Mar. hierarchal level 1.
+    def strain2_function(self, t, states, param, beta2_US, delta_beta2_regions, delta_beta2_states, delta_beta_temporal):
+        """
+        A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
-        delta_beta_spatiotemporal: np.ndarray (shape: 10, 9)
-            a spatio-temporal modifier for every US region in 1-15 Nov. hierarchal level 2.
+        input
+        -----
+
+        t: datetime.datetime
+            current timestep in simulation
+
+        states: dict
+            current values of all model states
+        
+        param: dict
+            current values of all model parameters
 
         output
         ------
@@ -158,17 +177,15 @@ class hierarchal_transmission_rate_function():
         """
 
         # state parameter mapping
-        delta_beta_states = 1 + delta_beta_states[self.state_mapping]
+        delta_beta2_states = 1 + delta_beta2_states[self.state_mapping]
         # regional parameter mapping
-        delta_beta_regions = 1 + delta_beta_regions[self.region_mapping]
-        # spatiotemporal betas
-        delta_beta_spatiotemporal = 1 + delta_beta_spatiotemporal[:, self.region_mapping] # --> if spatiotemporal components at regional level
+        delta_beta2_regions = 1 + delta_beta2_regions[self.region_mapping]
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
         # get smoothed temporal components
-        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
+        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
         # construct modifiers
-        return beta_US * temporal_modifiers_smooth * delta_beta_regions * delta_beta_states
+        return beta2_US * temporal_modifiers_smooth * delta_beta2_regions * delta_beta2_states
 
 #####################
 ## Social contacts ##

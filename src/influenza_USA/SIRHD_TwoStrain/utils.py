@@ -39,7 +39,7 @@ def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full
             'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
             'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
             'f_R1_R2': 0.5,                                                                                                         # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
-            'f_R1': 0.5,                                                                                                              # fraction of f_R1_R2 recovered from strain 1
+            'f_R1': 0.4,                                                                                                              # fraction of f_R1_R2 recovered from strain 1
             }
     
     # initial condition function
@@ -60,6 +60,22 @@ def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
+    ## hierarchal transmission rate
+    from influenza_USA.SIRHD_TwoStrain.TDPF import hierarchal_transmission_rate_function
+    TDPFs['beta1'] = hierarchal_transmission_rate_function(spatial_resolution).strain1_function
+    TDPFs['beta2'] = hierarchal_transmission_rate_function(spatial_resolution).strain2_function
+    # append its parameters
+    params.update(
+        {
+            'beta1_US': 0.03,
+            'beta2_US': 0.03,
+            'delta_beta1_regions': np.zeros(9),
+            'delta_beta2_regions': np.zeros(9),
+            'delta_beta1_states': np.zeros(52),
+            'delta_beta2_states': np.zeros(52),
+            'delta_beta_temporal': np.zeros(10)
+        }
+    )
 
     return SIRHD_TwoStrain(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
