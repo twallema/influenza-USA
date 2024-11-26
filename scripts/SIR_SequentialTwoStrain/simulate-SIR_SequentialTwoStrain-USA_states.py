@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime 
-from influenza_USA.SIRHD_TwoStrain.utils import initialise_SIRHD_TwoStrain # influenza model
+from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain # influenza model
 
 ##############
 ## Settings ##
@@ -29,7 +29,7 @@ dd = False                              # vary contact matrix by daytype
 ## Setup model ##
 #################
 
-model = initialise_SIRHD_TwoStrain(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd)
+model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, season=season, distinguish_daytype=dd)
 
 ######################
 ## Visualize result ##

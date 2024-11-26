@@ -355,7 +355,7 @@ class make_contact_function():
 ## Initial condition function ##
 ################################
 
-from influenza_USA.SIRHD_TwoStrain.utils import construct_initial_susceptible, get_spatial_mappings
+from influenza_USA.SIR_SequentialTwoStrain.utils import construct_initial_susceptible, get_spatial_mappings
 class make_initial_condition_function():
 
     def __init__(self, spatial_resolution, age_resolution):

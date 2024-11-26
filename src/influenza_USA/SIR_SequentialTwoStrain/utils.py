@@ -13,14 +13,14 @@ from datetime import datetime as datetime
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full', season='2017-2018', distinguish_daytype=True):
+def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resolution='full', season='2017-2018', distinguish_daytype=True):
 
     # model works at US state or county level
     if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
         raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
 
     # load model object
-    from influenza_USA.SIRHD_TwoStrain.model import ODE_SIRHD_TwoStrain as SIRHD_TwoStrain
+    from influenza_USA.SIR_SequentialTwoStrain.model import ODE_SIR_SequentialTwoStrain as SIR_SequentialTwoStrain
 
     # construct coordinates
     N, G, coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
@@ -28,8 +28,8 @@ def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full
     # define parameters
     params = {
             # core parameters
-            'beta1': 0.03*np.ones(G),                                                                                               # infectivity strain 1 (-)
-            'beta2': 0.03*np.ones(G),                                                                                               # infectivity strain 2 (-)
+            'beta1': 0.028*np.ones(G),                                                                                               # infectivity strain 1 (-)
+            'beta2': 0.028*np.ones(G),                                                                                               # infectivity strain 2 (-)
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
             'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
@@ -38,12 +38,12 @@ def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full
             # initial condition function
             'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
             'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
-            'f_R1_R2': 0.5,                                                                                                         # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
-            'f_R1': 0.4,                                                                                                              # fraction of f_R1_R2 recovered from strain 1
+            'f_R1_R2': 0.75,                                                                                                         # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
+            'f_R1': 0.45,                                                                                                              # fraction of f_R1_R2 recovered from strain 1
             }
     
     # initial condition function
-    from influenza_USA.SIRHD_TwoStrain.TDPF import make_initial_condition_function
+    from influenza_USA.SIR_SequentialTwoStrain.TDPF import make_initial_condition_function
     initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution).initial_condition_function
     params.update({
         'delta_f_I1_regions': np.zeros(9),
@@ -56,12 +56,12 @@ def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full
     TDPFs = {}
     ## contacts
     if distinguish_daytype:
-        from influenza_USA.SIRHD_TwoStrain.TDPF import make_contact_function
+        from influenza_USA.SIR_SequentialTwoStrain.TDPF import make_contact_function
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
     ## hierarchal transmission rate
-    from influenza_USA.SIRHD_TwoStrain.TDPF import hierarchal_transmission_rate_function
+    from influenza_USA.SIR_SequentialTwoStrain.TDPF import hierarchal_transmission_rate_function
     TDPFs['beta1'] = hierarchal_transmission_rate_function(spatial_resolution).strain1_function
     TDPFs['beta2'] = hierarchal_transmission_rate_function(spatial_resolution).strain2_function
     # append its parameters
@@ -77,7 +77,7 @@ def initialise_SIRHD_TwoStrain(spatial_resolution='states', age_resolution='full
         }
     )
 
-    return SIRHD_TwoStrain(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
+    return SIR_SequentialTwoStrain(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     """

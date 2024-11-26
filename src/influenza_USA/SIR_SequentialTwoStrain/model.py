@@ -13,7 +13,7 @@ from pySODM.models.base import ODE
 ## Deterministic ##
 ###################
 
-class ODE_SIRHD_TwoStrain(ODE):
+class ODE_SIR_SequentialTwoStrain(ODE):
     """
     Influenza model with vaccines and age/spatial stratification
     """
