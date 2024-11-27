@@ -33,7 +33,7 @@ dd = False                              # vary contact matrix by daytype
 
 # optimization
 start_calibration = datetime(season_start, 10, 15)                              # simulations will start on this date
-end_calibration = datetime(season_start+1, 2, 15)                               # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
+end_calibration = datetime(season_start+1, 4, 27)                               # 2017-2018: None, 2019-2020: datetime(2020,3,22) - exclude COVID
 end_validation = datetime(season_start+1, 5, 1)                                 # alternative: None
 start_slice = datetime(season_start+1, 1, 1)                                    # add in a part of the dataset twice: in this case the peak in hosp.
 end_slice = datetime(season_start+1, 3, 1)
@@ -41,14 +41,14 @@ end_slice = datetime(season_start+1, 3, 1)
 n_pso = 2000                                                                    # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'SequentialTwoStrain_midFeb'                                       # ID of run
+identifier = 'SequentialTwoStrain_May'                                       # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
-n_mcmc = 3000                                                                   # Number of MCMC iterations
+n_mcmc = 1                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 500                                                                  # Print diagnostics every `print_n`` iterations
-discard = 0                                                                     # Discard first `discard` iterations as burn-in
-thin = 1                                                                        # Thinning factor emcee chains
-n = 500                                                                         # Repeated simulations used in visualisations
+print_n = 5000                                                                  # Print diagnostics every `print_n`` iterations
+discard = 5000                                                                     # Discard first `discard` iterations as burn-in
+thin = 100                                                                        # Thinning factor emcee chains
+n = 400                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
 ## hierarchal hyperparameters                                                       
 L1_weight = 2
@@ -58,39 +58,38 @@ n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-# run_date = '2024-11-26'                                                         # First date of run
-# backend_identifier = 'SequentialTwoStrain_midFeb'
-# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+run_date = '2024-11-26'                                                         # First date of run
+backend_identifier = 'SequentialTwoStrain_May'
+backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-backend_path = None
-if not backend_path:
-    # get run date
-    run_date = datetime.today().strftime("%Y-%m-%d")
-    # check if samples folder exists, if not, make it
-    if not os.path.exists(samples_path):
-        os.makedirs(samples_path)
-    # set some ballpark national estimates
-    ## level 0
-    rho_h1 = 0.0026
-    rho_h2 = 0.0026
-    beta1_US = 0.022
-    beta2_US = 0.022
-    f_R1_R2 = 0.50
-    f_R1 = 0.50
-    f_I1 = 2e-4
-    f_I2 = 5e-6
-    ## level 1
-    delta_beta1_regions = 0.01
-    delta_beta2_regions = 0.01
-    delta_beta_temporal = 0.01
-    delta_f_I1_regions = 0.01
-    delta_f_I2_regions = 0.01
-    delta_f_R1_regions = 0.01
-    delta_f_R2_regions = 0.01
-    ## level 2
-    delta_beta1_states = 0.01
-    delta_beta2_states = 0.01
-
+# backend_path = None
+# if not backend_path:
+#     # get run date
+#     run_date = datetime.today().strftime("%Y-%m-%d")
+#     # check if samples folder exists, if not, make it
+#     if not os.path.exists(samples_path):
+#         os.makedirs(samples_path)
+#     # set some ballpark national estimates
+#     ## level 0
+#     rho_h1 = 0.0025
+#     rho_h2 = 0.001
+#     beta1_US = 0.0225
+#     beta2_US = 0.0228
+#     f_R1_R2 = 0.50
+#     f_R1 = 0.50
+#     f_I1 = 5e-5
+#     f_I2 = 5e-6
+#     ## level 1
+#     delta_beta1_regions = 0.01
+#     delta_beta2_regions = 0.01
+#     delta_beta_temporal = 0.01
+#     delta_f_I1_regions = 0.01
+#     delta_f_I2_regions = 0.01
+#     delta_f_R1_regions = 0.01
+#     delta_f_R2_regions = 0.01
+#     ## level 2
+#     delta_beta1_states = 0.01
+#     delta_beta2_states = 0.01
     
 ##########################################
 ## Load and format hospitalisation data ##
@@ -282,7 +281,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     fig_path=f'../../data/interim/calibration/{season}/{identifier}/'
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
-    plt.show()
+    #plt.show()
     plt.close()
 
     ##########
@@ -316,7 +315,8 @@ if __name__ == '__main__':
         parameters['beta1_US'] = samples['beta1_US'][idx]
         parameters['beta2_US'] = samples['beta2_US'][idx]
         parameters['f_R1_R2'] = samples['f_R1_R2'][idx]
-        parameters['f_I1'] = samples['f_I2'][idx]
+        parameters['f_I1'] = samples['f_I1'][idx]
+        parameters['f_I2'] = samples['f_I2'][idx]
         # level 1
         parameters['delta_beta1_regions'] = np.array([slice[idx] for slice in samples['delta_beta1_regions']])
         parameters['delta_beta2_regions'] = np.array([slice[idx] for slice in samples['delta_beta2_regions']])
