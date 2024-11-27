@@ -149,7 +149,7 @@ class hierarchal_transmission_rate_function():
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
         # get smoothed temporal components
-        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
+        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=7, window_size=30, freq='biweekly')
         # construct modifiers
         return beta1_US * temporal_modifiers_smooth * delta_beta1_regions * delta_beta1_states
 
