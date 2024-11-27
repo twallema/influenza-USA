@@ -38,17 +38,17 @@ end_validation = datetime(season_start+1, 5, 1)                                 
 start_slice = datetime(season_start+1, 1, 1)                                    # add in a part of the dataset twice: in this case the peak in hosp.
 end_slice = datetime(season_start+1, 3, 1)
 ## frequentist
-n_pso = 2000                                                                    # Number of PSO iterations
+n_pso = 5000                                                                    # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'SequentialTwoStrain_May_simple'                                       # ID of run
+identifier = 'SequentialTwoStrain_May_simple_holiday'                                       # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
-n_mcmc = 1                                                                   # Number of MCMC iterations
+n_mcmc = 2000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 5000                                                                  # Print diagnostics every `print_n`` iterations
-discard = 5000                                                                     # Discard first `discard` iterations as burn-in
-thin = 100                                                                        # Thinning factor emcee chains
-n = 400                                                                         # Repeated simulations used in visualisations
+print_n = 500                                                                  # Print diagnostics every `print_n`` iterations
+discard = 0                                                                     # Discard first `discard` iterations as burn-in
+thin = 1                                                                        # Thinning factor emcee chains
+n = 500                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
 ## hierarchal hyperparameters                                                       
 L1_weight = 2
@@ -58,8 +58,8 @@ n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-# run_date = '2024-11-26'                                                         # First date of run
-# backend_identifier = 'SequentialTwoStrain_May'
+# run_date = '2024-11-27'                                                         # First date of run
+# backend_identifier = 'SequentialTwoStrain_May_simple_temporal'
 # backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
 backend_path = None
@@ -72,20 +72,20 @@ if not backend_path:
     # set some ballpark national estimates
     ## level 0
     rho_h = 0.0025
-    beta1_US = 0.0225
-    beta2_US = 0.0228
-    f_R1_R2 = 0.50
-    f_R1 = 0.50
+    beta1_US = 0.0218
+    beta2_US = 0.0222
+    f_R1_R2 = 0.5
+    f_R1 = 0.43
     f_I1 = 5e-5
-    f_I2 = 5e-6
+    f_I2 = 5e-5
     ## level 1
     delta_beta1_regions = 0.01
     delta_beta2_regions = 0.01
-    delta_beta_temporal = 0.01
     delta_f_I1_regions = 0.01
     delta_f_I2_regions = 0.01
     delta_f_R1_regions = 0.01
     delta_f_R2_regions = 0.01
+    delta_beta_temporal = 0.01
     ## level 2
     delta_beta1_states = 0.01
     delta_beta2_states = 0.01
@@ -181,32 +181,27 @@ if __name__ == '__main__':
         weights = list(rel_weight * np.array(weights) / np.mean(weights))
 
     # parameters to calibrate
-    pars = ['rho_h', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                          # level 0
-            'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions','delta_beta_temporal',  # level 1
-            'delta_beta1_states', 'delta_beta2_states',                                                                                                             # level 2
+    pars = ['rho_h', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                             # level 0
+            'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions',                # level 1                                                                                                                                                
             ]
     # labels in output figures
-    labels = [r'$\rho_{h}$', r'$\beta_{1, US}$',  r'$\beta_{2, US}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$',             # level 0
-                r'$\Delta \beta_{1, regions}$', r'$\Delta \beta_{2, regions}$',   r'$\Delta f_{I, 1, regions}$', r'$\Delta f_{I, 2, regions}$',
-                 r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$',r'$\Delta \beta_{t}$',                                                        # level 1
-                r'$\Delta \beta_{1, states}$', r'$\Delta \beta_{2, states}$',                                                                               # level 2
+    labels = [r'$\rho_{h}$', r'$\beta_{1, US}$',  r'$\beta_{2, US}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$',                                # level 0
+                r'$\Delta \beta_{1, regions}$', r'$\Delta \beta_{2, regions}$',   r'$\Delta f_{I, 1, regions}$', r'$\Delta f_{I, 2, regions}$',             # level 1
+                  r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$'     
                 ]
     # parameter bounds
-    bounds = [(1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),                                                # level 0
-              (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),                                                           # level 1
-              (-0.5,0.5), (-0.5,0.5),                                                                                                                       # level 2
+    bounds = [(1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),                                                 # level 0
+              (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),                                                           # level 1
               ]
     # priors
     log_prior_prob_fcn = [
-        log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, # level 0
-        log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2,  # level 1
-        log_prior_normal_L2, log_prior_normal_L2,                                                                                                           # level 2
+        log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform,    # level 0
+        log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2,           # level 1
     ]
     stdev = 0.10
     log_prior_prob_fcn_args = [
         bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6],                                                                        # level 0
-        (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), # level 1
-        (0, stdev,  rel_weight_level2*L1_weight), (0, stdev,  rel_weight_level2*L1_weight),                                                                 # level 2
+        (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight),     # level 1
     ]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args,
@@ -222,12 +217,11 @@ if __name__ == '__main__':
         # set ballpark theta
         theta = [rho_h, beta1_US, beta2_US, f_R1_R2, f_R1, f_I1, f_I2] + \
                     n_regions*[delta_beta1_regions,] + n_regions*[delta_beta2_regions,] + n_regions*[delta_f_I1_regions,] + n_regions*[delta_f_I2_regions,] + \
-                         n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,] + n_temporal_modifiers*[delta_beta_temporal,] + \
-                            n_states * [delta_beta1_states,] + n_states * [delta_beta2_states,]
+                         n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,]
         # perform optimization 
-        #step = len(objective_function.expanded_bounds)*[0.2,]
-        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-        #                          processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        step = len(objective_function.expanded_bounds)*[0.2,]
+        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+                                  processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
     ######################
     ## Visualize result ##
@@ -282,9 +276,7 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
-    import sys
-    sys.exit()
-    
+
     ##########
     ## MCMC ##
     ##########
@@ -315,6 +307,7 @@ if __name__ == '__main__':
         parameters['beta1_US'] = samples['beta1_US'][idx]
         parameters['beta2_US'] = samples['beta2_US'][idx]
         parameters['f_R1_R2'] = samples['f_R1_R2'][idx]
+        parameters['f_R1'] = samples['f_R1'][idx]
         parameters['f_I1'] = samples['f_I1'][idx]
         parameters['f_I2'] = samples['f_I2'][idx]
         # level 1
@@ -324,10 +317,10 @@ if __name__ == '__main__':
         parameters['delta_f_I2_regions'] = np.array([slice[idx] for slice in samples['delta_f_I2_regions']])
         parameters['delta_f_R1_regions'] = np.array([slice[idx] for slice in samples['delta_f_R1_regions']])
         parameters['delta_f_R2_regions'] = np.array([slice[idx] for slice in samples['delta_f_R2_regions']])
-        parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
+        #parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
         # level 2
-        parameters['delta_beta1_states'] = np.array([slice[idx] for slice in samples['delta_beta1_states']])
-        parameters['delta_beta2_states'] = np.array([slice[idx] for slice in samples['delta_beta2_states']])
+        #parameters['delta_beta1_states'] = np.array([slice[idx] for slice in samples['delta_beta1_states']])
+        #parameters['delta_beta2_states'] = np.array([slice[idx] for slice in samples['delta_beta2_states']])
         return parameters
     
     # Simulate model
@@ -335,7 +328,7 @@ if __name__ == '__main__':
                         draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
 
     # Visualize
-    fig, ax = plt.subplots(n_states, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states)))
+    fig, ax = plt.subplots(n_states+2, 1, sharex=True, figsize=(8.3, 11.7/4*(n_states)))
     props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
     ## Overall
     x_calibration_data = df_calibration.index.get_level_values('date').unique().values
@@ -347,17 +340,34 @@ if __name__ == '__main__':
     ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
                         7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
     ax[0].grid(False)
-
+    ## Overall flu A
+    ax[1].scatter(x_calibration_data, 7*df_flu_A_calibration, color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    if not df_validation.empty:
+        ax[1].scatter(x_validation_data, 7*df_flu_A_validation, color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    ax[1].plot(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+    ax[1].fill_between(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
+                        7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
+    ax[1].grid(False)
+    ax[1].set_title('USA (Flu A)')
+    ## Overall flu B
+    ax[2].scatter(x_calibration_data, 7*df_flu_B_calibration, color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    if not df_validation.empty:
+        ax[2].scatter(x_validation_data, 7*df_flu_B_validation, color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+    ax[2].plot(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+    ax[2].fill_between(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
+                        7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
+    ax[2].grid(False)
+    ax[2].set_title('USA (Flu B)')
     ## per state
     for i,loc in enumerate(df.index.get_level_values('location').unique().values):
-        ax[i+1].scatter(x_calibration_data, 7*df_calibration.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+3].scatter(x_calibration_data, 7*df_calibration.loc[slice(None), loc], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_validation.empty:
-            ax[i+1].scatter(x_validation_data, 7*df_validation.loc[slice(None), loc], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[i+1].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
-        ax[i+1].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=0.05/2),
+            ax[i+3].scatter(x_validation_data, 7*df_validation.loc[slice(None), loc], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        ax[i+3].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+        ax[i+3].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=0.05/2),
                              7*out['H_inc'].sum(dim=['age_group']).sel(location=loc).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
-        ax[i+1].set_title(f"{fips2name(loc)} ({loc})")
-        ax[i+1].grid(False)
+        ax[i+3].set_title(f"{fips2name(loc)} ({loc})")
+        ax[i+3].grid(False)
 
     ## format dates
     ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
