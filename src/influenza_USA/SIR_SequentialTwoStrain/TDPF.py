@@ -119,7 +119,7 @@ class hierarchal_transmission_rate_function():
 
         return smoothed_modifier
 
-    def strain1_function(self, t, states, param, beta1_US, delta_beta1_regions, delta_beta1_states, delta_beta_temporal):
+    def strain1_function(self, t, states, param, beta1_US, delta_beta1_regions, delta_beta1_states, delta_beta_temporal, delta_beta_holiday):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -148,12 +148,14 @@ class hierarchal_transmission_rate_function():
         delta_beta1_regions = 1 + delta_beta1_regions[self.region_mapping]
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
+        # fill in holiday modifier
+        delta_beta_temporal[4] *= (1+delta_beta_holiday)
         # get smoothed temporal components
         temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=7, window_size=30, freq='biweekly')
         # construct modifiers
         return beta1_US * temporal_modifiers_smooth * delta_beta1_regions * delta_beta1_states
 
-    def strain2_function(self, t, states, param, beta2_US, delta_beta2_regions, delta_beta2_states, delta_beta_temporal):
+    def strain2_function(self, t, states, param, beta2_US, delta_beta2_regions, delta_beta2_states, delta_beta_temporal, delta_beta_holiday):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -182,6 +184,8 @@ class hierarchal_transmission_rate_function():
         delta_beta2_regions = 1 + delta_beta2_regions[self.region_mapping]
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
+        # fill in holiday modifier
+        delta_beta_temporal[4] *= (1+delta_beta_holiday)
         # get smoothed temporal components
         temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
         # construct modifiers

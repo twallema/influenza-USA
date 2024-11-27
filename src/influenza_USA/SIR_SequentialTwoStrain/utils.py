@@ -73,6 +73,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
             'delta_beta2_regions': np.zeros(9),
             'delta_beta1_states': np.zeros(52),
             'delta_beta2_states': np.zeros(52),
+            'delta_beta_holiday': 0,
             'delta_beta_temporal': np.zeros(10)
         }
     )

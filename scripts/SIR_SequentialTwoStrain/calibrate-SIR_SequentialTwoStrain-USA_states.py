@@ -85,6 +85,7 @@ if not backend_path:
     delta_f_I2_regions = 0.01
     delta_f_R1_regions = 0.01
     delta_f_R2_regions = 0.01
+    delta_beta_holiday = -0.05
     delta_beta_temporal = 0.01
     ## level 2
     delta_beta1_states = 0.01
@@ -181,27 +182,27 @@ if __name__ == '__main__':
         weights = list(rel_weight * np.array(weights) / np.mean(weights))
 
     # parameters to calibrate
-    pars = ['rho_h', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                             # level 0
-            'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions',                # level 1                                                                                                                                                
+    pars = ['rho_h', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                                     # level 0
+            'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions','delta_beta_holiday'    # level 1                                                                                                                                                
             ]
     # labels in output figures
     labels = [r'$\rho_{h}$', r'$\beta_{1, US}$',  r'$\beta_{2, US}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$',                                # level 0
                 r'$\Delta \beta_{1, regions}$', r'$\Delta \beta_{2, regions}$',   r'$\Delta f_{I, 1, regions}$', r'$\Delta f_{I, 2, regions}$',             # level 1
-                  r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$'     
+                  r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$', r'$\Delta \beta_{holiday}$'      
                 ]
     # parameter bounds
     bounds = [(1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),                                                 # level 0
-              (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),                                                           # level 1
+              (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),                                               # level 1
               ]
     # priors
     log_prior_prob_fcn = [
         log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform,    # level 0
-        log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2,           # level 1
+        log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2  # level 1
     ]
     stdev = 0.10
     log_prior_prob_fcn_args = [
         bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6],                                                                        # level 0
-        (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight),     # level 1
+        (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight) # level 1
     ]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args,
@@ -217,11 +218,11 @@ if __name__ == '__main__':
         # set ballpark theta
         theta = [rho_h, beta1_US, beta2_US, f_R1_R2, f_R1, f_I1, f_I2] + \
                     n_regions*[delta_beta1_regions,] + n_regions*[delta_beta2_regions,] + n_regions*[delta_f_I1_regions,] + n_regions*[delta_f_I2_regions,] + \
-                         n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,]
+                         n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,] + [delta_beta_holiday,]
         # perform optimization 
-        step = len(objective_function.expanded_bounds)*[0.2,]
-        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                  processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        #step = len(objective_function.expanded_bounds)*[0.2,]
+        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        #                          processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
     ######################
     ## Visualize result ##
