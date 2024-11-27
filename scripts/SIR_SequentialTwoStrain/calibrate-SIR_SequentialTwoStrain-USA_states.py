@@ -41,7 +41,7 @@ end_slice = datetime(season_start+1, 3, 1)
 n_pso = 2000                                                                    # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'SequentialTwoStrain_May'                                       # ID of run
+identifier = 'SequentialTwoStrain_May_simple'                                       # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
 n_mcmc = 1                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
@@ -58,38 +58,37 @@ n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-run_date = '2024-11-26'                                                         # First date of run
-backend_identifier = 'SequentialTwoStrain_May'
-backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+# run_date = '2024-11-26'                                                         # First date of run
+# backend_identifier = 'SequentialTwoStrain_May'
+# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-# backend_path = None
-# if not backend_path:
-#     # get run date
-#     run_date = datetime.today().strftime("%Y-%m-%d")
-#     # check if samples folder exists, if not, make it
-#     if not os.path.exists(samples_path):
-#         os.makedirs(samples_path)
-#     # set some ballpark national estimates
-#     ## level 0
-#     rho_h1 = 0.0025
-#     rho_h2 = 0.001
-#     beta1_US = 0.0225
-#     beta2_US = 0.0228
-#     f_R1_R2 = 0.50
-#     f_R1 = 0.50
-#     f_I1 = 5e-5
-#     f_I2 = 5e-6
-#     ## level 1
-#     delta_beta1_regions = 0.01
-#     delta_beta2_regions = 0.01
-#     delta_beta_temporal = 0.01
-#     delta_f_I1_regions = 0.01
-#     delta_f_I2_regions = 0.01
-#     delta_f_R1_regions = 0.01
-#     delta_f_R2_regions = 0.01
-#     ## level 2
-#     delta_beta1_states = 0.01
-#     delta_beta2_states = 0.01
+backend_path = None
+if not backend_path:
+    # get run date
+    run_date = datetime.today().strftime("%Y-%m-%d")
+    # check if samples folder exists, if not, make it
+    if not os.path.exists(samples_path):
+        os.makedirs(samples_path)
+    # set some ballpark national estimates
+    ## level 0
+    rho_h = 0.0025
+    beta1_US = 0.0225
+    beta2_US = 0.0228
+    f_R1_R2 = 0.50
+    f_R1 = 0.50
+    f_I1 = 5e-5
+    f_I2 = 5e-6
+    ## level 1
+    delta_beta1_regions = 0.01
+    delta_beta2_regions = 0.01
+    delta_beta_temporal = 0.01
+    delta_f_I1_regions = 0.01
+    delta_f_I2_regions = 0.01
+    delta_f_R1_regions = 0.01
+    delta_f_R2_regions = 0.01
+    ## level 2
+    delta_beta1_states = 0.01
+    delta_beta2_states = 0.01
     
 ##########################################
 ## Load and format hospitalisation data ##
@@ -182,30 +181,30 @@ if __name__ == '__main__':
         weights = list(rel_weight * np.array(weights) / np.mean(weights))
 
     # parameters to calibrate
-    pars = ['rho_h1', 'rho_h2', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                          # level 0
-            'delta_beta1_regions','delta_beta2_regions','delta_beta_temporal','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions',  # level 1
+    pars = ['rho_h', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                          # level 0
+            'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions','delta_beta_temporal',  # level 1
             'delta_beta1_states', 'delta_beta2_states',                                                                                                             # level 2
             ]
     # labels in output figures
-    labels = [r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1, US}$',  r'$\beta_{2, US}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$',             # level 0
-                r'$\Delta \beta_{1, regions}$', r'$\Delta \beta_{2, regions}$',  r'$\Delta \beta_{t}$', r'$\Delta f_{I, 1, regions}$',
-                r'$\Delta f_{I, 2, regions}$', r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$',                                                # level 1
+    labels = [r'$\rho_{h}$', r'$\beta_{1, US}$',  r'$\beta_{2, US}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$',             # level 0
+                r'$\Delta \beta_{1, regions}$', r'$\Delta \beta_{2, regions}$',   r'$\Delta f_{I, 1, regions}$', r'$\Delta f_{I, 2, regions}$',
+                 r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$',r'$\Delta \beta_{t}$',                                                        # level 1
                 r'$\Delta \beta_{1, states}$', r'$\Delta \beta_{2, states}$',                                                                               # level 2
                 ]
     # parameter bounds
-    bounds = [(1e-8,0.01), (1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),                                                # level 0
+    bounds = [(1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),                                                # level 0
               (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),                                                           # level 1
               (-0.5,0.5), (-0.5,0.5),                                                                                                                       # level 2
               ]
     # priors
     log_prior_prob_fcn = [
-        log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, # level 0
+        log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, # level 0
         log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2,  # level 1
         log_prior_normal_L2, log_prior_normal_L2,                                                                                                           # level 2
     ]
     stdev = 0.10
     log_prior_prob_fcn_args = [
-        bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], bounds[7],                                                              # level 0
+        bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6],                                                                        # level 0
         (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), # level 1
         (0, stdev,  rel_weight_level2*L1_weight), (0, stdev,  rel_weight_level2*L1_weight),                                                                 # level 2
     ]
@@ -221,14 +220,14 @@ if __name__ == '__main__':
     # Initial guess
     if not backend_path:
         # set ballpark theta
-        theta = [rho_h1, rho_h2, beta1_US, beta2_US, f_R1_R2, f_R1, f_I1, f_I2] + \
-                    n_regions*[delta_beta1_regions,] + n_regions*[delta_beta2_regions,] + n_temporal_modifiers*[delta_beta_temporal,] + n_regions*[delta_f_I1_regions,] + \
-                        n_regions*[delta_f_I2_regions,] + n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,] + \
+        theta = [rho_h, beta1_US, beta2_US, f_R1_R2, f_R1, f_I1, f_I2] + \
+                    n_regions*[delta_beta1_regions,] + n_regions*[delta_beta2_regions,] + n_regions*[delta_f_I1_regions,] + n_regions*[delta_f_I2_regions,] + \
+                         n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,] + n_temporal_modifiers*[delta_beta_temporal,] + \
                             n_states * [delta_beta1_states,] + n_states * [delta_beta2_states,]
         # perform optimization 
-        step = len(objective_function.expanded_bounds)*[0.2,]
-        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                  processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        #step = len(objective_function.expanded_bounds)*[0.2,]
+        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        #                          processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
     ######################
     ## Visualize result ##
@@ -283,7 +282,9 @@ if __name__ == '__main__':
     plt.savefig(fig_path+'goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
-
+    import sys
+    sys.exit()
+    
     ##########
     ## MCMC ##
     ##########
@@ -310,8 +311,7 @@ if __name__ == '__main__':
 
     def draw_fcn(parameters, samples):
         # level 0
-        idx, parameters['rho_h1'] = random.choice(list(enumerate(samples['rho_h1'])))
-        idx, parameters['rho_h2'] = random.choice(list(enumerate(samples['rho_h2'])))
+        idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
         parameters['beta1_US'] = samples['beta1_US'][idx]
         parameters['beta2_US'] = samples['beta2_US'][idx]
         parameters['f_R1_R2'] = samples['f_R1_R2'][idx]
@@ -320,11 +320,11 @@ if __name__ == '__main__':
         # level 1
         parameters['delta_beta1_regions'] = np.array([slice[idx] for slice in samples['delta_beta1_regions']])
         parameters['delta_beta2_regions'] = np.array([slice[idx] for slice in samples['delta_beta2_regions']])
-        parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
         parameters['delta_f_I1_regions'] = np.array([slice[idx] for slice in samples['delta_f_I1_regions']])
         parameters['delta_f_I2_regions'] = np.array([slice[idx] for slice in samples['delta_f_I2_regions']])
         parameters['delta_f_R1_regions'] = np.array([slice[idx] for slice in samples['delta_f_R1_regions']])
         parameters['delta_f_R2_regions'] = np.array([slice[idx] for slice in samples['delta_f_R2_regions']])
+        parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
         # level 2
         parameters['delta_beta1_states'] = np.array([slice[idx] for slice in samples['delta_beta1_states']])
         parameters['delta_beta2_states'] = np.array([slice[idx] for slice in samples['delta_beta2_states']])

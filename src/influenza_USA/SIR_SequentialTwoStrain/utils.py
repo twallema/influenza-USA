@@ -34,8 +34,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
             'T_r': 3.5,                                                                                                             # average time to recovery 
             'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
-            'rho_h1': 0.001,                                                                                                        # hospitalised fraction (source: Josh)
-            'rho_h2': 0.001,                                                                                                        # hospitalised fraction (source: Josh)
+            'rho_h': 0.001,                                                                                                        # hospitalised fraction (source: Josh)
             # initial condition function
             'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
             'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
