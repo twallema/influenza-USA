@@ -181,6 +181,9 @@ if __name__ == '__main__':
             log_likelihood_fnc_args.append([])
         weights = list(rel_weight * np.array(weights) / np.mean(weights))
 
+    weights[0] = 1
+    weights[1] = 1
+
     # parameters to calibrate
     pars = ['rho_h', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                                     # level 0
             'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions','delta_beta_holiday'    # level 1                                                                                                                                                
