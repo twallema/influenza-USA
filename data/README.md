@@ -54,13 +54,9 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### cases
 
-+ `2017_2018_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2017-2018 Flu season. Obtained from Josh (#TODO: where did he get it from?).
++ `weekly_flu_incid_complete.csv`: Weekly hospitalisations for Influenza in the USA, from 2009-2010 until 2023-2024. Obtained from Shaun (#TODO: where did he get it from?).
 
-+ `2019_2020_Flu.csv`: Contains the weekly number of cases, hospitalisations and deaths in the USA for the 2019-2020 Flu season. Obtained from Josh (#TODO: where did he get it from?).
-
-+ `weekly_flu_incid_complete.csv`: Obtained from Shaun (#TODO: where did he get it from?).
-
-+ `CDC_hosp-rate-age_2010-2023.csv`: Hospitalisation rate per age group as reported by the CDC.
++ `FluView_Subtypes_17-18.csv`: Downloaded from FluView: https://www.cdc.gov/fluview/surveillance/2024-week-46.html 
 
 ### initial condition
 
@@ -123,6 +119,8 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 + `locations-all_daytype-weekend_avg-UK-DE-FI_polymod-2008.csv`: Contains the social contact matrix for age groups 0-5, 5-18, 18-50, 50-65, 65+. Average of the UK, Germany and Finland from the 2008 Polymod study. Sum of all locations (home, work, school, leisure, others) and for weekends. Physical and non-physical contacts. Number of contacts integrated with the duration of the contact.
 
 ### Cases
+
++ `CDC_hosp-rate-age_2010-2023.csv`: Hospitalisation rate per age group as reported by the CDC.
 
 + `hospitalisations_per_state.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
 
