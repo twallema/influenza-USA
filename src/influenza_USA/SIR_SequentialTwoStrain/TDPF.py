@@ -119,7 +119,7 @@ class hierarchal_transmission_rate_function():
 
         return smoothed_modifier
 
-    def strain1_function(self, t, states, param, beta1_US, delta_beta1_regions, delta_beta1_states, delta_beta_temporal, delta_beta_holiday):
+    def strain1_function(self, t, states, param, beta1_US, delta_beta1_regions, delta_beta1_states, delta_beta_temporal):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -148,14 +148,12 @@ class hierarchal_transmission_rate_function():
         delta_beta1_regions = 1 + delta_beta1_regions[self.region_mapping]
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
-        # fill in holiday modifier
-        delta_beta_temporal[4] *= (1+delta_beta_holiday)
         # get smoothed temporal components
         temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=7, window_size=30, freq='biweekly')
         # construct modifiers
         return beta1_US * temporal_modifiers_smooth * delta_beta1_regions * delta_beta1_states
 
-    def strain2_function(self, t, states, param, beta2_US, delta_beta2_regions, delta_beta2_states, delta_beta_temporal, delta_beta_holiday):
+    def strain2_function(self, t, states, param, beta2_US, delta_beta2_regions, delta_beta2_states, delta_beta_temporal):
         """
         A function constructing a spatio-temporal hierarchal transmission rate 'beta'
 
@@ -184,10 +182,8 @@ class hierarchal_transmission_rate_function():
         delta_beta2_regions = 1 + delta_beta2_regions[self.region_mapping]
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
-        # fill in holiday modifier
-        delta_beta_temporal[4] *= (1+delta_beta_holiday)
         # get smoothed temporal components
-        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
+        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_temporal[:, np.newaxis], t, half_life_days=7, window_size=30, freq='biweekly')
         # construct modifiers
         return beta2_US * temporal_modifiers_smooth * delta_beta2_regions * delta_beta2_states
 
@@ -368,7 +364,8 @@ class make_initial_condition_function():
         # retrieve region/state --> state/county parameter  mapping
         self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
 
-    def initial_condition_function(self, f_I1, f_I2, f_R1_R2, f_R1, delta_f_I1_regions, delta_f_I2_regions, delta_f_R1_regions, delta_f_R2_regions):
+    def initial_condition_function(self, f_I1, f_I2, f_R1_R2, f_R1, delta_f_I1_regions, delta_f_I2_regions, delta_f_R1_regions, delta_f_R2_regions,
+                                   delta_f_I1_states, delta_f_I2_states, delta_f_R1_states, delta_f_R2_states):
         """
         A function setting the model's initial condition. Uses a hierarchal structure for the initial immunity.
         
@@ -392,12 +389,17 @@ class make_initial_condition_function():
         delta_f_I2_regions = delta_f_I2_regions[self.region_mapping]
         delta_f_R1_regions = delta_f_R1_regions[self.region_mapping]
         delta_f_R2_regions = delta_f_R2_regions[self.region_mapping]
+        # states
+        delta_f_I1_states = delta_f_I1_states[self.state_mapping]
+        delta_f_I2_states = delta_f_I2_states[self.state_mapping]
+        delta_f_R1_states = delta_f_R1_states[self.state_mapping]
+        delta_f_R2_states = delta_f_R2_states[self.state_mapping]        
 
         # construct hierarchal initial immunity
-        f_I1 = f_I1 * (1 + delta_f_I1_regions) 
-        f_I2 = f_I2 * (1 + delta_f_I2_regions) 
-        f_R1 = f_R1 * (1 + delta_f_R1_regions)  
-        f_R2 = f_R2 * (1 + delta_f_R2_regions)
+        f_I1 = f_I1 * (1 + delta_f_I1_regions) * (1 + delta_f_I1_states) 
+        f_I2 = f_I2 * (1 + delta_f_I2_regions) * (1 + delta_f_I2_states) 
+        f_R1 = f_R1 * (1 + delta_f_R1_regions) * (1 + delta_f_R1_states)
+        f_R2 = f_R2 * (1 + delta_f_R2_regions) * (1 + delta_f_R2_states)
 
         return {'S':  (1 - f_I1 - f_I2 - f_R1 - f_R2) * self.demography,
                 'I1': 0.5 * f_I1 * self.demography,     # assumption 50/50 I1 versus I21

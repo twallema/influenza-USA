@@ -41,11 +41,11 @@ end_slice = datetime(season_start+1, 3, 1)
 n_pso = 5000                                                                    # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian
-identifier = 'SequentialTwoStrain_May_simple_holiday'                                       # ID of run
+identifier = 'SequentialTwoStrain_May_simple'                                   # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
-n_mcmc = 2000                                                                   # Number of MCMC iterations
+n_mcmc = 3000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 500                                                                  # Print diagnostics every `print_n`` iterations
+print_n = 500                                                                   # Print diagnostics every `print_n`` iterations
 discard = 0                                                                     # Discard first `discard` iterations as burn-in
 thin = 1                                                                        # Thinning factor emcee chains
 n = 500                                                                         # Repeated simulations used in visualisations
@@ -58,8 +58,8 @@ n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-# run_date = '2024-11-27'                                                         # First date of run
-# backend_identifier = 'SequentialTwoStrain_May_simple_temporal'
+# run_date = '2024-11-29'                                                         # First date of run
+# backend_identifier = 'SequentialTwoStrain_May_simple'
 # backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
 backend_path = None
@@ -85,12 +85,8 @@ if not backend_path:
     delta_f_I2_regions = 0.01
     delta_f_R1_regions = 0.01
     delta_f_R2_regions = 0.01
-    delta_beta_holiday = -0.05
     delta_beta_temporal = 0.01
-    ## level 2
-    delta_beta1_states = 0.01
-    delta_beta2_states = 0.01
-    
+
 ##########################################
 ## Load and format hospitalisation data ##
 ##########################################
@@ -113,9 +109,9 @@ df_validation = df.loc[slice(end_calibration, end_validation), slice(None)]
 # compute enddate of the dataset
 end_sim = df_validation.index.get_level_values('date').unique().max()
 
-############################################################
-## Make a US-level flu A vs. flu B hospitalisation dataet ##
-############################################################
+#############################################################
+## Make a US-level flu A vs. flu B hospitalisation dataset ##
+#############################################################
 
 # load subtype data flu A vs. flu B
 subtypes_1718 = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/FluView_Subtypes_17-18.csv'))
@@ -146,6 +142,21 @@ if backend_path:
     pos = backend.get_chain(discard=discard, thin=thin, flat=False)[-1, ...]
     # Average out all walkers/parameter
     theta = np.mean(pos, axis=0)
+
+# GET The first calibration stage >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+run_date = '2024-11-27'                                                         # First date of run
+backend_identifier = 'SequentialTwoStrain_May_simple'
+backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+# Load emcee backend
+backend_path = os.path.join(os.getcwd(), backend_path)
+backend = emcee.backends.HDFBackend(backend_path)
+# Get last position
+pos = backend.get_chain(discard=discard, thin=thin, flat=False)[-1, ...]
+# Average out all walkers/parameter
+theta = list(np.mean(pos, axis=0))
+# reset backend_path
+backend_path = None
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 #################
 ## Setup model ##
@@ -181,31 +192,28 @@ if __name__ == '__main__':
             log_likelihood_fnc_args.append([])
         weights = list(rel_weight * np.array(weights) / np.mean(weights))
 
-    weights[0] = 1
-    weights[1] = 1
-
     # parameters to calibrate
     pars = ['rho_h', 'beta1_US', 'beta2_US', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2',                                                                                     # level 0
-            'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions','delta_beta_holiday'    # level 1                                                                                                                                                
+            'delta_beta1_regions','delta_beta2_regions','delta_f_I1_regions','delta_f_I2_regions','delta_f_R1_regions','delta_f_R2_regions', 'delta_beta_temporal', # level 1                                                                                                                                                
             ]
     # labels in output figures
     labels = [r'$\rho_{h}$', r'$\beta_{1, US}$',  r'$\beta_{2, US}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$',                                # level 0
                 r'$\Delta \beta_{1, regions}$', r'$\Delta \beta_{2, regions}$',   r'$\Delta f_{I, 1, regions}$', r'$\Delta f_{I, 2, regions}$',             # level 1
-                  r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$', r'$\Delta \beta_{holiday}$'      
+                  r'$\Delta f_{R, 1, regions}$', r'$\Delta f_{R, 2, regions}$', r'$\Delta \beta_{t}$',
                 ]
     # parameter bounds
-    bounds = [(1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),                                                 # level 0
-              (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),                                               # level 1
+    bounds = [(1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),                                                # level 0
+              (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5), (-0.5,0.5),                                              # level 1
               ]
     # priors
     log_prior_prob_fcn = [
-        log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform,    # level 0
-        log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2  # level 1
-    ]
+        log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform, log_prior_uniform,                # level 0
+        log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2, log_prior_normal_L2,  # level 1
+              ]
     stdev = 0.10
     log_prior_prob_fcn_args = [
         bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6],                                                                        # level 0
-        (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight) # level 1
+        (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight), (0, stdev,  L1_weight),    # level 1
     ]
     # Setup objective function (no priors defined = uniform priors based on bounds)
     objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args,
@@ -219,9 +227,13 @@ if __name__ == '__main__':
     # Initial guess
     if not backend_path:
         # set ballpark theta
-        theta = [rho_h, beta1_US, beta2_US, f_R1_R2, f_R1, f_I1, f_I2] + \
-                    n_regions*[delta_beta1_regions,] + n_regions*[delta_beta2_regions,] + n_regions*[delta_f_I1_regions,] + n_regions*[delta_f_I2_regions,] + \
-                         n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,] + [delta_beta_holiday,]
+        #theta = [rho_h, beta1_US, beta2_US, f_R1_R2, f_R1, f_I1, f_I2] + \
+        #            n_regions*[delta_beta1_regions,] + n_regions*[delta_beta2_regions,] + n_regions*[delta_f_I1_regions,] + n_regions*[delta_f_I2_regions,] + \
+        #                 n_regions*[delta_f_R1_regions,] + n_regions*[delta_f_R2_regions,] 
+        # append new states to theta >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        theta = theta + n_temporal_modifiers*[delta_beta_temporal,]
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
         # perform optimization 
         #step = len(objective_function.expanded_bounds)*[0.2,]
         #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
@@ -321,10 +333,7 @@ if __name__ == '__main__':
         parameters['delta_f_I2_regions'] = np.array([slice[idx] for slice in samples['delta_f_I2_regions']])
         parameters['delta_f_R1_regions'] = np.array([slice[idx] for slice in samples['delta_f_R1_regions']])
         parameters['delta_f_R2_regions'] = np.array([slice[idx] for slice in samples['delta_f_R2_regions']])
-        #parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
-        # level 2
-        #parameters['delta_beta1_states'] = np.array([slice[idx] for slice in samples['delta_beta1_states']])
-        #parameters['delta_beta2_states'] = np.array([slice[idx] for slice in samples['delta_beta2_states']])
+        parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
         return parameters
     
     # Simulate model

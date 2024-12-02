@@ -34,7 +34,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
             'T_r': 3.5,                                                                                                             # average time to recovery 
             'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
-            'rho_h': 0.001,                                                                                                        # hospitalised fraction (source: Josh)
+            'rho_h': 0.001,                                                                                                         # hospitalised fraction (source: Josh)
             # initial condition function
             'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
             'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
@@ -50,6 +50,10 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
         'delta_f_I2_regions': np.zeros(9),
         'delta_f_R1_regions': np.zeros(9),
         'delta_f_R2_regions': np.zeros(9),
+        'delta_f_I1_states': np.zeros(52),
+        'delta_f_I2_states': np.zeros(52),
+        'delta_f_R1_states': np.zeros(52),
+        'delta_f_R2_states': np.zeros(52),
     })
                                                                                  
     # time-dependencies
@@ -73,8 +77,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
             'delta_beta2_regions': np.zeros(9),
             'delta_beta1_states': np.zeros(52),
             'delta_beta2_states': np.zeros(52),
-            'delta_beta_holiday': 0,
-            'delta_beta_temporal': np.zeros(10)
+            'delta_beta_temporal': np.zeros(10),
         }
     )
 
