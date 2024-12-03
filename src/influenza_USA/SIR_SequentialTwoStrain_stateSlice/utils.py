@@ -63,7 +63,13 @@ def initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution='states', a
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
+    ## transmission rate
+    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
+    TDPFs['beta1'] = transmission_rate_function()   # initialise TDPF
+    TDPFs['beta2'] = transmission_rate_function()   # initialise TDPF
+    params['delta_beta_temporal'] = np.zeros(10)    # initialise parameter of TDPF
 
+    # initalise pySODM model
     return SIR_SequentialTwoStrain(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 def construct_coordinates_dictionary(spatial_resolution, age_resolution):
