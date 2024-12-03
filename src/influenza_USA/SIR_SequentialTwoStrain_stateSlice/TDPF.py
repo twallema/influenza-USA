@@ -18,10 +18,13 @@ from datetime import datetime, timedelta
 
 class transmission_rate_function():
 
-    def __init__(self):
-        pass
+    def __init__(self, half_life_days, window_size, freq):
+        # assign smoother settings to object
+        self.half_life_days = half_life_days
+        self.window_size = window_size
+        self.freq = freq
     
-    def get_smoothed_modifier(self, modifiers, simulation_date, half_life_days=5, window_size=30, freq='biweekly'):
+    def get_smoothed_modifier(self, modifiers, simulation_date, half_life_days, window_size, freq):
         """
         Calculate the smoothed temporal modifier for all US states based on the current simulation date.
         Supports 'biweekly' or 'monthly' frequencies for the modifiers.
@@ -29,9 +32,9 @@ class transmission_rate_function():
         Parameters:
         - modifiers: numpy array of shape (10, 9) or (5, 9), depending on freq ('biweekly' or 'monthly').
         - simulation_date: datetime object representing the current simulation date.
-        - half_life_days: Half-life in days for the exponential smoothing (default: 5 days).
-        - window_size: The number of days used in the smoothing window (default: 30 days).
-        - freq: 'biweekly' (default) or 'monthly'. Determines the structure of the modifiers.
+        - half_life_days: Half-life in days for the exponential smoothing.
+        - window_size: The number of days used in the smoothing window.
+        - freq: 'biweekly' or 'monthly'. Determines the structure of the modifiers.
 
         Returns:
         - smoothed_modifier: numpy array of shape (1, 9), representing the smoothed temporal modifier.
@@ -76,7 +79,7 @@ class transmission_rate_function():
 
             # Determine the period row; if outside Nov-Mar --> assume modifier is none
             if freq == 'biweekly':
-                biweekly_period = 1 if day <= 15 else 2
+                biweekly_period = 1 if day < 15 else 2
                 row = period_mapping.get((month, biweekly_period), None)
             elif freq == 'monthly':
                 row = period_mapping.get(month, None)
@@ -91,7 +94,7 @@ class transmission_rate_function():
             if freq == 'biweekly' and biweekly_period == 1:
                 days_in_this_period = min(day, days_to_collect)
             elif freq == 'biweekly' and biweekly_period == 2:
-                days_in_this_period = min(day - 15, days_to_collect)
+                days_in_this_period = min(day - 14, days_to_collect)
             else:  # Monthly case
                 days_in_this_period = min(day, days_to_collect)
 
@@ -148,7 +151,7 @@ class transmission_rate_function():
 
 
         # smooth modifier
-        temporal_modifiers_smooth = self.get_smoothed_modifier(1+delta_beta_temporal[:, np.newaxis], t, half_life_days=7, window_size=30, freq='biweekly')
+        temporal_modifiers_smooth = self.get_smoothed_modifier(1+delta_beta_temporal[:, np.newaxis], t, half_life_days=self.half_life_days, window_size=self.window_size, freq=self.freq)
         
         # apply modifier
         return param * temporal_modifiers_smooth
