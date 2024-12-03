@@ -41,7 +41,7 @@ def initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution='states', a
             'beta2': 0.028*np.ones(G),                                                                                              # infectivity strain 2 (-)
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
-            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
+            'CHR': compute_case_hospitalisation_rate('average', age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
             'rho_h': 0.001,                                                                                                         # hospitalised fraction (source: Josh)
             # initial condition function
