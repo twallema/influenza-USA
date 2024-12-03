@@ -58,6 +58,8 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `FluView_Subtypes_17-18.csv`: Downloaded from FluView: https://www.cdc.gov/fluview/surveillance/2024-week-46.html 
 
++ `influenza-surveillance-summary_NC_23-24.pdf`: End-of-season report on the 23-24 Influenza season in North Carolina. Of special interest is the figure at the bottom of page 6 titled 'Influenza Positive Tests Reported by PHE Facilities', whose data will be extracted using WebPlotDigitizer. Downloaded from https://flu.ncdhhs.gov/data.htm
+
 ### initial condition
 
 + `initial_condition_2017-2018.csv`: Contains the initial condition and model parameters of Josh' reference model, obtained by calibrating the model (no age groups or spatial patches) to the 2017-2018 Influenza season.
@@ -123,6 +125,8 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 + `CDC_hosp-rate-age_2010-2023.csv`: Hospitalisation rate per age group as reported by the CDC.
 
 + `hospitalisations_per_state.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
+
++ `subtypes_NC_23-24.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Extracted from `influenza-surveillance-summary_NC_23-24.pdf`. 
 
 ## Conversion
 
