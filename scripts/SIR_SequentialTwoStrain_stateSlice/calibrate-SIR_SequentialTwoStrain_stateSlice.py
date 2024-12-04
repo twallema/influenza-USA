@@ -47,35 +47,35 @@ samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  
 n_mcmc = 500                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                            # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 500                                                                   # Print diagnostics every `print_n`` iterations
-discard = 450                                                                     # Discard first `discard` iterations as burn-in
+discard = 500                                                                     # Discard first `discard` iterations as burn-in
 thin = 10                                                                        # Thinning factor emcee chains
 n = 100                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
 L1_weight = 5
 
 ## continue run
-# run_date = '2024-12-03'                                                         # First date of run
-# backend_identifier = 'SequentialTwoStrain_May_simple'
-# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+run_date = '2024-12-04'                                                         # First date of run
+backend_identifier = 'SequentialTwoStrain_May_simple'
+backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-backend_path = None
-if not backend_path:
-    # get run date
-    run_date = datetime.today().strftime("%Y-%m-%d")
-    # check if samples folder exists, if not, make it
-    if not os.path.exists(samples_path):
-        os.makedirs(samples_path)
-    # start from some ballpark estimates
-    ## level 0
-    rho_h = 0.0025
-    beta1 = 0.0218
-    beta2 = 0.0222
-    f_R1_R2 = 0.5
-    f_R1 = 0.43
-    f_I1 = 5e-5
-    f_I2 = 5e-5
-    ## level 1 
-    delta_beta_temporal = 0.01
+# backend_path = None
+# if not backend_path:
+#     # get run date
+#     run_date = datetime.today().strftime("%Y-%m-%d")
+#     # check if samples folder exists, if not, make it
+#     if not os.path.exists(samples_path):
+#         os.makedirs(samples_path)
+#     # start from some ballpark estimates
+#     ## level 0
+#     rho_h = 0.0025
+#     beta1 = 0.0218
+#     beta2 = 0.0222
+#     f_R1_R2 = 0.5
+#     f_R1 = 0.43
+#     f_I1 = 5e-5
+#     f_I2 = 5e-5
+#     ## level 1 
+#     delta_beta_temporal = 0.01
 
 ##########################################
 ## Load and format hospitalisation data ##
@@ -254,31 +254,12 @@ if __name__ == '__main__':
     # Generate a sample dictionary and save it as .json for long-term storage
     samples_dict = emcee_sampler_to_dictionary(samples_path, identifier, run_date=run_date, discard=discard, thin=thin)
 
+    #######################
+    ## Visualize results ##
+    #######################
 
-    # average out 
-    delta_beta_temporal_average = []
-    for i, beta_delta_temporal_i in enumerate(samples_dict['delta_beta_temporal']):
-        delta_beta_temporal_average.append(np.mean(beta_delta_temporal_i))
-    
-    # compute trajectory
-    ## get function
-    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
-    f = transmission_rate_function(sigma=2)
-    ## pre-allocate x and y
-    x = pd.date_range(start=start_calibration, end=end_validation, freq='d').tolist()
-    y = []
-    ## compute output
-    for d in x:
-        y.append(f(d, {}, 1, np.array(delta_beta_temporal_average)))
-    ## visualise
-    fig,ax=plt.subplots()
-    ax.plot(x, y)
-    plt.show()
-    plt.close()
-
-    ######################
-    ## Visualize result ##
-    ######################
+    # Simulate the model
+    # ------------------
 
     def draw_fcn(parameters, samples):
         # level 0
@@ -298,8 +279,29 @@ if __name__ == '__main__':
                         draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
     # Add sampling noise
     out = add_poisson_noise(out)
+
+    # Construct delta_beta_temporal trajectory
+    # ----------------------------------------
+
+    # get function
+    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
+    f = transmission_rate_function(sigma=2)
+    # pre-allocate output
+    y = []
+    lower = []
+    upper = []
+    x = pd.date_range(start=start_calibration, end=end_validation, freq='d').tolist()
+    # compute output
+    for d in x:
+        y.append(f(d, {}, 1, np.mean(np.array(samples_dict['delta_beta_temporal']), axis=1)))
+        lower.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=0.05/2, axis=1)))
+        upper.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=1-0.05/2, axis=1)))
+
+    # Build figure
+    # ------------
+
     # Visualize
-    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(8.3, 11.7/5*3))
+    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(8.3, 11.7/5*4))
     props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
     ## State
     x_calibration_data = df_calibration.index.unique().values
@@ -311,7 +313,8 @@ if __name__ == '__main__':
     ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
                         7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
     ax[0].grid(False)
-    ax[0].set_title(f'{state}')
+    ax[0].set_title(f'{state} (Overall)')
+    ax[0].set_ylabel('Weekly hospital inc. (-)')
     ## Flu A
     ax[1].scatter(x_calibration_data, 7*df_calibration['flu_A'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
     if not df_validation.empty:
@@ -320,7 +323,8 @@ if __name__ == '__main__':
     ax[1].fill_between(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
                         7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
     ax[1].grid(False)
-    ax[1].set_title(f'{state} (Flu A)')
+    ax[1].set_title('Influenza A')
+    ax[1].set_ylabel('Weekly hospital inc. (-)')
     ## Flu B
     ax[2].scatter(x_calibration_data, 7*df_calibration['flu_B'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
     if not df_validation.empty:
@@ -329,7 +333,15 @@ if __name__ == '__main__':
     ax[2].fill_between(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
                         7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
     ax[2].grid(False)
-    ax[2].set_title(f'{state} (Flu B)')
+    ax[2].set_title('Influenza B')
+    ax[2].set_ylabel('Weekly hospital inc. (-)')
+    ## Temporal betas
+    ax[3].plot(x, y, color='black')
+    ax[3].fill_between(x, lower, upper, color='black', alpha=0.1)
+    ax[3].grid(False)
+    ax[3].set_title('Temporal modifiers transmission coefficient')
+    ax[3].set_ylabel('$\\Delta \\beta (t)$')
+    ax[3].set_xlabel('Date')
     ## format dates
     ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
     for tick in ax[-1].get_xticklabels():
@@ -337,6 +349,6 @@ if __name__ == '__main__':
     ## Print to screen
     plt.tight_layout()
     fig_path=f'../../data/interim/calibration/{season}/{identifier}/'
+    plt.tight_layout()
     plt.savefig(fig_path+'goodness-fit-MCMC.pdf')
-    #plt.show()
     plt.close()
