@@ -47,12 +47,11 @@ samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  
 n_mcmc = 500                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                            # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 500                                                                   # Print diagnostics every `print_n`` iterations
-discard = 400                                                                     # Discard first `discard` iterations as burn-in
+discard = 450                                                                     # Discard first `discard` iterations as burn-in
 thin = 10                                                                        # Thinning factor emcee chains
 n = 100                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
-L1_weight = 10
-n_temporal_modifiers = 10
+L1_weight = 5
 
 ## continue run
 # run_date = '2024-12-03'                                                         # First date of run
@@ -183,7 +182,7 @@ if __name__ == '__main__':
     # Initial guess
     if not backend_path:
         # set ballpark theta
-        theta = [rho_h, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + n_temporal_modifiers*[delta_beta_temporal,]
+        theta = [rho_h, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
 
         # perform optimization 
         step = len(objective_function.expanded_bounds)*[0.2,]
@@ -264,7 +263,7 @@ if __name__ == '__main__':
     # compute trajectory
     ## get function
     from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
-    f = transmission_rate_function(sigma=2.5)
+    f = transmission_rate_function(sigma=2)
     ## pre-allocate x and y
     x = pd.date_range(start=start_calibration, end=end_validation, freq='d').tolist()
     y = []

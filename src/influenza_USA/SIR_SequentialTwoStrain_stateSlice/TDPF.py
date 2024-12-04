@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 ## Hierarchal transmission rate ##
 ##################################
 
+from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 
 class transmission_rate_function():
@@ -23,20 +24,28 @@ class transmission_rate_function():
     def __init__(self, sigma):
         self.sigma = sigma
         pass
-    
+
     @staticmethod
     def smooth_modifier(modifiers, simulation_date, sigma):
         """
         A function to smooth a vector of temporal modifiers with a gaussian filter
-        #TODO: vectorise
-        #TODO: frequency
         """
-        # Step 1: Expand the vector to daily values; assume 15 days per entry
-        expanded_vector = np.repeat(modifiers, 15)
-    
-        # Step 2: Prepend and append ones
-        padding = np.ones(31)
-        padded_vector = np.concatenate([padding, expanded_vector, padding])
+
+        # Define number of days between Nov 1 and Apr 1
+        num_days = 152
+
+        # Step 1: Project the input vector on the right knots 
+        ## Calculate the positions for each interval
+        interval_size = num_days / len(modifiers)
+        expanded_vector = np.zeros(num_days)
+        ## Project the input values onto the output
+        for i in range(len(modifiers)):
+            start = int(i * interval_size)
+            end = int((i + 1) * interval_size) if i != len(modifiers) - 1 else num_days  # Ensure last interval includes all remaining days
+            expanded_vector[start:end] = modifiers[i]
+
+        # Step 2: Prepend and append 31 days of ones
+        padded_vector = np.concatenate([np.ones(31), expanded_vector, np.ones(31)])
     
         # Step 3: Apply a gaussian 1D smoother
         smoothed_series = gaussian_filter1d(padded_vector, sigma=sigma)
@@ -90,7 +99,7 @@ class transmission_rate_function():
         """
 
         # smooth modifier
-        temporal_modifiers_smooth = self.smooth_modifier(1+delta_beta_temporal[:, np.newaxis], t, sigma=self.sigma)
+        temporal_modifiers_smooth = self.smooth_modifier(1+np.array(delta_beta_temporal), t, sigma=self.sigma)
 
         # apply modifier
         return param * temporal_modifiers_smooth
