@@ -25,8 +25,8 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season_start = 2016                     # start of season
-season = '2016-2017'                    # season to calibrate
+season_start = 2023                     # start of season
+season = '2023-2024'                    # season to calibrate
 sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd = False                              # vary contact matrix by daytype
@@ -36,26 +36,26 @@ dd = False                              # vary contact matrix by daytype
 state = 'North Carolina'
 ## dates
 start_calibration = datetime(season_start, 10, 15)                              # calibration data will be sliced starting on this date
-end_calibration = datetime(season_start+1, 4, 27)                               # calibration data will be sliced ending on this date
+end_calibration = datetime(season_start+1, 1, 8)                               # calibration data will be sliced ending on this date
 end_validation = datetime(season_start+1, 5, 1)                                 # alternative: None
 ## frequentist optimization
 n_pso = 500                                                                    # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-identifier = 'SequentialTwoStrain_May_simple'                                   # ID of run
+identifier = 'mid_Dec'                                                          # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
-n_mcmc = 1000                                                                   # Number of MCMC iterations
+n_mcmc = 2000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                            # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 500                                                                   # Print diagnostics every `print_n`` iterations
-discard = 800                                                                     # Discard first `discard` iterations as burn-in
-thin = 10                                                                        # Thinning factor emcee chains
-n = 100                                                                         # Repeated simulations used in visualisations
+print_n = 1000                                                                   # Print diagnostics every `print_n`` iterations
+discard = 1500                                                                     # Discard first `discard` iterations as burn-in
+thin = 100                                                                        # Thinning factor emcee chains
+n = 200                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
 L1_weight = 5
 
 ## continue run
 # run_date = '2024-12-04'                                                         # First date of run
-# backend_identifier = 'SequentialTwoStrain_May_simple'
+# backend_identifier = 'end_May'
 # backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
 backend_path = None
@@ -68,14 +68,14 @@ if not backend_path:
     # start from some ballpark estimates
     ## level 0
     rho_h = 0.0025
-    beta1 = 0.0218
-    beta2 = 0.0222
+    beta1 = 0.022
+    beta2 = 0.022
     f_R1_R2 = 0.5
-    f_R1 = 0.43
+    f_R1 = 0.5
     f_I1 = 5e-5
     f_I2 = 5e-5
     ## level 1 
-    delta_beta_temporal = 0.01
+    delta_beta_temporal = 0.001
 
 ##########################################
 ## Load and format hospitalisation data ##
@@ -110,7 +110,7 @@ df_merged['flu_B'] = df_merged['H_inc'] * (1-df_merged['fraction_A'])
 # slice out calibration data
 df_calibration = df_merged.loc[slice(start_calibration, end_calibration)]
 # replace `end_calibration` None --> datetime
-end_calibration = df_merged.index.unique().max() + timedelta(days=1)
+end_calibration = df_calibration.index.unique().max() + timedelta(days=1)
 # slice out validation data
 df_validation = df_merged.loc[slice(end_calibration, end_validation)]
 
@@ -163,7 +163,7 @@ if __name__ == '__main__':
                 ]
     # parameter bounds
     bounds = [
-        (1e-8,0.01), (0.01,0.06), (0.01,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),     # level 0
+        (1e-9,0.006), (0.001,0.06), (0.001,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3),     # level 0
         (-0.5,0.5),                                                                           # level 1
               ]
     # priors
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     ## Print to screen
     plt.tight_layout()
     fig_path=f'../../data/interim/calibration/{season}/{identifier}/'
-    plt.savefig(fig_path+'goodness-fit-NM.pdf')
+    plt.savefig(fig_path+f'{identifier}_goodness-fit-NM.pdf')
     #plt.show()
     plt.close()
 
@@ -291,7 +291,7 @@ if __name__ == '__main__':
 
     # get function
     from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
-    f = transmission_rate_function(sigma=2)
+    f = transmission_rate_function(sigma=2.5)
     # pre-allocate output
     y = []
     lower = []
@@ -347,6 +347,7 @@ if __name__ == '__main__':
     ax[3].grid(False)
     ax[3].set_title('Temporal modifiers transmission coefficient')
     ax[3].set_ylabel('$\\Delta \\beta (t)$')
+    ax[3].set_ylim([0.85,1.15])
     ## format dates
     ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
     for tick in ax[-1].get_xticklabels():
@@ -355,5 +356,5 @@ if __name__ == '__main__':
     plt.tight_layout()
     fig_path=f'../../data/interim/calibration/{season}/{identifier}/'
     plt.tight_layout()
-    plt.savefig(fig_path+'goodness-fit-MCMC.pdf')
+    plt.savefig(fig_path+f'{identifier}_goodness-fit-MCMC.pdf')
     plt.close()

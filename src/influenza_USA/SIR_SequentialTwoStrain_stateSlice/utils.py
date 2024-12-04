@@ -65,8 +65,8 @@ def initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution='states', a
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
     ## transmission rate
     from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
-    TDPFs['beta1'] = transmission_rate_function(sigma=2)      # initialise TDPF
-    TDPFs['beta2'] = transmission_rate_function(sigma=2)      # initialise TDPF
+    TDPFs['beta1'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
+    TDPFs['beta2'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
     params['delta_beta_temporal'] = np.zeros(10)                # initialise parameter of TDPF
 
     # initalise pySODM model
