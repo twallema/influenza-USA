@@ -39,44 +39,44 @@ start_calibration = datetime(season_start, 10, 15)                              
 end_calibration = datetime(season_start+1, 4, 27)                               # calibration data will be sliced ending on this date
 end_validation = datetime(season_start+1, 5, 1)                                 # alternative: None
 ## frequentist optimization
-n_pso = 1000                                                                    # Number of PSO iterations
+n_pso = 500                                                                    # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
 identifier = 'SequentialTwoStrain_May_simple'                                   # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
-n_mcmc = 1                                                                   # Number of MCMC iterations
+n_mcmc = 500                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                            # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 500                                                                   # Print diagnostics every `print_n`` iterations
-discard = 100                                                                     # Discard first `discard` iterations as burn-in
-thin = 5                                                                        # Thinning factor emcee chains
+discard = 400                                                                     # Discard first `discard` iterations as burn-in
+thin = 10                                                                        # Thinning factor emcee chains
 n = 100                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
-L1_weight = 5
-n_temporal_modifiers = 20
+L1_weight = 10
+n_temporal_modifiers = 10
 
 ## continue run
-run_date = '2024-12-03'                                                         # First date of run
-backend_identifier = 'SequentialTwoStrain_May_simple'
-backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+# run_date = '2024-12-03'                                                         # First date of run
+# backend_identifier = 'SequentialTwoStrain_May_simple'
+# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-# backend_path = None
-# if not backend_path:
-#     # get run date
-#     run_date = datetime.today().strftime("%Y-%m-%d")
-#     # check if samples folder exists, if not, make it
-#     if not os.path.exists(samples_path):
-#         os.makedirs(samples_path)
-#     # start from some ballpark estimates
-#     ## level 0
-#     rho_h = 0.0025
-#     beta1 = 0.0218
-#     beta2 = 0.0222
-#     f_R1_R2 = 0.5
-#     f_R1 = 0.43
-#     f_I1 = 5e-5
-#     f_I2 = 5e-5
-#     ## level 1 
-#     delta_beta_temporal = 0.01
+backend_path = None
+if not backend_path:
+    # get run date
+    run_date = datetime.today().strftime("%Y-%m-%d")
+    # check if samples folder exists, if not, make it
+    if not os.path.exists(samples_path):
+        os.makedirs(samples_path)
+    # start from some ballpark estimates
+    ## level 0
+    rho_h = 0.0025
+    beta1 = 0.0218
+    beta2 = 0.0222
+    f_R1_R2 = 0.5
+    f_R1 = 0.43
+    f_I1 = 5e-5
+    f_I2 = 5e-5
+    ## level 1 
+    delta_beta_temporal = 0.01
 
 ##########################################
 ## Load and format hospitalisation data ##
@@ -186,9 +186,9 @@ if __name__ == '__main__':
         theta = [rho_h, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + n_temporal_modifiers*[delta_beta_temporal,]
 
         # perform optimization 
-        #step = len(objective_function.expanded_bounds)*[0.2,]
-        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-        #                                processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        step = len(objective_function.expanded_bounds)*[0.2,]
+        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+                                        processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
     ######################
     ## Visualize result ##
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     # compute trajectory
     ## get function
     from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
-    f = transmission_rate_function(half_life_days=7, window_size=90, freq='biweekly')
+    f = transmission_rate_function(sigma=2.5)
     ## pre-allocate x and y
     x = pd.date_range(start=start_calibration, end=end_validation, freq='d').tolist()
     y = []
