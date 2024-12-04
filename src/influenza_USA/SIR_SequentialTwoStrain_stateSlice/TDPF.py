@@ -26,7 +26,10 @@ class transmission_rate_function():
     
     @staticmethod
     def smooth_modifier(modifiers, simulation_date, sigma):
-        """ A function to smooth a vector of temporal modifiers with a gaussian filter
+        """
+        A function to smooth a vector of temporal modifiers with a gaussian filter
+        #TODO: vectorise
+        #TODO: frequency
         """
         # Step 1: Expand the vector to daily values; assume 15 days per entry
         expanded_vector = np.repeat(modifiers, 15)
@@ -36,10 +39,10 @@ class transmission_rate_function():
         padded_vector = np.concatenate([padding, expanded_vector, padding])
     
         # Step 3: Apply a gaussian 1D smoother
-        smoothed_series = pd.Series(gaussian_filter1d(padded_vector, sigma=sigma))
+        smoothed_series = gaussian_filter1d(padded_vector, sigma=sigma)
 
         # Step 4: Remove the prepended padding, retain the appended padding
-        trimmed_smoothed_vector = smoothed_series.iloc[31:].values
+        trimmed_smoothed_vector = smoothed_series
 
         # Step 5: Compute the number of days since the last October 1
         year = simulation_date.year
