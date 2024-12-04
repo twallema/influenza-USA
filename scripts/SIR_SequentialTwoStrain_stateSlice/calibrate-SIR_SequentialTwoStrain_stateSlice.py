@@ -25,8 +25,8 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season_start = 2023                     # start of season
-season = '2023-2024'                    # season to calibrate
+season_start = 2016                     # start of season
+season = '2016-2017'                    # season to calibrate
 sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd = False                              # vary contact matrix by daytype
@@ -44,38 +44,38 @@ multiplier_pso = 10                                                             
 ## bayesian inference
 identifier = 'SequentialTwoStrain_May_simple'                                   # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
-n_mcmc = 500                                                                   # Number of MCMC iterations
+n_mcmc = 1000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                            # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 500                                                                   # Print diagnostics every `print_n`` iterations
-discard = 500                                                                     # Discard first `discard` iterations as burn-in
+discard = 800                                                                     # Discard first `discard` iterations as burn-in
 thin = 10                                                                        # Thinning factor emcee chains
 n = 100                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
 L1_weight = 5
 
 ## continue run
-run_date = '2024-12-04'                                                         # First date of run
-backend_identifier = 'SequentialTwoStrain_May_simple'
-backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+# run_date = '2024-12-04'                                                         # First date of run
+# backend_identifier = 'SequentialTwoStrain_May_simple'
+# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-# backend_path = None
-# if not backend_path:
-#     # get run date
-#     run_date = datetime.today().strftime("%Y-%m-%d")
-#     # check if samples folder exists, if not, make it
-#     if not os.path.exists(samples_path):
-#         os.makedirs(samples_path)
-#     # start from some ballpark estimates
-#     ## level 0
-#     rho_h = 0.0025
-#     beta1 = 0.0218
-#     beta2 = 0.0222
-#     f_R1_R2 = 0.5
-#     f_R1 = 0.43
-#     f_I1 = 5e-5
-#     f_I2 = 5e-5
-#     ## level 1 
-#     delta_beta_temporal = 0.01
+backend_path = None
+if not backend_path:
+    # get run date
+    run_date = datetime.today().strftime("%Y-%m-%d")
+    # check if samples folder exists, if not, make it
+    if not os.path.exists(samples_path):
+        os.makedirs(samples_path)
+    # start from some ballpark estimates
+    ## level 0
+    rho_h = 0.0025
+    beta1 = 0.0218
+    beta2 = 0.0222
+    f_R1_R2 = 0.5
+    f_R1 = 0.43
+    f_I1 = 5e-5
+    f_I2 = 5e-5
+    ## level 1 
+    delta_beta_temporal = 0.01
 
 ##########################################
 ## Load and format hospitalisation data ##
@@ -95,18 +95,24 @@ df /= 7
 ####################################################
 
 # load subtype data flu A vs. flu B
-df_subtype = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/subtypes_NC_23-24.csv'), index_col=0, parse_dates=True)
-df_subtype = df_subtype.fillna(50) # assume 50/50 mixed if no data
-df_subtype['fraction_A'] = df_subtype['flu_A'] / (df_subtype['flu_A'] + df_subtype['flu_B']) # compute percent A
-# make a combined dataframe
-df_combined = pd.concat([(df * df_subtype['fraction_A']).fillna(0), (df * (1-df_subtype['fraction_A'])).fillna(0)], axis=1)
-df_combined.columns = ['flu_A', 'flu_B']
+df_subtype = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/subtypes_NC.csv'), index_col=1, parse_dates=True)
+# load right season
+df_subtype = df_subtype[df_subtype['season']==season][['flu_A', 'flu_B']]
+# merge with the epi data
+df_merged = pd.merge(df, df_subtype, how='outer', left_on='date', right_on='date')
+# assume a 50/50 ratio where no subtype data is available
+df_merged = df_merged.fillna(1)
+# compute fraction of Flu A
+df_merged['fraction_A'] = df_merged['flu_A'] / (df_merged['flu_A'] + df_merged['flu_B']) # compute percent A
+# re-ecompute flu A and flu B cases
+df_merged['flu_A'] = df_merged['H_inc'] * df_merged['fraction_A']
+df_merged['flu_B'] = df_merged['H_inc'] * (1-df_merged['fraction_A'])
 # slice out calibration data
-df_calibration = df_combined.loc[slice(start_calibration, end_calibration)]
+df_calibration = df_merged.loc[slice(start_calibration, end_calibration)]
 # replace `end_calibration` None --> datetime
-end_calibration = df_calibration.index.unique().max() + timedelta(days=1)
+end_calibration = df_merged.index.unique().max() + timedelta(days=1)
 # slice out validation data
-df_validation = df_combined.loc[slice(end_calibration, end_validation)]
+df_validation = df_merged.loc[slice(end_calibration, end_validation)]
 
 #####################################################
 ## Load previous sampler and extract last estimate ##
@@ -341,7 +347,6 @@ if __name__ == '__main__':
     ax[3].grid(False)
     ax[3].set_title('Temporal modifiers transmission coefficient')
     ax[3].set_ylabel('$\\Delta \\beta (t)$')
-    ax[3].set_xlabel('Date')
     ## format dates
     ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
     for tick in ax[-1].get_xticklabels():

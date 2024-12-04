@@ -58,7 +58,7 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `FluView_Subtypes_17-18.csv`: Downloaded from FluView: https://www.cdc.gov/fluview/surveillance/2024-week-46.html 
 
-+ `influenza-surveillance-summary_NC_23-24.pdf`: End-of-season report on the 23-24 Influenza season in North Carolina. Of special interest is the figure at the bottom of page 6 titled 'Influenza Positive Tests Reported by PHE Facilities', whose data will be extracted using WebPlotDigitizer. Downloaded from https://flu.ncdhhs.gov/data.htm
++ `influenza-surveillance-summary_NC_xx-xx.pdf`: End-of-season report on the xx-xx Influenza season in North Carolina. Of special interest is the figure at the bottom of page 6 titled 'Influenza Positive Tests Reported by PHE Facilities', whose data will be extracted using WebPlotDigitizer. Downloaded from https://flu.ncdhhs.gov/data.htm
 
 ### initial condition
 
@@ -126,7 +126,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `hospitalisations_per_state.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
 
-+ `subtypes_NC_23-24.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Extracted from `influenza-surveillance-summary_NC_23-24.pdf`. 
++ `subtypes_NC.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. 
 
 ## Conversion
 
