@@ -6,7 +6,6 @@ __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 from functools import lru_cache
 from dateutil.easter import easter
@@ -16,7 +15,6 @@ from datetime import datetime, timedelta
 ## Hierarchal transmission rate ##
 ##################################
 
-from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 
 class transmission_rate_function():
