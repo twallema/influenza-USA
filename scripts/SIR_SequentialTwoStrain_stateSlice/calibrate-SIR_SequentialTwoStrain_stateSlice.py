@@ -25,8 +25,8 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 ##############
 
 # model settings
-season_start = 2023                     # start of season
-season = '2023-2024'                    # season to calibrate
+season_start = 2016                     # start of season
+season = '2016-2017'                    # season to calibrate
 sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd = False                              # vary contact matrix by daytype
@@ -36,13 +36,13 @@ dd = False                              # vary contact matrix by daytype
 state = 'North Carolina'
 ## dates
 start_calibration = datetime(season_start, 10, 15)                              # calibration data will be sliced starting on this date
-end_calibration = datetime(season_start+1, 1, 8)                               # calibration data will be sliced ending on this date
+end_calibration = datetime(season_start+1, 5, 1)                               # calibration data will be sliced ending on this date
 end_validation = datetime(season_start+1, 5, 1)                                 # alternative: None
 ## frequentist optimization
 n_pso = 500                                                                    # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-identifier = 'mid_Dec'                                                          # ID of run
+identifier = 'start_May'                                                          # ID of run
 samples_path=fig_path=f'../../data/interim/calibration/{season}/{identifier}/'  # Path to backend
 n_mcmc = 2000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                            # Total number of Markov chains = number of parameters * multiplier_mcmc
