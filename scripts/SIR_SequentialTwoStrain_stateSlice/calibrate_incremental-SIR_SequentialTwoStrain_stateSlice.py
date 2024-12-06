@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime as datetime
 from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice, name2fips # influenza model
 # pySODM packages
-from pySODM.optimization import nelder_mead
+from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
 from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal_L2, log_prior_uniform
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
@@ -28,13 +28,13 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2017-2018'                                # season to calibrate
+season = '2018-2019'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
 season_start = int(season[0:4])                     # start of season
 start_simulation = datetime(season_start, 10, 15)   # date simulation is started
-L1_weight = 5                                       # Forcing strength on temporal modifiers 
+L1_weight = 1                                       # Forcing strength on temporal modifiers 
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
@@ -43,20 +43,20 @@ start_calibration = datetime(season_start, 12, 15)                              
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
-n_pso = 500                                                                     # Number of PSO iterations
-multiplier_pso = 20                                                             # PSO swarm size
+n_pso = 2000                                                                     # Number of PSO iterations
+multiplier_pso = 50                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 2000                                                                   # Number of MCMC iterations
+n_mcmc = 5000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 2000                                                                  # Print diagnostics every `print_n`` iterations
-discard = 1600                                                                  # Discard first `discard` iterations as burn-in
+print_n = 5000                                                                  # Print diagnostics every `print_n`` iterations
+discard = 4000                                                                  # Discard first `discard` iterations as burn-in
 thin = 100                                                                      # Thinning factor emcee chains
 processes = mp.cpu_count()                                                      # Number of CPUs to use
 n = 200                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
-bounds = [(1e-9,0.006), (0.001,0.06), (0.001,0.06), (0,0.99), (0,1), (1e-8,1e-3), (1e-8,1e-3), (-0.5,0.5)]                              # parameter bounds
+bounds = [(1e-7,0.006), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                              # parameter bounds
 labels = [r'$\rho_{h}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 log_prior_prob_fcn = 7*[log_prior_uniform,] + [log_prior_normal_L2,]                                                                    # prior probability functions
 log_prior_prob_fcn_args = [ bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], (0, stdev,  L1_weight)]        # arguments prior functions
@@ -65,7 +65,7 @@ rho_h = 0.003
 beta1 = beta2 = 0.022
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
-delta_beta_temporal = 0.001
+delta_beta_temporal = 0.01
 
 ##########################################
 ## Load and format hospitalisation data ##
@@ -157,8 +157,10 @@ if __name__ == '__main__':
         theta = [rho_h, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
 
         # perform optimization 
-        step = len(objective_function.expanded_bounds)*[0.2,]
-        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        ## PSO
+        theta = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)[0]
+        ## Nelder-Mead
+        theta = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
                                         processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
         ######################
@@ -310,7 +312,7 @@ if __name__ == '__main__':
         ax[3].grid(False)
         ax[3].set_title('Temporal modifiers transmission coefficient')
         ax[3].set_ylabel('$\\Delta \\beta (t)$')
-        ax[3].set_ylim([0.85,1.15])
+        ax[3].set_ylim([0.70,1.30])
         ## format dates
         ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
         for tick in ax[-1].get_xticklabels():
