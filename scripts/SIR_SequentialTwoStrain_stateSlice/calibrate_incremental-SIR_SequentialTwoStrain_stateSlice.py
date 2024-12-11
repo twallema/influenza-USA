@@ -28,7 +28,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2018-2019'                                # season to calibrate
+season = '2023-2024'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -43,16 +43,16 @@ start_calibration = datetime(season_start, 12, 15)                              
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
-n_pso = 2000                                                                     # Number of PSO iterations
+n_pso = 3000                                                                     # Number of PSO iterations
 multiplier_pso = 50                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 5000                                                                   # Number of MCMC iterations
+n_mcmc = 20000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 5000                                                                  # Print diagnostics every `print_n`` iterations
-discard = 4000                                                                  # Discard first `discard` iterations as burn-in
-thin = 100                                                                      # Thinning factor emcee chains
+print_n = 20000                                                                  # Print diagnostics every `print_n`` iterations
+discard = 15000                                                                  # Discard first `discard` iterations as burn-in
+thin = 500                                                                      # Thinning factor emcee chains
 processes = mp.cpu_count()                                                      # Number of CPUs to use
-n = 200                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n = 600                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
@@ -62,7 +62,7 @@ log_prior_prob_fcn = 7*[log_prior_uniform,] + [log_prior_normal_L2,]            
 log_prior_prob_fcn_args = [ bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], (0, stdev,  L1_weight)]        # arguments prior functions
 ## starting guestimate NM
 rho_h = 0.003
-beta1 = beta2 = 0.022
+beta1 = beta2 = 0.02
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
 delta_beta_temporal = 0.01
@@ -79,6 +79,17 @@ df = df[((df['season_start'] == str(season_start)) & (df['location'] == name2fip
 df = df.set_index('date').squeeze()
 # convert to daily incidence
 df /= 7
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# load north carolina dataset
+df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/hosp_admissions_15_24.csv'), index_col=0, parse_dates=True)[['Influenza']].squeeze()
+# convert to daily incidence
+df /= 7
+# slice out `start_calibration` --> `end_calibration`
+df = df.loc[slice(start_simulation, end_calibration)]
+# rename to H_inc
+df = df.rename('H_inc')
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ####################################################
 ## Make a flu A vs. flu B hospitalisation dataset ##
@@ -134,7 +145,7 @@ if __name__ == '__main__':
 
         # split data in calibration and validation dataset
         df_calib = df_calibration.loc[slice(start_simulation, end_date)]
-        df_valid = df_calibration.loc[slice(end_date+timedelta(days=1), end_calibration)]
+        df_valid = df_calibration.loc[slice(end_date+timedelta(days=1), end_validation)]
 
         # prepare data-related arguments of posterior probability
         data = [df_calib['flu_A'], df_calib['flu_B']]
@@ -158,7 +169,7 @@ if __name__ == '__main__':
 
         # perform optimization 
         ## PSO
-        theta = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)[0]
+        #theta = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)[0]
         ## Nelder-Mead
         theta = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
                                         processes=1, max_iter=n_pso, no_improv_break=1000)[0]
@@ -211,7 +222,7 @@ if __name__ == '__main__':
         ##########
 
         # Perturbate previously obtained estimate
-        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
+        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.50*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
                 'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -251,6 +262,10 @@ if __name__ == '__main__':
         # Add sampling noise
         out = add_poisson_noise(out)
 
+        # Save as a .csv
+        df = out.to_dataframe().reset_index()
+        df.to_csv(samples_path+f'{identifier}_simulation-output.csv', index=False)
+
         # Construct delta_beta_temporal trajectory
         # ----------------------------------------
 
@@ -282,10 +297,13 @@ if __name__ == '__main__':
             ax[0].scatter(x_validation_data, 7*(df_valid['flu_A'] + df_valid['flu_B']), color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
         ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
+                            7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+        ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
+                            7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
         ax[0].grid(False)
         ax[0].set_title(f'{state} (Overall)')
         ax[0].set_ylabel('Weekly hospital inc. (-)')
+        ax[0].set_ylim([0,3500])
         ## Flu A
         ax[1].scatter(x_calibration_data, 7*df_calib['flu_A'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
@@ -302,7 +320,7 @@ if __name__ == '__main__':
             ax[2].scatter(x_validation_data, 7*df_valid['flu_B'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         ax[2].plot(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
         ax[2].fill_between(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
+                            7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)        
         ax[2].grid(False)
         ax[2].set_title('Influenza B')
         ax[2].set_ylabel('Weekly hospital inc. (-)')
