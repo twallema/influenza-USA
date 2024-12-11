@@ -46,17 +46,17 @@ end_validation = datetime(season_start+1, 5, 1)                                 
 n_pso = 3000                                                                     # Number of PSO iterations
 multiplier_pso = 50                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 20000                                                                   # Number of MCMC iterations
+n_mcmc = 30000                                                                   # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 20000                                                                  # Print diagnostics every `print_n`` iterations
-discard = 15000                                                                  # Discard first `discard` iterations as burn-in
-thin = 500                                                                      # Thinning factor emcee chains
+print_n = 30000                                                                  # Print diagnostics every `print_n`` iterations
+discard = 10000                                                                  # Discard first `discard` iterations as burn-in
+thin = 1000                                                                      # Thinning factor emcee chains
 processes = mp.cpu_count()                                                      # Number of CPUs to use
-n = 600                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n = 1000                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
-bounds = [(1e-7,0.006), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                              # parameter bounds
+bounds = [(1e-6,0.005), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                     # parameter bounds
 labels = [r'$\rho_{h}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 log_prior_prob_fcn = 7*[log_prior_uniform,] + [log_prior_normal_L2,]                                                                    # prior probability functions
 log_prior_prob_fcn_args = [ bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], (0, stdev,  L1_weight)]        # arguments prior functions
@@ -295,7 +295,7 @@ if __name__ == '__main__':
         ax[0].scatter(x_calibration_data, 7*(df_calib['flu_A'] + df_calib['flu_B']), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
             ax[0].scatter(x_validation_data, 7*(df_valid['flu_A'] + df_valid['flu_B']), color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+        #ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).median(dim='draws'), color='blue', alpha=0.8, linewidth=1, linestyle=':')
         ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
                             7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
         ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
@@ -308,9 +308,11 @@ if __name__ == '__main__':
         ax[1].scatter(x_calibration_data, 7*df_calib['flu_A'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
             ax[1].scatter(x_validation_data, 7*df_valid['flu_A'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[1].plot(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+        #ax[1].plot(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']).median(dim='draws'), color='blue', alpha=0.8, linewidth=1, linestyle=':')
         ax[1].fill_between(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)
+                            7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+        ax[1].fill_between(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
+                            7*out['H1_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
         ax[1].grid(False)
         ax[1].set_title('Influenza A')
         ax[1].set_ylabel('Weekly hospital inc. (-)')
@@ -318,9 +320,11 @@ if __name__ == '__main__':
         ax[2].scatter(x_calibration_data, 7*df_calib['flu_B'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
             ax[2].scatter(x_validation_data, 7*df_valid['flu_B'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[2].plot(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).mean(dim='draws'), color='blue', alpha=1, linewidth=2)
+        #ax[2].plot(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).median(dim='draws'), color='blue', alpha=0.8, linewidth=1, linestyle=':')
         ax[2].fill_between(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.2)        
+                            7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+        ax[2].fill_between(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
+                            7*out['H2_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
         ax[2].grid(False)
         ax[2].set_title('Influenza B')
         ax[2].set_ylabel('Weekly hospital inc. (-)')
