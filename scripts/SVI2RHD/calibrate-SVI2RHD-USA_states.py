@@ -13,7 +13,8 @@ import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.SVI2RHD.utils import initialise_SVI2RHD, fips2name # influenza model
+from influenza_USA.SVI2RHD.utils import initialise_SVI2RHD
+from influenza_USA.shared.utils import fips2name
 # pySODM packages
 from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import assign_theta
@@ -52,37 +53,37 @@ thin = 1                                                                        
 n = 500                                                                         # Repeated simulations used in visualisations
 processes = 16                                                                  # Retrieve CPU count
 ## hierarchal hyperparameters                                                       
-L1_weight = 2
+L1_weight = 1
 rel_weight_level2 = 2
 n_regions = 9
 n_states = 52
 n_temporal_modifiers = 10
 
 ## continue run
-run_date = '2024-11-25'                                                         # First date of run
-backend_identifier = 'USA_regions_hierarchal_midFeb-waning'
-backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
+# run_date = '2024-11-25'                                                         # First date of run
+# backend_identifier = 'USA_regions_hierarchal_midFeb-waning'
+# backend_path = f"../../data/interim/calibration/{season}/{backend_identifier}/{backend_identifier}_BACKEND_{run_date}.hdf5"
 ## new run
-# backend_path = None
-# if not backend_path:
-#     # get run date
-#     run_date = datetime.today().strftime("%Y-%m-%d")
-#     # check if samples folder exists, if not, make it
-#     if not os.path.exists(samples_path):
-#         os.makedirs(samples_path)
-#     # set some ballpark national estimates
-#     beta_US = 0.035
-#     delta_beta_regions = 0.01
-#     delta_beta_states = 0.01
-#     delta_beta_temporal = 0.01
-#     delta_beta_spatiotemporal = 0.01
-#     f_R = 0.50
-#     delta_f_R_states = 0.01
-#     delta_f_R_regions = 0.01
-#     T_r_US = 365/np.log(2)
-#     delta_T_r_regions = 0.01
-#     rho_h = 0.0026
-#     f_I = 2e-4
+backend_path = None
+if not backend_path:
+    # get run date
+    run_date = datetime.today().strftime("%Y-%m-%d")
+    # check if samples folder exists, if not, make it
+    if not os.path.exists(samples_path):
+        os.makedirs(samples_path)
+    # set some ballpark national estimates
+    beta_US = 0.035
+    delta_beta_regions = 0.01
+    delta_beta_states = 0.01
+    delta_beta_temporal = 0.01
+    delta_beta_spatiotemporal = 0.01
+    f_R = 0.50
+    delta_f_R_states = 0.01
+    delta_f_R_regions = 0.01
+    T_r_US = 365/np.log(2)
+    delta_T_r_regions = 0.01
+    rho_h = 0.0026
+    f_I = 2e-4
 
 ###############################
 ## Load hospitalisation data ##
@@ -193,9 +194,9 @@ if __name__ == '__main__':
                     n_regions*[delta_beta_regions,] + n_temporal_modifiers*[delta_beta_temporal,] + n_regions*[delta_f_R_states,] + n_regions*[delta_T_r_regions,] + \
                         n_states * [delta_beta_states,] + n_states * [delta_f_R_states,] + (n_regions*n_temporal_modifiers)*[delta_beta_spatiotemporal,]
         # perform optimization 
-        step = len(objective_function.expanded_bounds)*[0.2,]
-        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                  processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        #step = len(objective_function.expanded_bounds)*[0.2,]
+        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        #                                processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
     ######################
     ## Visualize result ##

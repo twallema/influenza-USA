@@ -1,5 +1,5 @@
 """
-This script calibrates an age-stratified two-strain sequential infection model for Influenza in a US state using pySODM
+This script calibrates an age-stratified spatially-explicit two-strain sequential infection SIR model to North Carolina hospital admission data
 It automatically calibrates to incrementally larger datasets between `start_calibration` and `end_calibration`
 """
 
@@ -15,7 +15,8 @@ import multiprocessing as mp
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice, name2fips # influenza model
+from influenza_USA.shared.utils import name2fips
+from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
@@ -39,20 +40,20 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 15)                              # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
+start_calibration = datetime(season_start, 12, 15)                              # incremental calibration will start from here..
+end_calibration = datetime(season_start, 12, 18)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
-n_pso = 3000                                                                     # Number of PSO iterations
+n_pso = 2000                                                                    # Number of PSO iterations
 multiplier_pso = 50                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 30000                                                                   # Number of MCMC iterations
+n_mcmc = 20000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 30000                                                                  # Print diagnostics every `print_n`` iterations
-discard = 10000                                                                  # Discard first `discard` iterations as burn-in
-thin = 1000                                                                      # Thinning factor emcee chains
+print_n = 20000                                                                 # Print diagnostics every `print_n`` iterations
+discard = 10000                                                                 # Discard first `discard` iterations as burn-in
+thin = 10                                                                       # Thinning factor emcee chains
 processes = mp.cpu_count()                                                      # Number of CPUs to use
-n = 1000                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
@@ -71,25 +72,14 @@ delta_beta_temporal = 0.01
 ## Load and format hospitalisation data ##
 ##########################################
 
-# load dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/hosp-admissions_FluSurvNet_USA_09-24.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
-# slice right season (and state; if applicable)
-df = df[((df['season_start'] == str(season_start)) & (df['location'] == name2fips(state)))][['date', 'H_inc']]
-# set date as index --> this is a pySODM requirement
-df = df.set_index('date').squeeze()
-# convert to daily incidence
-df /= 7
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # load north carolina dataset
 df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/hosp-admissions_NC_15-24.csv'), index_col=0, parse_dates=True)[['Influenza']].squeeze()
 # convert to daily incidence
 df /= 7
-# slice out `start_calibration` --> `end_calibration`
-df = df.loc[slice(start_simulation, end_calibration)]
+# slice out `start_calibration` --> `end_validation`
+df = df.loc[slice(start_simulation, end_validation)]
 # rename to H_inc
 df = df.rename('H_inc')
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ####################################################
 ## Make a flu A vs. flu B hospitalisation dataset ##
@@ -115,7 +105,7 @@ incremental_enddates = df_calibration.loc[slice(start_calibration, end_calibrati
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution=sr, age_resolution=ar, state=state, season=season, distinguish_daytype=dd)
+model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
 
 #####################
 ## Calibrate model ##
@@ -181,7 +171,7 @@ if __name__ == '__main__':
         # Assign results to model
         model.parameters = assign_theta(model.parameters, pars, theta)
         # Simulate model
-        out = model.sim([start_simulation, end_calibration])
+        out = model.sim([start_simulation, end_validation])
         # Visualize
         fig, ax = plt.subplots(3, 1, sharex=True, figsize=(8.3, 11.7/5*3))
         props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
@@ -256,7 +246,7 @@ if __name__ == '__main__':
             return parameters
         
         # Simulate model
-        out = model.sim([start_simulation, end_calibration], N=n,
+        out = model.sim([start_simulation, end_validation], N=n,
                             draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
         
         # Add sampling noise
@@ -270,7 +260,7 @@ if __name__ == '__main__':
         # ----------------------------------------
 
         # get function
-        from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
+        from influenza_USA.SIR_SequentialTwoStrain.TDPF import transmission_rate_function
         f = transmission_rate_function(sigma=2.5)
         # pre-allocate output
         y = []
@@ -279,9 +269,9 @@ if __name__ == '__main__':
         x = pd.date_range(start=start_simulation, end=end_validation, freq='d').tolist()
         # compute output
         for d in x:
-            y.append(f(d, {}, 1, np.mean(np.array(samples_dict['delta_beta_temporal']), axis=1)))
-            lower.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=0.05/2, axis=1)))
-            upper.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=1-0.05/2, axis=1)))
+            y.append(f(d, {}, 1, np.mean(np.array(samples_dict['delta_beta_temporal']), axis=1))[0])
+            lower.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=0.05/2, axis=1))[0])
+            upper.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=1-0.05/2, axis=1))[0])
 
         # Build figure
         # ------------

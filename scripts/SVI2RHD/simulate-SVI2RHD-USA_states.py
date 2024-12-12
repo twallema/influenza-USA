@@ -5,9 +5,6 @@ This script simulates an age-stratified, spatially-explicit SVI2HRD model for th
 __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
-import os
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime 
 from influenza_USA.SVI2RHD.utils import initialise_SVI2RHD # influenza model
@@ -42,5 +39,7 @@ out = model.sim([start_sim, end_sim])
 fig, ax = plt.subplots(2, 1, figsize=(8.3, 11.7/2))
 ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
 ax[1].plot(out['date'], out['V'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
+ax[0].set_ylabel('Model state "H_inc"')
+ax[1].set_ylabel('Model state "V"')
 plt.show()
 plt.close()

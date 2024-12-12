@@ -1,15 +1,14 @@
 """
-This script simulates an age-stratified, spatially-explicit two-strain sequential infection model for Influenza in a US state using pySODM
+This script simulates an age-stratified spatially-explicit two-strain sequential infection SIR model in North Carolina
 """
 
 __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
-import numpy as np
-import pandas as pd
+
 import matplotlib.pyplot as plt
 from datetime import datetime 
-from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice # influenza model
+from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain # influenza model
 
 ##############
 ## Settings ##
@@ -18,7 +17,7 @@ from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SI
 # model settings
 start_sim = datetime(2014, 11, 1)
 end_sim = datetime(2015, 5, 1)
-season = '2014-2015'                    # '2017-2018' or '2019-2020'
+state = 'north carolina'                # simulated US state
 sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd =  False                               # vary contact matrix by daytype
@@ -27,7 +26,7 @@ dd =  False                               # vary contact matrix by daytype
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution=sr, age_resolution=ar, state='north carolina', season=season, distinguish_daytype=dd)
+model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state='north carolina', season='average', distinguish_daytype=dd)
 
 ######################
 ## Visualize result ##
