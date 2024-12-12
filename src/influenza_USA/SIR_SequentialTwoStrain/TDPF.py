@@ -1,5 +1,5 @@
 """
-This script contains the time-dependent parameter functions associated with the age-stratified spatially-explicit SIR model for use with pySODM.
+This script contains the time-dependent parameter functions associated with the age-stratified spatially-explicit two-strain sequential infection SIR model
 """
 
 __author__      = "Tijs Alleman"

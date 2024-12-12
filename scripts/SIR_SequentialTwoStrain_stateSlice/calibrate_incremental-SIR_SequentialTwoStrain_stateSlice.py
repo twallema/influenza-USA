@@ -105,7 +105,7 @@ incremental_enddates = df_calibration.loc[slice(start_calibration, end_calibrati
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state=state, season=season, distinguish_daytype=dd)
+model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
 
 #####################
 ## Calibrate model ##

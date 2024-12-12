@@ -21,6 +21,7 @@ def initialise_SIR(spatial_resolution='states', age_resolution='full', distingui
 
     input
     -----
+    
     spatial_resolution: str
         'collapsed', 'states' or 'counties'. 
 

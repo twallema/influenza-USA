@@ -1,5 +1,5 @@
 """
-This script contains usefull functions for the pySODM US Influenza model
+This script contains usefull functions for the age-stratified spatially-explicit two-strain sequential infection SIR model
 """
 
 __author__      = "Tijs Alleman"
@@ -13,8 +13,35 @@ from influenza_USA.shared.utils import construct_coordinates_dictionary, name2fi
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resolution='full', state=None, season='2017-2018', distinguish_daytype=True):
+def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resolution='full', state=None, season='average', distinguish_daytype=True):
+    """
+    Initialises a two-strain sequential infection model. Optionally simulate a single state.
 
+    input
+    -----
+
+    spatial_resolution: str
+        'collapsed', 'states' or 'counties'. 
+
+    age_resolution: str
+        'collapsed' or 'full'. 
+
+    state: str
+        valid US state name.
+
+    season: str
+        influenza season. used to set the model's U-shaped severity curve.
+        
+    distinguish_daytype: bool
+        Differ contacts by weekday, weekendday and holiday.
+
+    output
+    ------
+
+    model: pySODM model
+        Initialised pySODM two-strain sequential infection SIR model
+    """
+    
     # model works at US state or county level
     if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
         raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
@@ -41,7 +68,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
             'beta2': 0.028*np.ones(G),                                                                                              # infectivity strain 2 (-)
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
-            'CHR': compute_case_hospitalisation_rate('average', age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
+            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                     # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
             'rho_h': 0.001,                                                                                                         # hospitalised fraction (source: Josh)
             # initial condition function

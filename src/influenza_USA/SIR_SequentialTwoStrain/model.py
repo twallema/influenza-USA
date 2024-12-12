@@ -1,5 +1,5 @@
 """
-This script contains an age-stratified spatially-explicit SIR model with a vaccine state for use with pySODM.
+This script contains the integration function of an age-stratified spatially-explicit two-strain sequential infection SIR model.
 """
 
 __author__      = "Tijs Alleman"

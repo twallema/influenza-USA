@@ -17,7 +17,7 @@ from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_Sequentia
 # model settings
 start_sim = datetime(2014, 11, 1)
 end_sim = datetime(2015, 5, 1)
-season = '2014-2015'                    # '2017-2018' or '2019-2020'
+state = 'north carolina'                # simulated US state
 sr = 'states'                           # spatial resolution: 'states' or 'counties'
 ar = 'full'                             # age resolution: 'collapsed' or 'full'
 dd =  False                               # vary contact matrix by daytype
@@ -26,7 +26,7 @@ dd =  False                               # vary contact matrix by daytype
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state='north carolina', season=season, distinguish_daytype=dd)
+model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state='north carolina', season='average', distinguish_daytype=dd)
 
 ######################
 ## Visualize result ##
