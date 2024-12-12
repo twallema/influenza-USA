@@ -423,4 +423,66 @@ def fips2name(fips_code):
     else:
         lu = df[((df['fips_state'] == fips_state) & (df['fips_county'] == fips_county))][['name_state', 'name_county']]
         return lu['name_state'].values[0], lu['name_county'].values[0]
-    
+
+
+from datetime import datetime
+from scipy.ndimage import gaussian_filter1d
+def smooth_modifier(modifier_vector, simulation_date, sigma):
+    """
+    A function returning the value of a temporal modifier on `simulation_date` after smoothing with a gaussian filter
+
+    input
+    -----
+
+    modifier_vector: np.ndarray
+        1D numpy array. Each entry represents a value of the modifier in a time interval.
+        Time intervals are set up so that Nov 1 to Apr 1 is divided into len(modifier_vector) timeperiods.
+
+    simulation_date: datetime
+        current simulation date
+
+    sigma: float
+        smoother standard deviation. higher values represent more smooth trajectories.
+
+    output
+    ------
+
+    smooth_modifier_t: float
+        smoothed modifier at `simulation_date`
+    """
+
+    # Define number of days between Nov 1 and Apr 1
+    num_days = 152
+
+    # Step 1: Project the input vector on the right knots 
+    ## Calculate the positions for each interval
+    interval_size = num_days / len(modifier_vector)
+    expanded_vector = np.zeros(num_days)
+    ## Project the input values onto the output
+    for i in range(len(modifier_vector)):
+        start = int(i * interval_size)
+        end = int((i + 1) * interval_size) if i != len(modifier_vector) - 1 else num_days  # Ensure last interval includes all remaining days
+        expanded_vector[start:end] = modifier_vector[i]
+
+    # Step 2: Prepend and append 31 days of ones
+    padded_vector = np.concatenate([np.ones(31), expanded_vector, np.ones(31)])
+
+    # Step 3: Apply a gaussian 1D smoother
+    smoothed_series = gaussian_filter1d(padded_vector, sigma=sigma)
+
+    # Step 4: Compute the number of days since the last October 1
+    year = simulation_date.year
+    # Compute the last October 1
+    oct1_this_year = datetime(year, 10, 1)
+    if simulation_date >= oct1_this_year:
+        last_oct1 = oct1_this_year
+    else:
+        last_oct1 = datetime(year - 1, 10, 1)
+    # Calculate the difference in days
+    days_difference = (simulation_date - last_oct1).days
+
+    # Step 6: Get the right smoothed value
+    try:
+        return smoothed_series[days_difference]
+    except:
+        return 1
