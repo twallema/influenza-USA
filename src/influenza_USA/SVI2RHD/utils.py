@@ -167,7 +167,7 @@ def compute_case_hospitalisation_rate(season, age_resolution):
     """
 
     # get case hospitalisation rates published by CDC
-    CDC_estimated_hosp = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/cases/CDC_hosp-rate-age_2010-2023.csv'),
+    CDC_estimated_hosp = pd.read_csv(os.path.join(abs_dir, '../../../data/interim/cases/hosp-rate-age_CDC_USA_10-23.csv'),
                                         dtype={'season': str, 'age': str, 'hospitalisation_rate': float})
 
     # check input season

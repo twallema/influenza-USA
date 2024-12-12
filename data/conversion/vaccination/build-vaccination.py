@@ -9,7 +9,6 @@ A script to convert the raw vaccination data from 2010-2024 in a format more sui
 ############################
 
 import os
-from datetime import datetime
 import numpy as np
 import pandas as pd
 

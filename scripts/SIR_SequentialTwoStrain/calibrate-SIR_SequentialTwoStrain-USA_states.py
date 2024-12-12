@@ -92,7 +92,7 @@ if not backend_path:
 ##########################################
 
 # load dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/hospitalisations_per_state.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
+df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/hosp-admissions_FluSurvNet_USA_09-24.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
 # slice right season
 df = df[df['season_start'] == str(season_start)][['date', 'location', 'H_inc']]
 # set a multiindex: 'date' + 'location' --> pySODM will align 'location' with model

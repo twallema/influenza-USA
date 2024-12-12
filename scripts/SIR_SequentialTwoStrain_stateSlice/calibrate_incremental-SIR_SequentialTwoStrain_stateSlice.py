@@ -72,7 +72,7 @@ delta_beta_temporal = 0.01
 ##########################################
 
 # load dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/hospitalisations_per_state.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
+df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/hosp-admissions_FluSurvNet_USA_09-24.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
 # slice right season (and state; if applicable)
 df = df[((df['season_start'] == str(season_start)) & (df['location'] == name2fips(state)))][['date', 'H_inc']]
 # set date as index --> this is a pySODM requirement
@@ -82,7 +82,7 @@ df /= 7
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # load north carolina dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/hosp_admissions_15_24.csv'), index_col=0, parse_dates=True)[['Influenza']].squeeze()
+df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/hosp-admissions_NC_15-24.csv'), index_col=0, parse_dates=True)[['Influenza']].squeeze()
 # convert to daily incidence
 df /= 7
 # slice out `start_calibration` --> `end_calibration`
@@ -96,7 +96,7 @@ df = df.rename('H_inc')
 ####################################################
 
 # load subtype data flu A vs. flu B
-df_subtype = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/subtypes_NC.csv'), index_col=1, parse_dates=True)
+df_subtype = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/subtypes_NC_14-24.csv'), index_col=1, parse_dates=True)
 # load right season
 df_subtype = df_subtype[df_subtype['season']==season][['flu_A', 'flu_B']]
 # merge with the epi data
