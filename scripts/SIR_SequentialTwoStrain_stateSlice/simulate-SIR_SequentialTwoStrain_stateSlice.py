@@ -5,8 +5,7 @@ This script simulates an age-stratified, spatially-explicit two-strain sequentia
 __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
-import numpy as np
-import pandas as pd
+
 import matplotlib.pyplot as plt
 from datetime import datetime 
 from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice # influenza model

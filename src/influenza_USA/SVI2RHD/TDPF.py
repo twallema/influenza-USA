@@ -242,16 +242,17 @@ class make_vaccination_function():
 ## Initial condition function ##
 ################################
 
-from influenza_USA.SVI2RHD.utils import construct_initial_susceptible, get_cumulative_vaccinated, get_vaccination_data, convert_vaccination_data, get_spatial_mappings
+from influenza_USA.shared.utils import construct_initial_susceptible
+from influenza_USA.SVI2RHD.utils import get_cumulative_vaccinated, get_vaccination_data, convert_vaccination_data, get_spatial_mappings
 class make_initial_condition_function():
 
-    def __init__(self, spatial_resolution, age_resolution, start_sim, season):
+    def __init__(self, spatial_resolution, age_resolution, spatial_coordinates, start_sim, season):
         # retrieve the vaccination data
         vaccination_data = get_vaccination_data()
         # convert the vaccination data to the right age and spatial resolution
         vaccination_data = convert_vaccination_data(vaccination_data, spatial_resolution, age_resolution)
         # retrieve the demography (susceptible pool)
-        self.demography = construct_initial_susceptible(spatial_resolution, age_resolution)
+        self.demography = construct_initial_susceptible(spatial_resolution, age_resolution, spatial_coordinates)
         # retrieve the cumulative vaccinated individuals at `start_sim` in `season`
         self.vaccinated = get_cumulative_vaccinated(start_sim, season, vaccination_data)
         # retrieve region/state --> state/county parameter  mapping

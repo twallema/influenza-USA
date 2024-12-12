@@ -13,7 +13,8 @@ import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.SVI2RHD.utils import initialise_SVI2RHD, fips2name # influenza model
+from influenza_USA.SVI2RHD.utils import initialise_SVI2RHD
+from influenza_USA.shared.utils import fips2name
 # pySODM packages
 from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import assign_theta
@@ -195,7 +196,7 @@ if __name__ == '__main__':
         # perform optimization 
         step = len(objective_function.expanded_bounds)*[0.2,]
         theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                  processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+                                        processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
     ######################
     ## Visualize result ##

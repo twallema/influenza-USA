@@ -6,10 +6,7 @@ __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
 import numpy as np
-import tensorflow as tf
-from functools import lru_cache
-from dateutil.easter import easter
-from datetime import datetime, timedelta
+from datetime import datetime
 
 ##################################
 ## Hierarchal transmission rate ##
@@ -106,21 +103,31 @@ class transmission_rate_function():
 ## Initial condition function ##
 ################################
 
-from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import construct_initial_susceptible, get_spatial_mappings
+from influenza_USA.shared.utils import construct_initial_susceptible
 class make_initial_condition_function():
 
     def __init__(self, spatial_resolution, age_resolution, spatial_coordinates):
         # retrieve the demography (susceptible pool)
         self.demography = construct_initial_susceptible(spatial_resolution, age_resolution, spatial_coordinates)
-        # retrieve region/state --> state/county parameter  mapping
-        self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
 
     def initial_condition_function(self, f_I1, f_I2, f_R1_R2, f_R1):
         """
-        A function setting the model's initial condition. Uses a hierarchal structure for the initial immunity.
+        A function setting the model's initial condition.
         
         input
         -----
+
+        f_I1: float
+            Fraction of the population infected with strain 1.
+        
+        f_I2: float
+            Fraction of the population infected with strain 2.
+
+        f_R1_R2: float
+            Fraction of the population with immunity to either strain 1 and strain 2 (= f_R1 + f_R2).
+        
+        f_R1: float
+            Fraction of f_R1_R2 with immunity to strain 1.
 
         output
         ------
@@ -135,7 +142,7 @@ class make_initial_condition_function():
         f_R1 = f_R1 * f_R1_R2
 
         return {'S':  (1 - f_I1 - f_I2 - f_R1 - f_R2) * self.demography,
-                'I1': 0.5 * f_I1 * self.demography,     # assumption 50/50 I1 versus I21
+                'I1': 0.5 * f_I1 * self.demography,     # assumption: split f_I1 50/50 between states I1/I21; idem strain 2
                 'I2': 0.5 * f_I2 * self.demography,
                 'R1': f_R1 * self.demography,
                 'R2': f_R2 * self.demography,

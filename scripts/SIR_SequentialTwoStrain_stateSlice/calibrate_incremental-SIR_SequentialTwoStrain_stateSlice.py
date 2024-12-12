@@ -15,7 +15,8 @@ import multiprocessing as mp
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice, name2fips # influenza model
+from influenza_USA.shared.utils import name2fips
+from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
@@ -71,16 +72,6 @@ delta_beta_temporal = 0.01
 ## Load and format hospitalisation data ##
 ##########################################
 
-# load dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/hosp-admissions_FluSurvNet_USA_09-24.csv'), index_col=1, parse_dates=True, dtype={'season_start': str, 'location': str}).reset_index()
-# slice right season (and state; if applicable)
-df = df[((df['season_start'] == str(season_start)) & (df['location'] == name2fips(state)))][['date', 'H_inc']]
-# set date as index --> this is a pySODM requirement
-df = df.set_index('date').squeeze()
-# convert to daily incidence
-df /= 7
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # load north carolina dataset
 df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/hosp-admissions_NC_15-24.csv'), index_col=0, parse_dates=True)[['Influenza']].squeeze()
 # convert to daily incidence
@@ -89,7 +80,6 @@ df /= 7
 df = df.loc[slice(start_simulation, end_calibration)]
 # rename to H_inc
 df = df.rename('H_inc')
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ####################################################
 ## Make a flu A vs. flu B hospitalisation dataset ##
