@@ -8,97 +8,69 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import os
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from datetime import datetime as datetime
 
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', season='2017-2018', vaccine_waning='off',
-                       distinguish_daytype=True, start_sim=datetime(2024,8,1)):
+def initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution='states', age_resolution='full', state=None, season='2017-2018', distinguish_daytype=True):
 
     # model works at US state or county level
     if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
         raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
 
     # load model object
-    from influenza_USA.SVI2RHD.model import ODE_SVI2RHD as SVI2RHD
+    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.model import ODE_SIR_SequentialTwoStrain as SIR_SequentialTwoStrain
 
     # construct coordinates
     N, G, coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
 
+    # slice state out of the coordinates
+    if state:
+        # get fips code (performs checks)
+        fips = name2fips(state)
+        # extract coordinates
+        coordinates['location'] = [coord for coord in coordinates['location'] if coord[0:2] == fips[0:2]]
+        # update spatial dimension size
+        G = len(coordinates['location'])
+
     # define parameters
     params = {
             # core parameters
-            'beta': 0.03*np.ones(G),                                                                                                # infectivity (-)
-            'f_v': 0.5,                                                                                                             # fraction of total contacts on visited patch
+            'beta1': 0.028*np.ones(G),                                                                                              # infectivity strain 1 (-)
+            'beta2': 0.028*np.ones(G),                                                                                              # infectivity strain 2 (-)
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
-            'M': get_mobility_matrix(spatial_resolution=spatial_resolution, dataset='cellphone_03092020'),                          # origin-destination mobility matrix          
-            'n_vacc': np.zeros(shape=(N, G),dtype=np.float64),                                                                      # vaccination incidence (dummy)
-            'e_i': 0.2,                                                                                                             # vaccine efficacy against infection
-            'e_h': 0.5,                                                                                                             # vaccine efficacy against hospitalisation
-            'T_r': 365/np.log(2),                                                                                                   # average time to waning of natural immunity
-            'T_v': 10*365,                                                                                                          # average time to waning of vaccine immunity
-            'rho_h': 0.014,                                                                                                         # hospitalised fraction (source: Josh)
-            'T_h': 3.5,                                                                                                             # average time to hospitalisation (= length infectious period, source: Josh)
-            'rho_d': 0.06,                                                                                                          # deceased in hospital fraction (source: Josh)
-            'T_d': 5.0,                                                                                                             # average time to hospital outcome (source: Josh)
-            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
-            # time-dependencies
-            'vaccine_incidence_modifier': 1.0,                                                                                      # used to modify vaccination incidence
-            'vaccine_incidence_timedelta': 0,                                                                                       # shift the vaccination season
-            # initial condition function
-            'f_I': 1e-4,                                                                                                            # initial fraction of infected
-            'f_R': 0.5,                                                                                                             # initial fraction of recovered (USA)
+            'T_r': 3.5,                                                                                                             # average time to recovery 
+            'CHR': compute_case_hospitalisation_rate('average', age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
-            'asc_case': 0.004,
+            'rho_h': 0.001,                                                                                                         # hospitalised fraction (source: Josh)
+            # initial condition function
+            'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
+            'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
+            'f_R1_R2': 0.75,                                                                                                        # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
+            'f_R1': 0.45,                                                                                                           # fraction of f_R1_R2 recovered from strain 1
             }
     
-    # vaccine waning on/off
-    if vaccine_waning == 'on':
-        params.update({'e_i': 0.2, 'e_h': 0.75, 'T_v': 365/2})
-
     # initial condition function
-    from influenza_USA.SVI2RHD.TDPF import make_initial_condition_function
-    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, start_sim, season).initial_condition_function
-    params.update({
-        'delta_f_R_regions': np.zeros(9),
-        'delta_f_R_states': np.zeros(52),        
-    })
+    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import make_initial_condition_function
+    initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location']).initial_condition_function
                                                                                  
     # time-dependencies
     TDPFs = {}
     ## contacts
     if distinguish_daytype:
-        from influenza_USA.SVI2RHD.TDPF import make_contact_function
+        from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import make_contact_function
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
-    ## vaccine uptake
-    from influenza_USA.SVI2RHD.TDPF import make_vaccination_function
-    TDPFs['n_vacc'] = make_vaccination_function(season, spatial_resolution, age_resolution).vaccination_function
+    ## transmission rate
+    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
+    TDPFs['beta1'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
+    TDPFs['beta2'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
+    params['delta_beta_temporal'] = np.zeros(10)                # initialise parameter of TDPF
 
-    ## hierarchal transmission rate
-    from influenza_USA.SVI2RHD.TDPF import hierarchal_transmission_rate_function
-    TDPFs['beta'] = hierarchal_transmission_rate_function(spatial_resolution)
-    # append its parameters
-    params.update(
-        {
-            'beta_US': 0.03,
-            'delta_beta_regions': np.zeros(9),
-            'delta_beta_states': np.zeros(52),
-            'delta_beta_temporal': np.zeros(10),
-            'delta_beta_spatiotemporal': np.zeros(shape=[10,9])
-        }
-    )
-
-    # hierarchal natural immunity
-    from influenza_USA.SVI2RHD.TDPF import hierarchal_waning_natural_immunity
-    TDPFs['T_r'] = hierarchal_waning_natural_immunity(spatial_resolution)
-    # append its parameters
-    params.update({'T_r_US': 365/np.log(2), 'delta_T_r_regions': np.zeros(9)})
-
-    return SVI2RHD(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
+    # initalise pySODM model
+    return SIR_SequentialTwoStrain(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 def construct_coordinates_dictionary(spatial_resolution, age_resolution):
     """
@@ -440,7 +412,7 @@ def get_mobility_matrix(spatial_resolution, dataset='cellphone_03092020'):
 
     return mobility_matrix
 
-def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_states):
+def construct_initial_susceptible(spatial_resolution, age_resolution, spatial_coordinates, *subtract_states):
     """
     A function to construct the initial number of susceptible individuals, computed as the number of susceptibles 'S' derived from the demographic data, minus any individiduals present in `subtract_states`
 
@@ -453,10 +425,13 @@ def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_
         If not provided: function returns demography
 
     spatial_resolution: str
-        US 'states' or 'counties'
+        US 'states' or 'counties' or 'collapsed'
 
     age_resolution: str
         'collapsed', 'full' (0-5, 5-18, 18-50, 50-65, 65+)
+
+    spatial_coordiantes: list
+        A list containing the spatial coordinates of the model (fips codes)
 
     output
     ------
@@ -473,6 +448,9 @@ def construct_initial_susceptible(spatial_resolution, age_resolution, *subtract_
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_states_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
     else:
         demography = pd.read_csv(os.path.join(abs_dir,'../../../data/interim/demography/demography_counties_2023.csv'), dtype={'fips': str, 'age': str, 'population': int})
+
+    # slice spatial coordinates from the demography
+    demography = demography[demography['fips'].isin(spatial_coordinates)]
 
     # derive shape model states
     n_age = len(demography['age'].unique())

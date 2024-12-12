@@ -54,9 +54,13 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 ### cases
 
-+ `weekly_flu_incid_complete.csv`: Weekly hospitalisations for Influenza in the USA, from 2009-2010 until 2023-2024. Obtained from Shaun (#TODO: where did he get it from?).
++ `hosp-admissions_FluSurvNet_USA_09-24_raw.csv`: Weekly hospital admissions for Influenza in the USA, from 2009-2010 until 2023-2024, based on FluSurvNet. Obtained from Shaun Truelove.
 
-+ `FluView_Subtypes_17-18.csv`: Downloaded from FluView: https://www.cdc.gov/fluview/surveillance/2024-week-46.html 
++ `influenza-surveillance-summary_NC_xx-xx.pdf`: End-of-season report on the xx-xx Influenza season in North Carolina. Of special interest is the figure at the bottom of page 6 titled 'Influenza Positive Tests Reported by PHE Facilities', whose data will be extracted using WebPlotDigitizer. Downloaded from https://flu.ncdhhs.gov/data.htm
+
++ `hosp-admissions_NC_15-24.csv`: Weekly hospital admissions in North Carolina (reported by PHE facilities) from 2015 to 2024. Indexed on Saturday. Downloaded from: https://ncdetect.org/respiratory-dashboard/ by Matthew Mietchen.
+
++ `ILI_NC_15-24.csv`: Weekly ILI counts in North Carolina (reported by emergency departments) from 2015 to 2024. Indexed on Saturday. Downloaded from: https://ncdetect.org/respiratory-dashboard/ by Matthew Mietchen.
 
 ### initial condition
 
@@ -120,9 +124,11 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 ### Cases
 
-+ `CDC_hosp-rate-age_2010-2023.csv`: Hospitalisation rate per age group as reported by the CDC.
++ `hosp-rate-age_CDC_USA_10-23.csv`: Hospitalisation rate per age group as reported by the CDC.
 
-+ `hospitalisations_per_state.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
++ `hosp-admissions_FluSurvNet_USA_09-24.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
+
++ `subtypes_NC_14-24.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. 
 
 ## Conversion
 
