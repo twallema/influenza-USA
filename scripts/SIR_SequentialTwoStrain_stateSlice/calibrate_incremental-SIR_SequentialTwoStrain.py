@@ -40,20 +40,20 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 15)                              # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
+start_calibration = datetime(season_start, 12, 15)                              # incremental calibration will start from here..
+end_calibration = datetime(season_start, 12, 18)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
-n_pso = 3000                                                                     # Number of PSO iterations
+n_pso = 2000                                                                    # Number of PSO iterations
 multiplier_pso = 50                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 30000                                                                   # Number of MCMC iterations
+n_mcmc = 20000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 30000                                                                  # Print diagnostics every `print_n`` iterations
-discard = 10000                                                                  # Discard first `discard` iterations as burn-in
-thin = 1000                                                                      # Thinning factor emcee chains
+print_n = 20000                                                                 # Print diagnostics every `print_n`` iterations
+discard = 10000                                                                 # Discard first `discard` iterations as burn-in
+thin = 10                                                                       # Thinning factor emcee chains
 processes = mp.cpu_count()                                                      # Number of CPUs to use
-n = 1000                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
@@ -76,8 +76,8 @@ delta_beta_temporal = 0.01
 df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/hosp-admissions_NC_15-24.csv'), index_col=0, parse_dates=True)[['Influenza']].squeeze()
 # convert to daily incidence
 df /= 7
-# slice out `start_calibration` --> `end_calibration`
-df = df.loc[slice(start_simulation, end_calibration)]
+# slice out `start_calibration` --> `end_validation`
+df = df.loc[slice(start_simulation, end_validation)]
 # rename to H_inc
 df = df.rename('H_inc')
 
@@ -171,7 +171,7 @@ if __name__ == '__main__':
         # Assign results to model
         model.parameters = assign_theta(model.parameters, pars, theta)
         # Simulate model
-        out = model.sim([start_simulation, end_calibration])
+        out = model.sim([start_simulation, end_validation])
         # Visualize
         fig, ax = plt.subplots(3, 1, sharex=True, figsize=(8.3, 11.7/5*3))
         props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
@@ -246,7 +246,7 @@ if __name__ == '__main__':
             return parameters
         
         # Simulate model
-        out = model.sim([start_simulation, end_calibration], N=n,
+        out = model.sim([start_simulation, end_validation], N=n,
                             draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
         
         # Add sampling noise
@@ -269,9 +269,9 @@ if __name__ == '__main__':
         x = pd.date_range(start=start_simulation, end=end_validation, freq='d').tolist()
         # compute output
         for d in x:
-            y.append(f(d, {}, 1, np.mean(np.array(samples_dict['delta_beta_temporal']), axis=1)))
-            lower.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=0.05/2, axis=1)))
-            upper.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=1-0.05/2, axis=1)))
+            y.append(f(d, {}, 1, np.mean(np.array(samples_dict['delta_beta_temporal']), axis=1))[0])
+            lower.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=0.05/2, axis=1))[0])
+            upper.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=1-0.05/2, axis=1))[0])
 
         # Build figure
         # ------------

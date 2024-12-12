@@ -449,7 +449,7 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
 
     smooth_temporal_modifier: float
         smoothed modifier at `simulation_date`
-        1D array of smoothed modifiers at `simulation_date`. If the input is 1D,  the output will be a single-element array. If the input is 2D, the output will have one value for each spatial dimension.
+        1D array of smoothed modifiers at `simulation_date`. If the input is 1D, the output will be a single-element array. If the input is 2D, the output will have one value for each spatial dimension.
     """
 
     # Ensure the input is at least 2D
