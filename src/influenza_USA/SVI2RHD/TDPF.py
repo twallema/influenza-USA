@@ -80,11 +80,7 @@ class hierarchal_transmission_rate_function():
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
         # get smoothed temporal components
-        to_smooth = delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis]
-        temporal_modifiers_smooth = []
-        for i in range(delta_beta_spatiotemporal.shape[1]):
-            temporal_modifiers_smooth.append(get_smooth_temporal_modifier(to_smooth[:,i], t, self.sigma))
-        temporal_modifiers_smooth = np.array(temporal_modifiers_smooth)
+        temporal_modifiers_smooth = get_smooth_temporal_modifier(delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis], t, self.sigma)
         # construct modifiers
         return beta_US * temporal_modifiers_smooth * delta_beta_regions * delta_beta_states
     

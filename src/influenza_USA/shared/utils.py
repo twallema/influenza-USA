@@ -431,14 +431,12 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     """
     A function returning the value of a temporal modifier on `simulation_date` after smoothing with a gaussian filter
 
-    #TODO: vectorise
-    
     input
     -----
 
     modifier_vector: np.ndarray
-        1D numpy array. Each entry represents a value of the modifier in a time interval.
-        Time intervals are set up so that Nov 1 to Apr 1 is divided into len(modifier_vector) timeperiods.
+        1D numpy array (time) or 2D numpy array (time x space).
+        Each entry represents a value of the modifier in a time interval, with time intervals divided between Nov 1 and Apr 1.
 
     simulation_date: datetime
         current simulation date
@@ -451,26 +449,28 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
 
     smooth_temporal_modifier: float
         smoothed modifier at `simulation_date`
+        1D array of smoothed modifiers at `simulation_date`. If the input is 1D,  the output will be a single-element array. If the input is 2D, the output will have one value for each spatial dimension.
     """
+
+    # Ensure the input is at least 2D
+    if modifier_vector.ndim == 1:
+        modifier_vector = modifier_vector[:, np.newaxis]
+    _, num_space = modifier_vector.shape
 
     # Define number of days between Nov 1 and Apr 1
     num_days = 152
 
-    # Step 1: Project the input vector on the right knots 
-    ## Calculate the positions for each interval
+    # Step 1: Project the input vector onto the daily time scale
     interval_size = num_days / len(modifier_vector)
-    expanded_vector = np.zeros(num_days)
-    ## Project the input values onto the output
-    for i in range(len(modifier_vector)):
-        start = int(i * interval_size)
-        end = int((i + 1) * interval_size) if i != len(modifier_vector) - 1 else num_days  # Ensure last interval includes all remaining days
-        expanded_vector[start:end] = modifier_vector[i]
+    positions = (np.arange(num_days) // interval_size).astype(int)
+    expanded_vector = modifier_vector[positions, :]
 
     # Step 2: Prepend and append 31 days of ones
-    padded_vector = np.concatenate([np.ones(31), expanded_vector, np.ones(31)])
+    padding = np.ones((31, num_space))
+    padded_vector = np.vstack([padding, expanded_vector, padding])
 
     # Step 3: Apply a gaussian 1D smoother
-    smoothed_series = gaussian_filter1d(padded_vector, sigma=sigma)
+    smoothed_series = gaussian_filter1d(padded_vector, sigma=sigma, axis=0)
 
     # Step 4: Compute the number of days since the last October 1
     year = simulation_date.year
@@ -483,8 +483,7 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     # Calculate the difference in days
     days_difference = (simulation_date - last_oct1).days
 
-    # Step 6: Get the right smoothed value
-    try:
-        return smoothed_series[days_difference]
-    except:
-        return 1
+    # Step 5: Return the smoothed value(s) for the specified day
+    if 0 <= days_difference < smoothed_series.shape[0]:
+        return smoothed_series[days_difference, :]  # Always returns a 1D array
+    return np.ones(num_space)  # Default value if index is out of bounds
