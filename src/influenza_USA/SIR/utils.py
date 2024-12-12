@@ -8,11 +8,69 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import os
 import numpy as np
 import pandas as pd
-
-# TODO: add an initialisation function for the SIR
+import tensorflow as tf
 
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
+
+def initialise_SIR(spatial_resolution='states', age_resolution='full', distinguish_daytype=False, stochastic=False):
+    """
+    Initialises an age- and space structured SIR model for the USA
+
+    input
+    -----
+    spatial_resolution: str
+        'collapsed', 'states' or 'counties'. 
+
+    age_resolution: str
+        'collapsed' or 'full'. 
+
+    distinguish_daytype: bool
+        Differ contacts by weekday, weekendday and holiday.
+
+    stochastic: bool
+        Deterministic ODE model (False) or Gillespie Tau-leaping stochastic model (True)
+
+    output
+    ------
+
+    model: pySODM model
+        Initialised pySODM SIR model
+    """
+
+    # choose right model
+    if stochastic:
+        from influenza_USA.SIR.model import TL_SIR as SIR
+    else:
+        from influenza_USA.SIR.model import ODE_SIR as SIR
+
+    # initialise coordinates
+    coordinates = construct_coordinates_dictionary(spatial_resolution, age_resolution)
+
+    # initialise parameters
+    params = {'beta': 0.015,                                                                                                      # infectivity (-)
+            'gamma': 5,                                                                                                           # duration of infection (d)
+            'f_v': 0.5,                                                                                                           # fraction of total contacts on visited patch
+            'N': tf.convert_to_tensor(get_contact_matrix(daytype='all', age_resolution=age_resolution), dtype=float),                         # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
+            'M': tf.convert_to_tensor(get_mobility_matrix(dataset='cellphone_03092020', spatial_resolution=spatial_resolution), dtype=float)      # origin-destination mobility matrix
+            }
+
+    # initialise initial states
+    I0 = construct_initial_infected(seed_loc=('alabama',''), n=10, agedist='demographic', spatial_resolution=spatial_resolution, age_resolution=age_resolution)
+    S0 = construct_initial_susceptible(I0, spatial_resolution=spatial_resolution, age_resolution=age_resolution)
+    init_states = {'S': tf.convert_to_tensor(S0, dtype=float),
+                'I': tf.convert_to_tensor(I0, dtype=float)
+                    }
+
+    # initialise time-dependencies
+    TDPFs={}
+    if distinguish_daytype:
+        from influenza_USA.SIR.TDPF import make_contact_function
+        TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
+                                                get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
+                                                get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
+        
+    return SIR(initial_states=init_states, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
 
 def construct_coordinates_dictionary(spatial_resolution='states', age_resolution='full'):
     """

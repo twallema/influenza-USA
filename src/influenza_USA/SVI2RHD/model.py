@@ -7,7 +7,6 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 
 
 import numpy as np
-import tensorflow as tf
 from pySODM.models.base import ODE
 
 ###################
