@@ -65,7 +65,7 @@ def initialise_SIR(spatial_resolution='states', age_resolution='full', distingui
     # initialise time-dependencies
     TDPFs={}
     if distinguish_daytype:
-        from influenza_USA.SIR.TDPF import make_contact_function
+        from influenza_USA.shared.TDPF import make_contact_function
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function

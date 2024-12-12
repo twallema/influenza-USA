@@ -60,7 +60,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
     TDPFs = {}
     ## contacts
     if distinguish_daytype:
-        from influenza_USA.SIR_SequentialTwoStrain.TDPF import make_contact_function
+        from influenza_USA.shared.TDPF import make_contact_function
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function

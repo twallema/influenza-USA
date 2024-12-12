@@ -8,7 +8,6 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import os
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from datetime import datetime as datetime
 
 # all paths relative to the location of this file
@@ -70,7 +69,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
     TDPFs = {}
     ## contacts
     if distinguish_daytype:
-        from influenza_USA.SVI2RHD.TDPF import make_contact_function
+        from influenza_USA.shared.TDPF import make_contact_function
         TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
