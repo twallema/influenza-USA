@@ -16,7 +16,7 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
 from influenza_USA.shared.utils import name2fips
-from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice # influenza model
+from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
@@ -105,7 +105,7 @@ incremental_enddates = df_calibration.loc[slice(start_calibration, end_calibrati
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution=sr, age_resolution=ar, state=state, season=season, distinguish_daytype=dd)
+model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state=state, season=season, distinguish_daytype=dd)
 
 #####################
 ## Calibrate model ##
@@ -260,7 +260,7 @@ if __name__ == '__main__':
         # ----------------------------------------
 
         # get function
-        from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
+        from influenza_USA.SIR_SequentialTwoStrain.TDPF import transmission_rate_function
         f = transmission_rate_function(sigma=2.5)
         # pre-allocate output
         y = []

@@ -8,7 +8,7 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 
 import matplotlib.pyplot as plt
 from datetime import datetime 
-from influenza_USA.SIR_SequentialTwoStrain_stateSlice.utils import initialise_SIR_SequentialTwoStrain_stateSlice # influenza model
+from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain # influenza model
 
 ##############
 ## Settings ##
@@ -26,7 +26,7 @@ dd =  False                               # vary contact matrix by daytype
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution=sr, age_resolution=ar, state='north carolina', season=season, distinguish_daytype=dd)
+model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state='north carolina', season=season, distinguish_daytype=dd)
 
 ######################
 ## Visualize result ##

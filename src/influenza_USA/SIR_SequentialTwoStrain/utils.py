@@ -13,14 +13,14 @@ from influenza_USA.shared.utils import construct_coordinates_dictionary, name2fi
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution='states', age_resolution='full', state=None, season='2017-2018', distinguish_daytype=True):
+def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resolution='full', state=None, season='2017-2018', distinguish_daytype=True):
 
     # model works at US state or county level
     if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
         raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
 
     # load model object
-    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.model import ODE_SIR_SequentialTwoStrain as SIR_SequentialTwoStrain
+    from influenza_USA.SIR_SequentialTwoStrain.model import ODE_SIR_SequentialTwoStrain as SIR_SequentialTwoStrain
 
     # construct coordinates
     _, G, coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
@@ -52,7 +52,7 @@ def initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution='states', a
             }
     
     # initial condition function
-    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import make_initial_condition_function
+    from influenza_USA.SIR_SequentialTwoStrain.TDPF import make_initial_condition_function
     initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location']).initial_condition_function
                                                                                  
     # time-dependencies
@@ -64,7 +64,7 @@ def initialise_SIR_SequentialTwoStrain_stateSlice(spatial_resolution='states', a
                                                 get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
                                                 get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
     ## transmission rate
-    from influenza_USA.SIR_SequentialTwoStrain_stateSlice.TDPF import transmission_rate_function
+    from influenza_USA.SIR_SequentialTwoStrain.TDPF import transmission_rate_function
     TDPFs['beta1'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
     TDPFs['beta2'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
     params['delta_beta_temporal'] = np.zeros(10)                # initialise parameter of TDPF
