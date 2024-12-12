@@ -194,9 +194,9 @@ if __name__ == '__main__':
                     n_regions*[delta_beta_regions,] + n_temporal_modifiers*[delta_beta_temporal,] + n_regions*[delta_f_R_states,] + n_regions*[delta_T_r_regions,] + \
                         n_states * [delta_beta_states,] + n_states * [delta_f_R_states,] + (n_regions*n_temporal_modifiers)*[delta_beta_spatiotemporal,]
         # perform optimization 
-        step = len(objective_function.expanded_bounds)*[0.2,]
-        theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                        processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        #step = len(objective_function.expanded_bounds)*[0.2,]
+        #theta = nelder_mead.optimize(objective_function, np.array(theta), step, kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        #                                processes=1, max_iter=n_pso, no_improv_break=1000)[0]
 
     ######################
     ## Visualize result ##

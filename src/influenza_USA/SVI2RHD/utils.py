@@ -81,7 +81,7 @@ def initialise_SVI2RHD(spatial_resolution='states', age_resolution='full', seaso
 
     ## hierarchal transmission rate
     from influenza_USA.SVI2RHD.TDPF import hierarchal_transmission_rate_function
-    TDPFs['beta'] = hierarchal_transmission_rate_function(spatial_resolution)
+    TDPFs['beta'] = hierarchal_transmission_rate_function(spatial_resolution, sigma=2.5)
     # append its parameters
     params.update(
         {

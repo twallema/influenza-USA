@@ -427,10 +427,12 @@ def fips2name(fips_code):
 
 from datetime import datetime
 from scipy.ndimage import gaussian_filter1d
-def smooth_modifier(modifier_vector, simulation_date, sigma):
+def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     """
     A function returning the value of a temporal modifier on `simulation_date` after smoothing with a gaussian filter
 
+    #TODO: vectorise
+    
     input
     -----
 
@@ -447,7 +449,7 @@ def smooth_modifier(modifier_vector, simulation_date, sigma):
     output
     ------
 
-    smooth_modifier_t: float
+    smooth_temporal_modifier: float
         smoothed modifier at `simulation_date`
     """
 

@@ -8,6 +8,7 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import numpy as np
 from datetime import timedelta
 from functools import lru_cache
+from influenza_USA.shared.utils import get_smooth_temporal_modifier
 
 ##################################
 ## Hierarchal transmission rate ##
@@ -25,107 +26,12 @@ class hierarchal_waning_natural_immunity():
 
 class hierarchal_transmission_rate_function():
 
-    def __init__(self, spatial_resolution):
+    def __init__(self, spatial_resolution, sigma):
+        # set smoother length
+        self.sigma = sigma
         # retrieve region/state --> state/county parameter mapping
         self.region_mapping, self.state_mapping = get_spatial_mappings(spatial_resolution)
         pass
-    
-    def get_smoothed_modifier(self, modifiers, simulation_date, half_life_days=5, window_size=30, freq='biweekly'):
-        """
-        Calculate the smoothed temporal modifier for all US states based on the current simulation date.
-        Supports 'biweekly' or 'monthly' frequencies for the modifiers.
-
-        Parameters:
-        - modifiers: numpy array of shape (10, 9) or (5, 9), depending on freq ('biweekly' or 'monthly').
-        - simulation_date: datetime object representing the current simulation date.
-        - half_life_days: Half-life in days for the exponential smoothing (default: 5 days).
-        - window_size: The number of days used in the smoothing window (default: 30 days).
-        - freq: 'biweekly' (default) or 'monthly'. Determines the structure of the modifiers.
-
-        Returns:
-        - smoothed_modifier: numpy array of shape (1, 9), representing the smoothed temporal modifier.
-        """
-
-        # Exponential smoothing factor (alpha)
-        alpha = 1 - np.exp(np.log(0.5) / half_life_days)
-
-        # Define mappings based on frequency
-        if freq == 'biweekly':
-            period_mapping = {
-                (11, 1): 0, (11, 2): 1,
-                (12, 1): 2, (12, 2): 3,
-                (1, 1): 4, (1, 2): 5,
-                (2, 1): 6, (2, 2): 7,
-                (3, 1): 8, (3, 2): 9
-            }
-        elif freq == 'monthly':
-            period_mapping = {
-                11: 0,  # Nov
-                12: 1,  # Dec
-                1: 2,   # Jan
-                2: 3,   # Feb
-                3: 4    # Mar
-            }
-        else:
-            raise ValueError("Invalid frequency. Use 'biweekly' or 'monthly'.")
-
-        # Initialize arrays for the modifier window and smoothing weights
-        modifier_window = []
-        smoothing_weights = []
-
-        # Traverse backward to fill the window
-        days_to_collect = window_size
-        current_date = simulation_date
-
-        while days_to_collect > 0:
-            
-            # Determine the day and month
-            month = current_date.month
-            day = current_date.day
-
-            # Determine the period row; if outside Nov-Mar --> assume modifier is none
-            if freq == 'biweekly':
-                biweekly_period = 1 if day <= 15 else 2
-                row = period_mapping.get((month, biweekly_period), None)
-            elif freq == 'monthly':
-                row = period_mapping.get(month, None)
-            
-            # Get current date modifier values
-            if row == None:
-                modifier_values = np.ones(modifiers.shape[1])
-            else:
-                modifier_values = modifiers[row, :]
-
-            # Calculate the number of days in the current period
-            if freq == 'biweekly' and biweekly_period == 1:
-                days_in_this_period = min(day, days_to_collect)
-            elif freq == 'biweekly' and biweekly_period == 2:
-                days_in_this_period = min(day - 15, days_to_collect)
-            else:  # Monthly case
-                days_in_this_period = min(day, days_to_collect)
-
-            # Append the modifiers and weights for each day
-            for _ in range(days_in_this_period):
-                modifier_window.append(modifier_values)
-                smoothing_weights.append((1 - alpha) ** (window_size - days_to_collect))
-                days_to_collect -= 1
-                current_date -= timedelta(days=1)
-
-            # Move to the previous day
-            else:
-                current_date -= timedelta(days=1)
-
-        # Convert lists to NumPy arrays
-        modifier_window = np.array(modifier_window)
-        smoothing_weights = np.array(smoothing_weights)
-
-        # Normalize weights
-        smoothing_weights /= np.sum(smoothing_weights)
-
-        # Compute the smoothed modifier
-        smoothed_modifier = np.average(modifier_window, axis=0, weights=smoothing_weights)
-
-        return smoothed_modifier
 
     def __call__(self, t, states, param, beta_US, delta_beta_regions, delta_beta_states, delta_beta_temporal, delta_beta_spatiotemporal):
         """
@@ -174,7 +80,11 @@ class hierarchal_transmission_rate_function():
         # temporal betas
         delta_beta_temporal = 1 + delta_beta_temporal
         # get smoothed temporal components
-        temporal_modifiers_smooth = self.get_smoothed_modifier(delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis], t, half_life_days=5, window_size=30, freq='biweekly')
+        to_smooth = delta_beta_spatiotemporal * delta_beta_temporal[:, np.newaxis]
+        temporal_modifiers_smooth = []
+        for i in range(delta_beta_spatiotemporal.shape[1]):
+            temporal_modifiers_smooth.append(get_smooth_temporal_modifier(to_smooth[:,i], t, self.sigma))
+        temporal_modifiers_smooth = np.array(temporal_modifiers_smooth)
         # construct modifiers
         return beta_US * temporal_modifiers_smooth * delta_beta_regions * delta_beta_states
     

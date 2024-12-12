@@ -6,7 +6,7 @@ __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
 import numpy as np
-from influenza_USA.shared.utils import smooth_modifier
+from influenza_USA.shared.utils import get_smooth_temporal_modifier
 
 ##################################
 ## Hierarchal transmission rate ##
@@ -47,7 +47,7 @@ class transmission_rate_function():
         """
 
         # smooth modifier
-        temporal_modifiers_smooth = smooth_modifier(1+np.array(delta_beta_temporal), t, sigma=self.sigma)
+        temporal_modifiers_smooth = get_smooth_temporal_modifier(1+np.array(delta_beta_temporal), t, sigma=self.sigma)
 
         # apply modifier
         return param * temporal_modifiers_smooth
