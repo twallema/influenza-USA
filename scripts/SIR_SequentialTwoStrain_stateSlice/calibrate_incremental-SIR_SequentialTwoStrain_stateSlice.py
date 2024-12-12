@@ -1,5 +1,5 @@
 """
-This script calibrates an age-stratified two-strain sequential infection model for Influenza in a US state using pySODM
+This script calibrates an age-stratified spatially-explicit two-strain sequential infection SIR model to North Carolina hospital admission data
 It automatically calibrates to incrementally larger datasets between `start_calibration` and `end_calibration`
 """
 

@@ -1,5 +1,5 @@
 """
-This script simulates an age-stratified, spatially-explicit two-strain sequential infection model for Influenza in a US state using pySODM
+This script simulates an age-stratified spatially-explicit two-strain sequential infection SIR model in North Carolina
 """
 
 __author__      = "Tijs Alleman"
