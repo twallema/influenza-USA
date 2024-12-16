@@ -29,7 +29,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2014-2015'                                # season to calibrate
+season = '2023-2024'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -44,20 +44,20 @@ start_calibration = datetime(season_start+1, 4, 25)                             
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
-n_pso = 200                                                                    # Number of PSO iterations
+n_pso = 2000                                                                    # Number of PSO iterations
 multiplier_pso = 50                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 300                                                                  # Number of MCMC iterations
+n_mcmc = 30000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 300                                                                 # Print diagnostics every `print_n`` iterations
-discard = 250                                                                 # Discard first `discard` iterations as burn-in
-thin = 10                                                                       # Thinning factor emcee chains
-processes = mp.cpu_count()                                                      # Number of CPUs to use
-n = 100                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
+discard = 10000                                                                 # Discard first `discard` iterations as burn-in
+thin = 2000                                                                       # Thinning factor emcee chains
+processes = 16                                                      # Number of CPUs to use
+n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
-bounds = [(1e-6,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                     # parameter bounds
+bounds = [(1e-5,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                     # parameter bounds
 labels = [r'$\rho_{h}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 log_prior_prob_fcn = 7*[log_prior_uniform,] + [log_prior_normal_L2,]                                                                    # prior probability functions
 log_prior_prob_fcn_args = [ bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], (0, stdev,  L1_weight)]        # arguments prior functions
@@ -212,7 +212,7 @@ if __name__ == '__main__':
         ##########
 
         # Perturbate previously obtained estimate
-        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.50*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
+        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.25*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
                 'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
