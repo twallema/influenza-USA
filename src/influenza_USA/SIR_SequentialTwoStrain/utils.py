@@ -94,7 +94,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
     from influenza_USA.SIR_SequentialTwoStrain.TDPF import transmission_rate_function
     TDPFs['beta1'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
     TDPFs['beta2'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
-    params['delta_beta_temporal'] = np.zeros(10)                # initialise parameter of TDPF
-
+    params['delta_beta_temporal'] = np.zeros(12)                # initialise parameter of TDPF
+    
     # initalise pySODM model
     return SIR_SequentialTwoStrain(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)
