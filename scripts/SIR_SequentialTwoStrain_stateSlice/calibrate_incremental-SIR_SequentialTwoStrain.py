@@ -29,13 +29,13 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2023-2024'                                # season to calibrate
+season = '2014-2015'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
 season_start = int(season[0:4])                     # start of season
-start_simulation = datetime(season_start, 10, 15)   # date simulation is started
-L1_weight = 1                                       # Forcing strength on temporal modifiers 
+start_simulation = datetime(season_start, 10, 1)   # date simulation is started
+L1_weight = 1                                      # Forcing strength on temporal modifiers 
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
@@ -51,8 +51,8 @@ n_mcmc = 30000                                                                  
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
 discard = 10000                                                                 # Discard first `discard` iterations as burn-in
-thin = 2000                                                                       # Thinning factor emcee chains
-processes = 16                                                      # Number of CPUs to use
+thin = 2000                                                                     # Thinning factor emcee chains
+processes = 16                                                                  # Number of CPUs to use
 n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
