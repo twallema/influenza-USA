@@ -436,7 +436,7 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
 
     modifier_vector: np.ndarray
         1D numpy array (time) or 2D numpy array (time x space).
-        Each entry represents a value of the modifier in a time interval, with time intervals divided between Nov 1 and Apr 1.
+        Each entry represents a value of the modifier in a time interval, with time intervals divided between Oct 15 and Apr 15.
 
     simulation_date: datetime
         current simulation date
@@ -457,8 +457,8 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
         modifier_vector = modifier_vector[:, np.newaxis]
     _, num_space = modifier_vector.shape
 
-    # Define number of days between Nov 1 and Apr 1
-    num_days = 152
+    # Define number of days between Oct 15 and Apr 15
+    num_days = 182
 
     # Step 1: Project the input vector onto the daily time scale
     interval_size = num_days / len(modifier_vector)
@@ -475,13 +475,13 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     # Step 4: Compute the number of days since the last October 1
     year = simulation_date.year
     # Compute the last October 1
-    oct1_this_year = datetime(year, 10, 1)
-    if simulation_date >= oct1_this_year:
-        last_oct1 = oct1_this_year
+    sept15_this_year = datetime(year, 9, 15)
+    if simulation_date >= sept15_this_year:
+        last_sept15 = sept15_this_year
     else:
-        last_oct1 = datetime(year - 1, 10, 1)
+        last_sept15 = datetime(year - 1, 9, 15)
     # Calculate the difference in days
-    days_difference = (simulation_date - last_oct1).days
+    days_difference = (simulation_date - last_sept15).days
 
     # Step 5: Return the smoothed value(s) for the specified day
     if 0 <= days_difference < smoothed_series.shape[0]:
