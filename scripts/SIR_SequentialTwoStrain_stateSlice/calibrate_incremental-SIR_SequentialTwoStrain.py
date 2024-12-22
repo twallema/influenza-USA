@@ -45,24 +45,25 @@ end_calibration = datetime(season_start+1, 5, 1)                                
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                                    # Number of PSO iterations
-multiplier_pso = 50                                                             # PSO swarm size
+multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
 n_mcmc = 30000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
 discard = 10000                                                                 # Discard first `discard` iterations as burn-in
 thin = 2000                                                                     # Thinning factor emcee chains
-processes = 16                                                                  # Number of CPUs to use
+processes = 2                                                                   # Number of CPUs to use
 n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
-pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
-bounds = [(1e-5,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                     # parameter bounds
-labels = [r'$\rho_{h}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
-log_prior_prob_fcn = 7*[log_prior_uniform,] + [log_prior_normal_L2,]                                                                    # prior probability functions
-log_prior_prob_fcn_args = [ bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], (0, stdev,  L1_weight)]        # arguments prior functions
+pars = ['rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                             # parameters to calibrate
+bounds = [(1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                     # parameter bounds
+labels = [r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
+log_prior_prob_fcn = 8*[log_prior_uniform,] + [log_prior_normal_L2,]                                                                                # prior probability functions
+log_prior_prob_fcn_args = [bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], bounds[7], (0, stdev,  L1_weight)]          # arguments prior functions
 ## starting guestimate NM
-rho_h = 0.002
+rho_h1 = 0.002
+rho_h2 = 0.002
 beta1 = beta2 = 0.022
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
@@ -155,14 +156,14 @@ if __name__ == '__main__':
         #################
 
         # set ballpark theta
-        theta = [rho_h, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
+        theta = [rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
 
         # perform optimization 
         ## PSO
-        #theta = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)[0]
+        #theta, _ = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)
         ## Nelder-Mead
-        theta = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                        processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+                                        processes=1, max_iter=n_pso, no_improv_break=1000)
 
         ######################
         ## Visualize result ##
@@ -235,7 +236,8 @@ if __name__ == '__main__':
         # ------------------
 
         def draw_fcn(parameters, samples):
-            idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
+            idx, parameters['rho_h1'] = random.choice(list(enumerate(samples['rho_h1'])))
+            parameters['rho_h2'] = samples['rho_h2'][idx]
             parameters['beta1'] = samples['beta1'][idx]
             parameters['beta2'] = samples['beta2'][idx]
             parameters['f_R1_R2'] = samples['f_R1_R2'][idx]
