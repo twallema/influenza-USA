@@ -20,7 +20,7 @@ from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_Sequentia
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
-from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal_L2, log_prior_uniform, log_prior_gamma, log_prior_normal
+from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
 
 ##############
@@ -29,7 +29,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2023-2024'                                # season to calibrate
+season = '2019-2020'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -41,7 +41,7 @@ stdev = 0.10                                        # Expected standard deviatio
 # optimization parameters
 ## dates
 start_calibration = datetime(season_start, 12, 15)                             # incremental calibration will start from here..
-end_calibration = datetime(season_start+1, 2, 1)                                # and incrementally (weekly) calibrate until this date
+end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                                    # Number of PSO iterations
@@ -61,24 +61,30 @@ bounds = [(1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.
 labels = [r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 # OLD: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #log_prior_prob_fcn = 8*[log_prior_uniform,] + [log_prior_normal_L2,]                                                                                   # prior probability functions
-#log_prior_prob_fcn_args = [bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], bounds[7], (0, stdev,  L1_weight)]             # arguments prior functions
+#log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
+#                            {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'mu':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # NEW: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal_L2,] 
-log_prior_prob_fcn_args = [(3.8,-2.9e-04,7.9e-04), (1.4,3.0e-4,1.6e-03), (6.2,1.1e-02,1.9e-03), (1.7,1.4e-02,4.0e-03),
-                           (0.50, 0.22), (0.50, 0.22),
-                           (1.3,-6.0e-07,9.3e-05), (1.2,5.7e-07,1.4e-04),
-                           (-0.072, stdev,  L1_weight),
-                           (-0.042, stdev,  L1_weight),
-                           (-0.042, stdev,  L1_weight),
-                           (-0.011, stdev,  L1_weight),
-                           (0.076, stdev,  L1_weight),
-                           (-0.068, stdev,  L1_weight),
-                           (-0.011, stdev,  L1_weight),
-                           (0.106, stdev,  L1_weight),
-                           (0.061, stdev,  L1_weight),
-                           (0.065, stdev,  L1_weight),
-                           (0.046, stdev,  L1_weight),
-                           (-0.028, stdev,  L1_weight),
+log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
+log_prior_prob_fcn_args = [{'a': 3.8, 'loc': -2.9e-04, 'scale': 7.9e-04, 'weight': L1_weight},
+                           {'a': 1.4, 'loc': 3.0e-4, 'scale': 1.6e-03, 'weight': L1_weight},
+                           {'a': 6.2, 'loc': 1.1e-02, 'scale': 1.9e-03, 'weight': L1_weight},
+                           {'a': 1.7, 'loc': 1.4e-02, 'scale': 4.0e-03, 'weight': L1_weight},
+                           {'mu': 0.50, 'stdev': 0.22, 'weight': L1_weight},
+                           {'mu': 0.50, 'stdev': 0.22, 'weight': L1_weight},
+                           {'a': 1.3, 'loc': -6.0e-07, 'scale': 9.3e-05, 'weight': L1_weight},
+                           {'a': 1.2, 'loc': 5.7e-07, 'scale': 1.4e-04, 'weight': L1_weight},
+                           {'mu': -0.072, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': -0.042, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': -0.042, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': -0.011, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': 0.076, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': -0.068, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': -0.011, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': 0.106, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': 0.061, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': 0.065, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': 0.046, 'stdev': stdev, 'weight': L1_weight},
+                           {'mu': -0.028, 'stdev': stdev, 'weight': L1_weight},
                            ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ## starting guestimate NM
