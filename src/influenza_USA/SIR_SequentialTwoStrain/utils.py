@@ -68,9 +68,10 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
             'beta2': 0.028*np.ones(G),                                                                                              # infectivity strain 2 (-)
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
-            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                     # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
+            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             # outcomes
-            'rho_h': 0.001,                                                                                                         # hospitalised fraction (source: Josh)
+            'rho_h1': 0.002,                                                                                                        # hospitalised fraction (source: Josh)
+            'rho_h2': 0.002,                                                                                                        # hospitalised fraction (source: Josh)
             # initial condition function
             'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
             'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
@@ -94,7 +95,7 @@ def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resoluti
     from influenza_USA.SIR_SequentialTwoStrain.TDPF import transmission_rate_function
     TDPFs['beta1'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
     TDPFs['beta2'] = transmission_rate_function(sigma=2.5)      # initialise TDPF
-    params['delta_beta_temporal'] = np.zeros(10)                # initialise parameter of TDPF
-
+    params['delta_beta_temporal'] = np.zeros(12)                # initialise parameter of TDPF
+    
     # initalise pySODM model
     return SIR_SequentialTwoStrain(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)

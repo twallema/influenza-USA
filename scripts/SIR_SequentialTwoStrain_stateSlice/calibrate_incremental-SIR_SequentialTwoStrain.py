@@ -20,7 +20,7 @@ from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_Sequentia
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
-from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal_L2, log_prior_uniform
+from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
 
 ##############
@@ -34,36 +34,63 @@ sr = 'states'                                       # spatial resolution: 'state
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
 season_start = int(season[0:4])                     # start of season
-start_simulation = datetime(season_start, 10, 15)   # date simulation is started
+start_simulation = datetime(season_start, 10, 1)    # date simulation is started
 L1_weight = 1                                       # Forcing strength on temporal modifiers 
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 15)                              # incremental calibration will start from here..
-end_calibration = datetime(season_start, 12, 18)                                # and incrementally (weekly) calibrate until this date
+start_calibration = datetime(season_start+1, 3, 1)                             # incremental calibration will start from here..
+end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                                    # Number of PSO iterations
-multiplier_pso = 50                                                             # PSO swarm size
+multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 20000                                                                  # Number of MCMC iterations
+n_mcmc = 30000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 5                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 20000                                                                 # Print diagnostics every `print_n`` iterations
+print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
 discard = 10000                                                                 # Discard first `discard` iterations as burn-in
-thin = 10                                                                       # Thinning factor emcee chains
-processes = mp.cpu_count()                                                      # Number of CPUs to use
-n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+thin = 2000                                                                     # Thinning factor emcee chains
+processes = 16                                                                   # Number of CPUs to use
+n = 1000                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
-pars = ['rho_h', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                            # parameters to calibrate
-bounds = [(1e-6,0.005), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                     # parameter bounds
-labels = [r'$\rho_{h}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
-log_prior_prob_fcn = 7*[log_prior_uniform,] + [log_prior_normal_L2,]                                                                    # prior probability functions
-log_prior_prob_fcn_args = [ bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5], bounds[6], (0, stdev,  L1_weight)]        # arguments prior functions
+pars = ['rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                             # parameters to calibrate
+bounds = [(1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]                     # parameter bounds
+labels = [r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
+# OLD: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+log_prior_prob_fcn = 8*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
+log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
+                            {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
+# NEW: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
+# log_prior_prob_fcn_args = [{'a': 3.8, 'loc': -2.9e-04, 'scale': 7.9e-04, 'weight': L1_weight},
+#                            {'a': 1.4, 'loc': 3.0e-4, 'scale': 1.6e-03, 'weight': L1_weight},
+#                            {'a': 6.2, 'loc': 1.1e-02, 'scale': 1.9e-03, 'weight': L1_weight},
+#                            {'a': 1.7, 'loc': 1.4e-02, 'scale': 4.0e-03, 'weight': L1_weight},
+#                            {'mu': 0.50, 'stdev': 0.22, 'weight': L1_weight},
+#                            {'mu': 0.50, 'stdev': 0.22, 'weight': L1_weight},
+#                            {'a': 1.3, 'loc': -6.0e-07, 'scale': 9.3e-05, 'weight': L1_weight},
+#                            {'a': 1.2, 'loc': 5.7e-07, 'scale': 1.4e-04, 'weight': L1_weight},
+#                            {'mu': -0.072, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': -0.042, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': -0.042, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': -0.011, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': 0.076, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': -0.068, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': -0.011, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': 0.106, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': 0.061, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': 0.065, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': 0.046, 'stdev': stdev, 'weight': L1_weight},
+#                            {'mu': -0.028, 'stdev': stdev, 'weight': L1_weight},
+#                            ]          # arguments of prior functions
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ## starting guestimate NM
-rho_h = 0.003
-beta1 = beta2 = 0.02
+rho_h1 = 0.002
+rho_h2 = 0.002
+beta1 = beta2 = 0.022
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
 delta_beta_temporal = 0.01
@@ -155,14 +182,14 @@ if __name__ == '__main__':
         #################
 
         # set ballpark theta
-        theta = [rho_h, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
+        theta = [rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
 
         # perform optimization 
         ## PSO
-        #theta = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)[0]
+        #theta, _ = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)
         ## Nelder-Mead
-        theta = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                        processes=1, max_iter=n_pso, no_improv_break=1000)[0]
+        theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+                                        processes=1, max_iter=n_pso, no_improv_break=1000)
 
         ######################
         ## Visualize result ##
@@ -212,7 +239,7 @@ if __name__ == '__main__':
         ##########
 
         # Perturbate previously obtained estimate
-        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.50*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
+        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.25*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
                 'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
@@ -235,7 +262,8 @@ if __name__ == '__main__':
         # ------------------
 
         def draw_fcn(parameters, samples):
-            idx, parameters['rho_h'] = random.choice(list(enumerate(samples['rho_h'])))
+            idx, parameters['rho_h1'] = random.choice(list(enumerate(samples['rho_h1'])))
+            parameters['rho_h2'] = samples['rho_h2'][idx]
             parameters['beta1'] = samples['beta1'][idx]
             parameters['beta2'] = samples['beta2'][idx]
             parameters['f_R1_R2'] = samples['f_R1_R2'][idx]
