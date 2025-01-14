@@ -39,7 +39,7 @@ out = model.sim([start_sim, end_sim])
 fig, ax = plt.subplots(2, 1, sharex=True, figsize=(8.3, 11.7/2))
 # hospitalisations
 
-ax[0].plot(out['date'], 7*out['I_inc_obs'].sum(dim=['age_group', 'location']), color='green', alpha=1, linewidth=2, label='Infectious (strain I + II)')
+ax[0].plot(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']), color='green', alpha=1, linewidth=2, label='Infectious (strain I + II)')
 ax[0].plot(out['date'], 7*out['H1_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2, label='Hosp. strain I')
 ax[0].plot(out['date'], 7*out['H2_inc'].sum(dim=['age_group', 'location']), color='red', alpha=1, linewidth=2, label='Hosp. strain II')
 ax[0].plot(out['date'], 7*((out['H1_inc'] + out['H2_inc']).sum(dim=['age_group', 'location'])), color='black', alpha=1, linewidth=2, label = 'Hosp. (strain I + II)')
