@@ -95,38 +95,12 @@ f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
 delta_beta_temporal = 0.01
 
-##########################################
-## Load and format hospitalisation data ##
-##########################################
+#####################
+## Load NC dataset ##
+#####################
 
-# load north carolina dataset
-df = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/raw/cases/hosp-admissions_NC_15-24.csv'), index_col=0, parse_dates=True)[['Influenza']].squeeze()
-# convert to daily incidence
-df /= 7
-# slice out `start_calibration` --> `end_validation`
-df = df.loc[slice(start_simulation, end_validation)]
-# rename to H_inc
-df = df.rename('H_inc')
-
-####################################################
-## Make a flu A vs. flu B hospitalisation dataset ##
-####################################################
-
-# load subtype data flu A vs. flu B
-df_subtype = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../data/interim/cases/subtypes_NC_14-24.csv'), index_col=1, parse_dates=True)
-# load right season
-df_subtype = df_subtype[df_subtype['season']==season][['flu_A', 'flu_B']]
-# merge with the epi data
-df_merged = pd.merge(df, df_subtype, how='outer', left_on='date', right_on='date')
-# assume a 50/50 ratio where no subtype data is available
-df_calibration = df_merged.fillna(1)
-# compute fraction of Flu A
-df_calibration['fraction_A'] = df_calibration['flu_A'] / (df_calibration['flu_A'] + df_calibration['flu_B']) # compute percent A
-# re-ecompute flu A and flu B cases
-df_calibration['flu_A'] = df_calibration['H_inc'] * df_calibration['fraction_A']
-df_calibration['flu_B'] = df_calibration['H_inc'] * (1-df_calibration['fraction_A'])
-# compute the list of incremental calibration enddates between start_calibration and end_calibration
-incremental_enddates = df_calibration.loc[slice(start_calibration, end_calibration)].index
+# load dataset
+data_interim = get_NC_influenza_data(start_simulation, end_validation, season)
 
 #################
 ## Setup model ##
@@ -143,6 +117,9 @@ if __name__ == '__main__':
     #####################
     ## Loop over weeks ##
     #####################
+
+    # compute the list of incremental calibration enddates between start_calibration and end_calibration
+    incremental_enddates = data_interim.loc[slice(start_calibration, end_calibration)].index
 
     for end_date in incremental_enddates:
 
