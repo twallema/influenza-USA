@@ -58,7 +58,7 @@ class ODE_SIR_SequentialTwoStrain(ODE):
         dR = (1/T_r) * (I12 + I21)
 
         # calculate outcome differentials 
-        dI_inc = (I1_new + I21_new + I2_new + I12_new)*rho_i - I_inc
+        dI_inc = (I1_new + I21_new)*rho_i + (I2_new + I12_new)*rho_i - I_inc
 
         # delayed hospitalisation -- exponentially distributed delay
         ## strain I
