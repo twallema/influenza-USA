@@ -40,7 +40,7 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 15)                             # incremental calibration will start from here
+start_calibration = datetime(season_start+1, 4, 25)                             # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
@@ -57,46 +57,46 @@ n = 500                                                                         
 
 # calibration parameters
 pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                    # parameters to calibrate
-bounds = [(1, 21), (1e-4,0.10), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
-labels = [r'$T_h$', r'$\rho_{i,2}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
+bounds = [(1, 21), (1e-4,0.15), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
+labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 # OLD: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-#log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
-#log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
-#                            {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
-#                            {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
+log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
+log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
+                           {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
+                           {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # NEW: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-log_prior_prob_fcn = 6*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
-log_prior_prob_fcn_args = [{'a': 0.9, 'loc': 6.4e-01, 'scale': 3.2, 'weight': L1_weight},
-                           {'a': 3.8, 'loc': -4.3e-05, 'scale': 4.9e-03, 'weight': L1_weight},
-                           {'a': 4.8, 'loc': -2.5e-04, 'scale': 5.7e-04, 'weight': L1_weight},
-                           {'a': 0.8, 'loc': 7.5e-04, 'scale': 1.9e-03, 'weight': L1_weight},
-                           {'a': 3.0, 'loc': 1.3e-02, 'scale': 3.0e-03, 'weight': L1_weight},
-                           {'a': 4.9, 'loc': 1.0e-02, 'scale': 2.3e-03, 'weight': L1_weight},
-                           {'avg': 0.53, 'stdev': 0.23, 'weight': L1_weight},
-                           {'avg': 0.47, 'stdev': 0.21, 'weight': L1_weight},
-                           {'a': 1.9, 'loc': -3.0e-05, 'scale': 8.7e-05, 'weight': L1_weight},
-                           {'a': 1.9, 'loc': 5.4e-05, 'scale': 9.0e-05, 'weight': L1_weight},
-                           {'avg': -0.082, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.054, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.047, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.0, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.07, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.11, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.021, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.112, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.053, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.061, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.040, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.036, 'stdev': stdev, 'weight': L1_weight},
-                           ]          # arguments of prior functions
+# log_prior_prob_fcn = 6*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
+# log_prior_prob_fcn_args = [{'a': 0.9, 'loc': 6.4e-01, 'scale': 3.2, 'weight': L1_weight},
+#                            {'a': 3.8, 'loc': -4.3e-05, 'scale': 4.9e-03, 'weight': L1_weight},
+#                            {'a': 4.8, 'loc': -2.5e-04, 'scale': 5.7e-04, 'weight': L1_weight},
+#                            {'a': 0.8, 'loc': 7.5e-04, 'scale': 1.9e-03, 'weight': L1_weight},
+#                            {'a': 3.0, 'loc': 1.3e-02, 'scale': 3.0e-03, 'weight': L1_weight},
+#                            {'a': 4.9, 'loc': 1.0e-02, 'scale': 2.3e-03, 'weight': L1_weight},
+#                            {'avg': 0.53, 'stdev': 0.23, 'weight': L1_weight},
+#                            {'avg': 0.47, 'stdev': 0.21, 'weight': L1_weight},
+#                            {'a': 1.9, 'loc': -3.0e-05, 'scale': 8.7e-05, 'weight': L1_weight},
+#                            {'a': 1.9, 'loc': 5.4e-05, 'scale': 9.0e-05, 'weight': L1_weight},
+#                            {'avg': -0.082, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': -0.054, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': -0.047, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': 0.0, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': 0.07, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': -0.11, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': 0.021, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': 0.112, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': 0.053, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': 0.061, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': 0.040, 'stdev': stdev, 'weight': L1_weight},
+#                            {'avg': -0.036, 'stdev': stdev, 'weight': L1_weight},
+#                            ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ## starting guestimate NM
-T_h = 7
-rho_i = 0.01
+T_h = 3.5
+rho_i = 0.02
 rho_h1 = 0.002
 rho_h2 = 0.002
-beta1 = beta2 = 0.022
+beta1 = beta2 = 0.0215
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
 delta_beta_temporal = 0.01
