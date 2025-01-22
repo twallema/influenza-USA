@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 from datetime import datetime as datetime
 from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain, get_NC_influenza_data # influenza model
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
-from pySODM.optimization.objective_functions import ll_poisson
 
 ##############
 ## Settings ##
@@ -75,13 +74,26 @@ def pytensor_simulate_model_extract_output(theta):
     return simout
 
 # define a custom log likelihood function
+def gammaln_approx(x, num_terms=3):
+    """ Approximate scipy.special.gammaln using a series expansion - validated
+    """
+    # Constants
+    pi = 3.1415
+    bernoulli_numbers = [1/6, -1/30, 1/42, -1/30, 5/66]  # Precomputed B_2, B_4, ..., B_10
+    # Basic Stirling's approximation
+    log_gamma = (x - 0.5) * np.log(x) - x + 0.5 * np.log(2 * pi)
+    # Add higher-order terms
+    for k in range(1, num_terms + 1):
+        term = bernoulli_numbers[k-1] / (2 * k * (2 * k - 1) * x**(2 * k - 1))
+        log_gamma += term
+    return log_gamma
+
 def weighted_ll(value, mu):
+    """ Weighted Poisson likelihoods 
     """
-    Weighted Poisson likelihoods 
-    """
-    ll_0 = 1/pm.math.max(value[:,0]) * (- pm.math.sum(mu[:,0]) + pm.math.sum(value[:,0]*pm.math.log(mu[:,0])))
-    ll_1 = 1/pm.math.max(value[:,1]) * (- pm.math.sum(mu[:,1]) + pm.math.sum(value[:,1]*pm.math.log(mu[:,1])))
-    ll_2 = 1/pm.math.max(value[:,2]) * (- pm.math.sum(mu[:,2]) + pm.math.sum(value[:,2]*pm.math.log(mu[:,2])))
+    ll_0 = 1/pm.math.max(value[:,0]) * (- pm.math.sum(mu[:,0]) + pm.math.sum(value[:,0]*pm.math.log(mu[:,0])) - pm.math.sum(gammaln_approx(value[:,0])))
+    ll_1 = 1/pm.math.max(value[:,1]) * (- pm.math.sum(mu[:,1]) + pm.math.sum(value[:,1]*pm.math.log(mu[:,1])) - pm.math.sum(gammaln_approx(value[:,1])))
+    ll_2 = 1/pm.math.max(value[:,2]) * (- pm.math.sum(mu[:,2]) + pm.math.sum(value[:,2]*pm.math.log(mu[:,2])) - pm.math.sum(gammaln_approx(value[:,2])))
     return ll_0 + ll_1 + ll_2
 
 # define inference model
@@ -111,8 +123,8 @@ with pm.Model() as model:
 # tryout sampling (DEMetroplis didn't work)
 vars_list = list(model.values_to_rvs.keys())[:-1]
 chains = 44
-tune = 1000
-draws = 10000
+tune = 3000
+draws = 2000
 with model:
     trace = pm.sample(step=[pm.DEMetropolisZ(vars_list)], draws=draws, tune=tune, chains=chains, cores=16)
 
