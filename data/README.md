@@ -58,9 +58,9 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `influenza-surveillance-summary_NC_xx-xx.pdf`: End-of-season report on the xx-xx Influenza season in North Carolina. Of special interest is the figure at the bottom of page 6 titled 'Influenza Positive Tests Reported by PHE Facilities', whose data will be extracted using WebPlotDigitizer. Downloaded from https://flu.ncdhhs.gov/data.htm
 
-+ `hosp-admissions_NC_15-24.csv`: Weekly hospital admissions in North Carolina (reported by PHE facilities) from 2015 to 2024. Indexed on Saturday. Downloaded from: https://ncdetect.org/respiratory-dashboard/ by Matthew Mietchen.
++ `hosp-admissions_NC_10-25.csv`: Weekly hospital admissions in Emergency Departments in North Carolina from 2010 to 2025. Indexed on Saturday. Downloaded from: https://ncdetect.org/respiratory-dashboard/ > Admissions. Alternatively: https://covid19.ncdhhs.gov/dashboard/data-behind-dashboards > Hospital Admissions from the Emergency Department. Made available here: https://github.com/ACCIDDA/NC_Forecasting_Collab/blob/main/nc_data/cleaned/20250116_hosp_admissions.csv by Matthew Mietchen.
 
-+ `ILI_NC_15-24.csv`: Weekly ILI counts in North Carolina (reported by emergency departments) from 2015 to 2024. Indexed on Saturday. Downloaded from: https://ncdetect.org/respiratory-dashboard/ by Matthew Mietchen.
++ `ED-visits_NC_10-25.csv`: Weekly visits to Emergency Departments in North Carolina for Influenza-like illness (ILI) from 2010 to 2025. Indexed on Saturday. Downloaded from: https://ncdetect.org/respiratory-dashboard/ > Overall Trends. Made available here: https://github.com/ACCIDDA/NC_Forecasting_Collab/blob/main/nc_data/cleaned/20250116_hosp_admissions.csv by Matthew Mietchen.
 
 ### initial condition
 
@@ -128,7 +128,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `hosp-admissions_FluSurvNet_USA_09-24.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
 
-+ `subtypes_NC_14-24.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. 
++ `subtypes_NC_14-25.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Data for 2014-2024 were extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. Data for 2025 were downloaded from https://covid19.ncdhhs.gov/dashboard/respiratory-virus-surveillance.
 
 ## Conversion
 
