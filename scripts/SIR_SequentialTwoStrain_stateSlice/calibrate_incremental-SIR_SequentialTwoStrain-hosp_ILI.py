@@ -47,13 +47,13 @@ end_validation = datetime(season_start+1, 5, 1)                                 
 n_pso = 2000                                                                  # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 20000                                                                  # Number of MCMC iterations
+n_mcmc = 30000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 4                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
 discard = 10000                                                                 # Discard first `discard` iterations as burn-in
 thin = 1000                                                                     # Thinning factor emcee chains
 processes = 16                                                                   # Number of CPUs to use
-n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n = 1000                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                    # parameters to calibrate
