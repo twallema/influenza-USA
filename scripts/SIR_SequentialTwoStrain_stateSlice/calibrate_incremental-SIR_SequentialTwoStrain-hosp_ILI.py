@@ -29,7 +29,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2019-2020'                                # season to calibrate
+season = '2024-2025'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -40,14 +40,14 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start+1, 4, 25)                             # incremental calibration will start from here
+start_calibration = datetime(season_start+1, 1, 16)                             # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                                  # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 30000                                                                  # Number of MCMC iterations
+n_mcmc = 20000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 4                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
 discard = 10000                                                                 # Discard first `discard` iterations as burn-in
@@ -59,36 +59,36 @@ n = 500                                                                         
 pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                    # parameters to calibrate
 bounds = [(1, 21), (1e-4,0.15), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
 labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
-# OLD: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
-log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
-                           {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
-                           {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
-# NEW: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# log_prior_prob_fcn = 6*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
-# log_prior_prob_fcn_args = [{'a': 0.9, 'loc': 6.4e-01, 'scale': 3.2, 'weight': L1_weight},
-#                            {'a': 3.8, 'loc': -4.3e-05, 'scale': 4.9e-03, 'weight': L1_weight},
-#                            {'a': 4.8, 'loc': -2.5e-04, 'scale': 5.7e-04, 'weight': L1_weight},
-#                            {'a': 0.8, 'loc': 7.5e-04, 'scale': 1.9e-03, 'weight': L1_weight},
-#                            {'a': 3.0, 'loc': 1.3e-02, 'scale': 3.0e-03, 'weight': L1_weight},
-#                            {'a': 4.9, 'loc': 1.0e-02, 'scale': 2.3e-03, 'weight': L1_weight},
-#                            {'avg': 0.53, 'stdev': 0.23, 'weight': L1_weight},
-#                            {'avg': 0.47, 'stdev': 0.21, 'weight': L1_weight},
-#                            {'a': 1.9, 'loc': -3.0e-05, 'scale': 8.7e-05, 'weight': L1_weight},
-#                            {'a': 1.9, 'loc': 5.4e-05, 'scale': 9.0e-05, 'weight': L1_weight},
-#                            {'avg': -0.082, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': -0.054, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': -0.047, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': 0.0, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': 0.07, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': -0.11, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': 0.021, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': 0.112, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': 0.053, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': 0.061, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': 0.040, 'stdev': stdev, 'weight': L1_weight},
-#                            {'avg': -0.036, 'stdev': stdev, 'weight': L1_weight},
-#                            ]          # arguments of prior functions
+# UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
+# log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
+#                            {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
+#                            {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
+# INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+log_prior_prob_fcn = 6*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
+log_prior_prob_fcn_args = [{'a': 0.9, 'loc': 6.4e-01, 'scale': 3.2, 'weight': L1_weight},
+                           {'a': 3.8, 'loc': -4.3e-05, 'scale': 4.9e-03, 'weight': L1_weight},
+                           {'a': 4.8, 'loc': -2.5e-04, 'scale': 5.7e-04, 'weight': L1_weight},
+                           {'a': 0.8, 'loc': 7.5e-04, 'scale': 1.9e-03, 'weight': L1_weight},
+                           {'a': 3.0, 'loc': 1.3e-02, 'scale': 3.0e-03, 'weight': L1_weight},
+                           {'a': 4.9, 'loc': 1.0e-02, 'scale': 2.3e-03, 'weight': L1_weight},
+                           {'avg': 0.53, 'stdev': 0.23, 'weight': L1_weight},
+                           {'avg': 0.47, 'stdev': 0.21, 'weight': L1_weight},
+                           {'a': 1.9, 'loc': -3.0e-05, 'scale': 8.7e-05, 'weight': L1_weight},
+                           {'a': 1.9, 'loc': 5.4e-05, 'scale': 9.0e-05, 'weight': L1_weight},
+                           {'avg': -0.082, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': -0.054, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': -0.047, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': 0.0, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': 0.07, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': -0.11, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': 0.021, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': 0.112, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': 0.053, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': 0.061, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': 0.040, 'stdev': stdev, 'weight': L1_weight},
+                           {'avg': -0.036, 'stdev': stdev, 'weight': L1_weight},
+                           ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ## starting guestimate NM
@@ -99,7 +99,7 @@ rho_h2 = 0.002
 beta1 = beta2 = 0.0215
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
-delta_beta_temporal = 0.01
+delta_beta_temporal = [-0.08, -0.05, -0.05, 0.001, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04] # 0.01
 
 #####################
 ## Load NC dataset ##
@@ -165,7 +165,7 @@ if __name__ == '__main__':
         #################
 
         # set ballpark theta
-        theta = [T_h, rho_i, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
+        theta = [T_h, rho_i, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + delta_beta_temporal # len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
 
         # perform optimization 
         ## PSO
@@ -312,7 +312,7 @@ if __name__ == '__main__':
         ax[0].grid(False)
         ax[0].set_title(f'{state}\nHospitalisations')
         ax[0].set_ylabel('Weekly hospital inc. (-)')
-        ax[0].set_ylim([0,3500])
+        ax[0].set_ylim([0,2000])
         ## Flu A
         ax[1].scatter(x_calibration_data, 7*df_calib['H_inc_A'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
