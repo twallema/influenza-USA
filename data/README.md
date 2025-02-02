@@ -130,6 +130,10 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `subtypes_NC_14-25.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Data for 2014-2024 were extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. Data for 2025 were downloaded from https://covid19.ncdhhs.gov/dashboard/respiratory-virus-surveillance.
 
+### Calibration
+
++ `calibrated_parameters.csv`: Contains the North Carolina two strain sequential infection model's parameters, when calibrated seperately to the seasons 2014-2015 until 2023-2024. Used as initial starting point for the Bayesian hierarchical model training.
+
 ## Conversion
 
 ### Demography

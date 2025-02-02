@@ -11,7 +11,6 @@ import random
 import emcee
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
@@ -29,7 +28,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emce
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2024-2025'                                # season to calibrate
+season = '2019-2020'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -40,16 +39,16 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start+1, 1, 19)                             # incremental calibration will start from here
+start_calibration = datetime(season_start, 12, 15)                             # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                                  # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 25000                                                                  # Number of MCMC iterations
+n_mcmc = 15000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 4                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
+print_n = 5000                                                                 # Print diagnostics every `print_n`` iterations
 discard = 10000                                                                 # Discard first `discard` iterations as burn-in
 thin = 1000                                                                     # Thinning factor emcee chains
 processes = 16                                                                   # Number of CPUs to use
@@ -66,28 +65,28 @@ labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1
 #                            {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_beta] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
-log_prior_prob_fcn_args = [{'a': 1, 'loc': 0, 'scale': 3.8, 'weight': L1_weight},
-                           {'a': 3.7, 'loc': 0, 'scale': 5.1e-03, 'weight': L1_weight},
-                           {'a': 4.2, 'loc': 0, 'scale': 5.9e-04, 'weight': L1_weight},
-                           {'a': 4.5, 'loc': 0, 'scale': 6.0e-04, 'weight': L1_weight},
-                           {'avg': 2.3e-02, 'stdev': 5.7e-03, 'weight': L1_weight},
-                           {'avg': 2.2e-02, 'stdev': 4.2e-03, 'weight': L1_weight},
-                           {'a': 5.6, 'b': 5.2, 'loc': 0, 'scale': 1, 'weight': L1_weight},
-                           {'a': 5.8, 'b': 5.7, 'loc': 0, 'scale': 1, 'weight': L1_weight},
-                           {'a': 1.8, 'loc': 0, 'scale': 8.0e-05, 'weight': L1_weight},
-                           {'a': 2.4, 'loc': 0, 'scale': 9.5e-05, 'weight': L1_weight},
-                           {'avg': -0.07, 'stdev': 0.04, 'weight': L1_weight},
-                           {'avg': -0.05, 'stdev': 0.04, 'weight': L1_weight},
-                           {'avg': -0.05, 'stdev': 0.04, 'weight': L1_weight},
-                           {'avg': 0.01, 'stdev': 0.07, 'weight': L1_weight},
-                           {'avg': 0.07, 'stdev': 0.08, 'weight': L1_weight},
-                           {'avg': -0.11, 'stdev': 0.10, 'weight': L1_weight},
+log_prior_prob_fcn_args = [{'a': 1, 'loc': 0, 'scale': 4.5, 'weight': L1_weight},
+                           {'a': 3.5, 'loc': 0, 'scale': 5.5e-03, 'weight': L1_weight},
+                           {'a': 3.9, 'loc': 0, 'scale': 6.1e-04, 'weight': L1_weight},
+                           {'a': 3.8, 'loc': 0, 'scale': 6.4e-04, 'weight': L1_weight},
+                           {'avg': 2.3e-02, 'stdev': 6.1e-03, 'weight': L1_weight},
+                           {'avg': 2.1e-02, 'stdev': 3.9e-03, 'weight': L1_weight},
+                           {'a': 6.9, 'b': 5.9, 'loc': 0, 'scale': 1, 'weight': L1_weight},
+                           {'a': 7.4, 'b': 7.1, 'loc': 0, 'scale': 1, 'weight': L1_weight},
+                           {'a': 1.6, 'loc': 0, 'scale': 7.6e-05, 'weight': L1_weight},
+                           {'a': 2.7, 'loc': 0, 'scale': 8.8e-05, 'weight': L1_weight},
+                           {'avg': -0.07, 'stdev': 0.05, 'weight': L1_weight},
+                           {'avg': -0.04, 'stdev': 0.04, 'weight': L1_weight},
+                           {'avg': -0.05, 'stdev': 0.05, 'weight': L1_weight},
+                           {'avg': 0.01, 'stdev': 0.08, 'weight': L1_weight},
+                           {'avg': 0.06, 'stdev': 0.09, 'weight': L1_weight},
+                           {'avg': -0.12, 'stdev': 0.12, 'weight': L1_weight},
                            {'avg': 0.02, 'stdev': 0.08, 'weight': L1_weight},
                            {'avg': 0.10, 'stdev': 0.09, 'weight': L1_weight},
-                           {'avg': 0.05, 'stdev': 0.10, 'weight': L1_weight},
+                           {'avg': 0.04, 'stdev': 0.13, 'weight': L1_weight},
                            {'avg': 0.06, 'stdev': 0.07, 'weight': L1_weight},
-                           {'avg': 0.04, 'stdev': 0.15, 'weight': L1_weight},
-                           {'avg': -0.04, 'stdev': 0.07, 'weight': L1_weight},
+                           {'avg': 0.07, 'stdev': 0.15, 'weight': L1_weight},
+                           {'avg': -0.03, 'stdev': 0.07, 'weight': L1_weight},
                            ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
