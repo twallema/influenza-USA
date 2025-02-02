@@ -20,7 +20,7 @@ from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_Sequentia
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
-from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal
+from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal, log_prior_beta
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
 
 ##############
@@ -40,20 +40,20 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start+1, 1, 16)                             # incremental calibration will start from here
+start_calibration = datetime(season_start+1, 1, 19)                             # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                                  # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 30000                                                                  # Number of MCMC iterations
+n_mcmc = 25000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 4                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10000                                                                 # Print diagnostics every `print_n`` iterations
 discard = 10000                                                                 # Discard first `discard` iterations as burn-in
 thin = 1000                                                                     # Thinning factor emcee chains
 processes = 16                                                                   # Number of CPUs to use
-n = 1000                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                    # parameters to calibrate
@@ -65,29 +65,29 @@ labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1
 #                            {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
 #                            {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-log_prior_prob_fcn = 6*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
-log_prior_prob_fcn_args = [{'a': 0.9, 'loc': 6.4e-01, 'scale': 3.2, 'weight': L1_weight},
-                           {'a': 3.8, 'loc': -4.3e-05, 'scale': 4.9e-03, 'weight': L1_weight},
-                           {'a': 4.8, 'loc': -2.5e-04, 'scale': 5.7e-04, 'weight': L1_weight},
-                           {'a': 0.8, 'loc': 7.5e-04, 'scale': 1.9e-03, 'weight': L1_weight},
-                           {'a': 3.0, 'loc': 1.3e-02, 'scale': 3.0e-03, 'weight': L1_weight},
-                           {'a': 4.9, 'loc': 1.0e-02, 'scale': 2.3e-03, 'weight': L1_weight},
-                           {'avg': 0.53, 'stdev': 0.23, 'weight': L1_weight},
-                           {'avg': 0.47, 'stdev': 0.21, 'weight': L1_weight},
-                           {'a': 1.9, 'loc': -3.0e-05, 'scale': 8.7e-05, 'weight': L1_weight},
-                           {'a': 1.9, 'loc': 5.4e-05, 'scale': 9.0e-05, 'weight': L1_weight},
-                           {'avg': -0.082, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.054, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.047, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.0, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.07, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.11, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.021, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.112, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.053, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.061, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': 0.040, 'stdev': stdev, 'weight': L1_weight},
-                           {'avg': -0.036, 'stdev': stdev, 'weight': L1_weight},
+log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_beta] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
+log_prior_prob_fcn_args = [{'a': 1, 'loc': 0, 'scale': 3.8, 'weight': L1_weight},
+                           {'a': 3.7, 'loc': 0, 'scale': 5.1e-03, 'weight': L1_weight},
+                           {'a': 4.2, 'loc': 0, 'scale': 5.9e-04, 'weight': L1_weight},
+                           {'a': 4.5, 'loc': 0, 'scale': 6.0e-04, 'weight': L1_weight},
+                           {'avg': 2.3e-02, 'stdev': 5.7e-03, 'weight': L1_weight},
+                           {'avg': 2.2e-02, 'stdev': 4.2e-03, 'weight': L1_weight},
+                           {'a': 5.6, 'b': 5.2, 'loc': 0, 'scale': 1, 'weight': L1_weight},
+                           {'a': 5.8, 'b': 5.7, 'loc': 0, 'scale': 1, 'weight': L1_weight},
+                           {'a': 1.8, 'loc': 0, 'scale': 8.0e-05, 'weight': L1_weight},
+                           {'a': 2.4, 'loc': 0, 'scale': 9.5e-05, 'weight': L1_weight},
+                           {'avg': -0.07, 'stdev': 0.04, 'weight': L1_weight},
+                           {'avg': -0.05, 'stdev': 0.04, 'weight': L1_weight},
+                           {'avg': -0.05, 'stdev': 0.04, 'weight': L1_weight},
+                           {'avg': 0.01, 'stdev': 0.07, 'weight': L1_weight},
+                           {'avg': 0.07, 'stdev': 0.08, 'weight': L1_weight},
+                           {'avg': -0.11, 'stdev': 0.10, 'weight': L1_weight},
+                           {'avg': 0.02, 'stdev': 0.08, 'weight': L1_weight},
+                           {'avg': 0.10, 'stdev': 0.09, 'weight': L1_weight},
+                           {'avg': 0.05, 'stdev': 0.10, 'weight': L1_weight},
+                           {'avg': 0.06, 'stdev': 0.07, 'weight': L1_weight},
+                           {'avg': 0.04, 'stdev': 0.15, 'weight': L1_weight},
+                           {'avg': -0.04, 'stdev': 0.07, 'weight': L1_weight},
                            ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -275,6 +275,7 @@ if __name__ == '__main__':
         # Save as a .csv
         df = out.to_dataframe().reset_index()
         df.to_csv(samples_path+f'{identifier}_simulation-output.csv', index=False)
+        df.to_csv(samples_path+f'{identifier}_simulation-output.csv.gz', index=False, compression={'method': 'gzip'})
 
         # Construct delta_beta_temporal trajectory
         # ----------------------------------------
