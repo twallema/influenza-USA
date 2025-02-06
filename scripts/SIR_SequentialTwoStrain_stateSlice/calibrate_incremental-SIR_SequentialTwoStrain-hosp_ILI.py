@@ -15,12 +15,12 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
 from influenza_USA.shared.utils import name2fips
-from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain, get_NC_influenza_data # influenza model
+from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain, get_NC_influenza_data, pySODM_to_hubverse # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
 from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal, log_prior_beta
-from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler, emcee_sampler_to_dictionary
+from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler
 
 ##############
 ## Settings ##
@@ -46,11 +46,11 @@ end_validation = datetime(season_start+1, 5, 1)                                 
 n_pso = 2000                                                                  # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 15000                                                                  # Number of MCMC iterations
-multiplier_mcmc = 4                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 5000                                                                 # Print diagnostics every `print_n`` iterations
-discard = 10000                                                                 # Discard first `discard` iterations as burn-in
-thin = 1000                                                                     # Thinning factor emcee chains
+n_mcmc = 30000                                                                  # Number of MCMC iterations
+multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
+print_n = 10000                                                                # Print diagnostics every `print_n`` iterations
+discard = 1000                                                                 # Discard first `discard` iterations as burn-in
+thin = 10000                                                                     # Thinning factor emcee chains
 processes = 16                                                                   # Number of CPUs to use
 n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
@@ -170,8 +170,8 @@ if __name__ == '__main__':
         ## PSO
         #theta, _ = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)
         ## Nelder-Mead
-        theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-                                        processes=1, max_iter=n_pso, no_improv_break=1000)
+        #theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        #                                processes=1, max_iter=n_pso, no_improv_break=1000)
 
         ######################
         ## Visualize result ##
@@ -231,18 +231,14 @@ if __name__ == '__main__':
         ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
-                'n_chains': nwalkers, 'starting_estimate': list(theta), 'labels': labels, 'season': season,
-                'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd}
+                  'season': season, 'starting_estimate': list(theta),
+                  'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd}
         # Sample n_mcmc iterations
-        sampler = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 
-                                            moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1),
-                                                    (emcee.moves.StretchMove(live_dangerously=True), 0.50)],
-                                            settings_dict=settings,
-                                            objective_function_kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}}
+        sampler, samples_xr = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 
+                                                    moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1), (emcee.moves.StretchMove(live_dangerously=True), 0.50)],
+                                                    settings_dict=settings, objective_function_kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}}
                                             )                                                                               
-        # Generate a sample dictionary and save it as .json for long-term storage
-        samples_dict = emcee_sampler_to_dictionary(samples_path, identifier, run_date=run_date, discard=discard, thin=thin)
-
+ 
         #######################
         ## Visualize results ##
         #######################
@@ -250,31 +246,28 @@ if __name__ == '__main__':
         # Simulate the model
         # ------------------
 
-        def draw_fcn(parameters, samples):
-            idx, parameters['T_h'] = random.choice(list(enumerate(samples['T_h'])))
-            parameters['rho_i'] = samples['rho_i'][idx]
-            parameters['rho_h1'] = samples['rho_h1'][idx]
-            parameters['rho_h2'] = samples['rho_h2'][idx]
-            parameters['beta1'] = samples['beta1'][idx]
-            parameters['beta2'] = samples['beta2'][idx]
-            parameters['f_R1_R2'] = samples['f_R1_R2'][idx]
-            parameters['f_R1'] = samples['f_R1'][idx]
-            parameters['f_I1'] = samples['f_I1'][idx]
-            parameters['f_I2'] = samples['f_I2'][idx]
-            parameters['delta_beta_temporal'] = np.array([slice[idx] for slice in samples['delta_beta_temporal']])
+        def draw_fcn(parameters, samples_xr):
+            # get a random iteration and markov chain
+            i = random.randint(0, len(samples_xr.coords['iteration'])-1)
+            j = random.randint(0, len(samples_xr.coords['chain'])-1)
+            # assign parameters
+            for var in pars:
+                parameters[var] = samples_xr[var].sel({'iteration': i, 'chain': j}).values
             return parameters
         
         # Simulate model
         out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n,
-                            draw_function=draw_fcn, draw_function_kwargs={'samples': samples_dict}, processes=1)
+                            draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr}, processes=1)
         
+        # Aggregate hospitalised for Flu A and Flu B
+        out['H_inc'] = out['H1_inc'] + out['H2_inc']
+
         # Add sampling noise
         out = add_poisson_noise(out)
 
-        # Save as a .csv
-        df = out.to_dataframe().reset_index()
-        df.to_csv(samples_path+f'{identifier}_simulation-output.csv', index=False)
-        df.to_csv(samples_path+f'{identifier}_simulation-output.csv.gz', index=False, compression={'method': 'gzip'})
+        # Save as a .csv in hubverse format / raw netcdf
+        df = pySODM_to_hubverse(out, end_date+timedelta(weeks=1), 'wk inc flu hosp', 'H_inc', samples_path)
+        out.to_netcdf(samples_path+f'{identifier}_simulation-output.nc')
 
         # Construct delta_beta_temporal trajectory
         # ----------------------------------------
@@ -289,9 +282,9 @@ if __name__ == '__main__':
         x = pd.date_range(start=start_simulation, end=end_validation, freq='d').tolist()
         # compute output
         for d in x:
-            y.append(f(d, {}, 1, np.mean(np.array(samples_dict['delta_beta_temporal']), axis=1))[0])
-            lower.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=0.05/2, axis=1))[0])
-            upper.append(f(d, {}, 1, np.quantile(np.array(samples_dict['delta_beta_temporal']), q=1-0.05/2, axis=1))[0])
+            y.append(f(d, {}, 1, samples_xr['delta_beta_temporal'].mean(dim=['chain', 'iteration']))[0])
+            lower.append(f(d, {}, 1, samples_xr['delta_beta_temporal'].quantile(q=0.05/2, dim=['chain', 'iteration']))[0])
+            upper.append(f(d, {}, 1, samples_xr['delta_beta_temporal'].quantile(q=1-0.05/2, dim=['chain', 'iteration']))[0])
 
         # Build figure
         # ------------

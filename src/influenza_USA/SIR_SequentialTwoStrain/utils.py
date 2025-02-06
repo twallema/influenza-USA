@@ -8,7 +8,8 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import os
 import numpy as np
 import pandas as pd
-from datetime import datetime as datetime
+import xarray as xr
+from datetime import datetime, timedelta
 from influenza_USA.shared.utils import construct_coordinates_dictionary, name2fips, get_contact_matrix, compute_case_hospitalisation_rate
 
 # all paths relative to the location of this file
@@ -16,31 +17,31 @@ abs_dir = os.path.dirname(__file__)
 
 def initialise_SIR_SequentialTwoStrain(spatial_resolution='states', age_resolution='full', state=None, season='average', distinguish_daytype=True):
     """
-    Initialises a two-strain sequential infection model. Optionally simulate a single state.
+    Initialises the two-strain sequential infection model. Optionally simulate a single state.
 
     input
     -----
 
-    spatial_resolution: str
-        'collapsed', 'states' or 'counties'. 
+    - spatial_resolution: str
+        - 'collapsed', 'states' or 'counties'. 
 
-    age_resolution: str
-        'collapsed' or 'full'. 
+    - age_resolution: str
+        - 'collapsed' or 'full'. 
 
-    state: str
-        valid US state name.
+    - state: str
+        - valid US state name.
 
-    season: str
-        influenza season. used to set the model's U-shaped severity curve.
+    - season: str
+        - influenza season. used to set the model's U-shaped severity curve.
         
-    distinguish_daytype: bool
-        Differ contacts by weekday, weekendday and holiday.
+    - distinguish_daytype: bool
+        - differ contacts by weekday, weekendday and holiday.
 
     output
     ------
 
-    model: pySODM model
-        Initialised pySODM two-strain sequential infection SIR model
+    - model: pySODM model
+        - initialised pySODM two-strain sequential infection SIR model
     """
     
     # model works at US state or county level
@@ -110,20 +111,20 @@ def get_NC_influenza_data(startdate, enddate, season):
     input
     -----
 
-    startdate: str/datetime
-        Start of dataset
+    - startdate: str/datetime
+        - start of dataset
     
-    enddate: str/datetime
-        End of dataset
+    - enddate: str/datetime
+        - end of dataset
 
-    season: str
-        Influenza season
+    - season: str
+        - influenza season
 
     output
     ------
 
-    data: pd.DataFrame
-        index: 'date' [datetime], columns: 'H_inc', 'I_inc', 'H_inc_A', 'H_inc_B' (frequency: weekly, converted to daily)
+    - data: pd.DataFrame
+        - index: 'date' [datetime], columns: 'H_inc', 'I_inc', 'H_inc_A', 'H_inc_B' (frequency: weekly, converted to daily)
     """
 
     # load raw Hospitalisation and ILI data + convert to daily incidence
@@ -155,3 +156,66 @@ def get_NC_influenza_data(startdate, enddate, season):
     df_merged = df_merged.dropna()
     # throw out `fraction_A`
     return df_merged[['H_inc', 'I_inc', 'H_inc_A', 'H_inc_B']].loc[slice(startdate,enddate)]
+
+
+def pySODM_to_hubverse(simout: xr.Dataset,
+                        reference_date: datetime,
+                        target: str,
+                        model_state: str,
+                        path: str=None) -> pd.DataFrame:
+    """
+    Convert pySODM simulation result to Hubverse format
+
+    Parameters
+    ----------
+    - simout: xr.Dataset
+        - pySODM simulation output. must contain `model_state`.
+
+    - reference_date: datetime
+        - when using data until a Saturday `x` to calibrate the model, `reference_date` is the date of the next saturday `x+1`.
+
+    - target: str
+        - simulation target, typically 'wk inc flu hosp'.
+
+    - path: str
+        - path to save result in. if no path provided, does not save result.
+
+    Returns
+    -------
+
+    - hubverse_df: pd.Dataframe
+        - forecast in hubverse format
+
+    Reference
+    ---------
+
+    https://github.com/cdcepi/FluSight-forecast-hub/blob/main/model-output/README.md#Forecast-file-format
+    """
+
+    # deduce information from simout
+    location = list(simout.coords['location'].values)
+    output_type_id = simout.coords['draws'].values
+    # fixed metadata
+    horizon = range(-1,3)
+    output_type = 'samples'
+    # derived metadata
+    target_end_date = [reference_date + timedelta(weeks=h) for h in horizon]
+
+    # pre-allocate dataframe
+    idx = pd.MultiIndex.from_product([[reference_date,], [target,], horizon, location, [output_type,], output_type_id],
+                                        names=['reference_date', 'target', 'horizon', 'location', 'output_type', 'output_type_id'])
+    df = pd.DataFrame(index=idx, columns=['value'])
+    # attach target end date
+    df = df.reset_index()
+    df['target_end_date'] = df.apply(lambda row: row['reference_date'] + timedelta(weeks=row['horizon']), axis=1)
+
+    # fill in dataframe
+    for loc in location:
+        for draw in output_type_id:
+            df.loc[((df['output_type_id'] == draw) & (df['location'] == loc)), 'value'] = 7*simout[model_state].sum(dim='age_group').sel({'location': loc, 'draws': draw}).interp(date=target_end_date).values
+    
+    # save result
+    if path:
+        df.to_csv(path+reference_date.strftime('%Y-%m-%d')+'-JHU_IDD'+'-hierarchSIM.csv', index=False)
+
+    return df
