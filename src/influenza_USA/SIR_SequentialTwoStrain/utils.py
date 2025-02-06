@@ -137,6 +137,8 @@ def get_NC_influenza_data(startdate, enddate, season):
     data_raw[1] = data_raw[1].rename('I_inc')
     # merge
     data_raw = pd.concat(data_raw, axis=1)
+    # change index name
+    data_raw.index.name = 'date'
     # slice right dates
     data_raw = data_raw.loc[slice(startdate,enddate)]
     # load subtype data flu A vs. flu B
