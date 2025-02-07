@@ -28,7 +28,7 @@ from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2019-2020'                                # season to calibrate
+season = '2024-2025'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -39,20 +39,20 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 15)                             # incremental calibration will start from here
+start_calibration = datetime(season_start+1, 1, 21)                             # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                                  # Number of PSO iterations
 multiplier_pso = 10                                                             # PSO swarm size
 ## bayesian inference
-n_mcmc = 30000                                                                  # Number of MCMC iterations
+n_mcmc = 20000                                                                  # Number of MCMC iterations
 multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 10000                                                                # Print diagnostics every `print_n`` iterations
 discard = 1000                                                                 # Discard first `discard` iterations as burn-in
 thin = 10000                                                                     # Thinning factor emcee chains
 processes = 16                                                                   # Number of CPUs to use
-n = 500                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n = 750                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                    # parameters to calibrate
@@ -170,8 +170,8 @@ if __name__ == '__main__':
         ## PSO
         #theta, _ = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)
         ## Nelder-Mead
-        #theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
-        #                                processes=1, max_iter=n_pso, no_improv_break=1000)
+        theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+                                        processes=1, max_iter=n_pso, no_improv_break=1000)
 
         ######################
         ## Visualize result ##
