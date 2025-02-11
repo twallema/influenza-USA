@@ -28,9 +28,10 @@ ar = 'full'                                         # age resolution: 'collapsed
 dd = False                                          # vary contact matrix by daytype
 
 # calibration settings
-seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2023-2024']
-start_calibration_month = 10 
-end_calibration_month = 5
+use_ED_visits = True                                                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
+seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2023-2024']    # season to include in calibration excercise
+start_calibration_month = 10                                                                # start calibration on month 10, day 1
+end_calibration_month = 5                                                                   # end calibration on month 5, day 1
 
 # Define number of chains
 max_n = 5000
@@ -38,13 +39,16 @@ n_chains = 500
 pert = 0.05
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'test'
-print_n = 2
+print_n = 10
 backend = None
 discard = 0
 thin = 1
 
 # Make folder structure
-samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/' # Path to backend
+if use_ED_visits:
+    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/use_ED_visits/' # Path to backend
+else:
+    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/not_use_ED_visits/' # Path to backend
 # check if samples folder exists, if not, make it
 if not os.path.exists(samples_path):
     os.makedirs(samples_path)
@@ -74,7 +78,13 @@ model = initialise_model(strains=True, spatial_resolution=sr, age_resolution=ar,
 states_model = ['I_inc', 'H1_inc', 'H2_inc']
 states_data = ['I_inc', 'H_inc_A', 'H_inc_B']
 
+# cut out 'I_inc'
+if not use_ED_visits:
+    states_model = states_model[1:]
+    states_data = states_data[1:]
+
 # define model parameters to calibrate to every season and their bounds
+# not how we're not cutting out the parameters associated with the ED visit data
 pars_model_names = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']
 pars_model_bounds = [(0.1, 15), (1e-5,0.05), (1e-5,0.01), (1e-5,0.01), (0.001,0.05), (0.001,0.05), (0.001,0.999), (0.001,0.999), (1e-7,5e-4), (1e-7,5e-4), (-0.5,0.5)]
 _, pars_model_shapes = validate_calibrated_parameters(pars_model_names, model.parameters)
@@ -100,7 +110,7 @@ hyperpars_shapes = {
 ####################################
 
 # get independent fit parameters
-pars_model_0 = pd.read_csv('../../../data/interim/calibration/calibrated_parameters.csv', index_col=0)[seasons]
+pars_model_0 = pd.read_csv('../../../data/interim/calibration/calibrated_parameters-SequentialTwoStrain.csv', index_col=0)[seasons]
 
 # parameters
 pars_0 = list(pars_model_0.transpose().values.flatten())
@@ -169,8 +179,8 @@ if __name__ == '__main__':
                 # ..dump samples
                 samples = dump_sampler_to_xarray(sampler.get_chain(discard=discard, thin=thin), samples_path+str(identifier)+'_SAMPLES_'+run_date+'.nc', hyperpars_shapes, pars_model_shapes, seasons)
                 # .. visualise hyperdistributions
-                #hyperdistributions(samples, pars_model_shapes, pars_model_bounds, 300)
+                hyperdistributions(samples, samples_path+str(identifier)+'_HYPERDIST_'+run_date+'.pdf', pars_model_shapes, pars_model_bounds, 300)
                 # ..generate goodness-of-fit
-                #plot_fit(model, datasets, samples, pars_model_names)
+                plot_fit(model, datasets, samples, pars_model_names, samples_path, identifier, run_date)
                 # ..generate traceplots
-                #traceplot(samples, pars_model_shapes, hyperpars_shapes)
+                traceplot(samples, pars_model_shapes, hyperpars_shapes, samples_path, identifier, run_date)

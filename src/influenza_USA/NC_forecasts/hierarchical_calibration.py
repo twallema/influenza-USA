@@ -118,7 +118,7 @@ def log_posterior_probability(theta, model, datasets, pars_model_names, pars_mod
 ## Function to save the chains ##
 #################################
 
-def dump_sampler_to_xarray(samples_np, path_name, hyperpars_shapes, pars_shapes, seasons):
+def dump_sampler_to_xarray(samples_np, path_filename, hyperpars_shapes, pars_shapes, seasons):
     """
     A function converting the raw samples from `emcee` (numpy matrix) to a more convenient xarray dataset
     """
@@ -172,7 +172,7 @@ def dump_sampler_to_xarray(samples_np, path_name, hyperpars_shapes, pars_shapes,
     samples_xr = xr.Dataset(data)
 
     # save it
-    samples_xr.to_netcdf(path_name)
+    samples_xr.to_netcdf(path_filename)
 
     return samples_xr
 
@@ -180,7 +180,7 @@ def dump_sampler_to_xarray(samples_np, path_name, hyperpars_shapes, pars_shapes,
 ## Hyperdistributions ##
 ########################
 
-def hyperdistributions(samples_xr, pars_model_shapes, bounds, N):
+def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
 
     # get the element-expanded number of parameters and the parameter's names
     pars_model_names = pars_model_shapes.keys()
@@ -255,7 +255,7 @@ def hyperdistributions(samples_xr, pars_model_shapes, bounds, N):
         ## TEMPORAL BETAS
         elif par_name == 'delta_beta_temporal':
             ### get transmission rate function
-            from influenza_USA.SIR_SequentialTwoStrain.TDPF import transmission_rate_function
+            from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
             f = transmission_rate_function(sigma=2.5)
             x = pd.date_range(start=datetime(2020,10,21), end=datetime(2021,4,10), freq='2D').tolist()
             ### compute modifier tranjectory of every season and plot
@@ -282,7 +282,7 @@ def hyperdistributions(samples_xr, pars_model_shapes, bounds, N):
 
     fig.delaxes(axes[5,1])
     plt.tight_layout()
-    plt.savefig('hyperdistributions.pdf')
+    plt.savefig(path_filename)
     plt.close()
 
     pass
@@ -306,7 +306,7 @@ def draw_function(parameters, samples_xr, season, pars_model_names):
         parameters[var] = samples_xr[var].sel({'iteration': i, 'chain': j, 'season': season}).values
     return parameters
 
-def plot_fit(model, datasets, samples_xr, pars_model_names):
+def plot_fit(model, datasets, samples_xr, pars_model_names, path, identifier, run_date):
     """
     Visualises the goodness of fit for every season
     """
@@ -356,14 +356,17 @@ def plot_fit(model, datasets, samples_xr, pars_model_names):
         ax[3].set_ylabel('Weekly ILI inc. (-)')
         fig.suptitle(f'{season}')
         plt.tight_layout()
-        plt.savefig(f'plot-fit_{season}.pdf')
+        # check if samples folder exists, if not, make it
+        if not os.path.exists(path+'fit/'):
+            os.makedirs(path+'fit/')
+        plt.savefig(path+'fit/'+str(identifier)+'_FIT-'+f'{season}_'+run_date+'.pdf')
         plt.close()
 
 ################
 ## Traceplots ##
 ################
 
-def traceplot(samples_xr, pars_model_shapes, hyperpars_shapes):
+def traceplot(samples_xr, pars_model_shapes, hyperpars_shapes, path, identifier, run_date):
     """
     Saves traceplots for hyperparameters, as well as the model's parameters for every season
     """
@@ -409,7 +412,10 @@ def traceplot(samples_xr, pars_model_shapes, hyperpars_shapes):
             
         ax[0].set_xlabel('iteration (-)', fontsize=9)
         plt.tight_layout()
-        plt.savefig(f'pars_model_{season}_trace.pdf')
+        # check if samples folder exists, if not, make it
+        if not os.path.exists(path+'trace/'):
+            os.makedirs(path+'trace/')
+        plt.savefig(path+'trace/'+str(identifier)+'_TRACE-'+f'{season}_'+run_date+'.pdf')
         plt.close()
 
     # hyperpars
@@ -441,7 +447,7 @@ def traceplot(samples_xr, pars_model_shapes, hyperpars_shapes):
         
     ax[0].set_xlabel('iteration (-)', fontsize=9)
     plt.tight_layout()
-    plt.savefig('hyperpars_trace.pdf')
+    plt.savefig(path+'trace/'+str(identifier)+'_TRACE-hyperdist_'+run_date+'.pdf')
     plt.close()
 
     pass

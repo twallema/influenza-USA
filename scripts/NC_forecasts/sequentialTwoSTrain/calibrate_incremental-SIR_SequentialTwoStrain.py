@@ -1,5 +1,5 @@
 """
-This script calibrates an age-stratified spatially-explicit two-strain sequential infection SIR model to North Carolina hospital admission data
+This script calibrates an age-stratified spatially-explicit two-strain sequential infection SIR model to North Carolina ED admission and ED visits data
 It automatically calibrates to incrementally larger datasets between `start_calibration` and `end_calibration`
 """
 
@@ -38,7 +38,7 @@ L1_weight = 1                                       # Forcing strength on tempor
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
-use_ED_visits = True                                      # use both ED admission (hospitalisation) and ED visits (ILI) data 
+use_ED_visits = True                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
 ## dates
 start_calibration = datetime(season_start+1, 1, 21)         # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
@@ -66,8 +66,11 @@ labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1
 #                            {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_beta] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
-log_prior_prob_fcn_args = [{'a': 1, 'loc': 0, 'scale': 4.5, 'weight': L1_weight},
+log_prior_prob_fcn_args = [ 
+                           # ED visits
+                           {'a': 1, 'loc': 0, 'scale': 4.5, 'weight': L1_weight},
                            {'a': 3.5, 'loc': 0, 'scale': 5.5e-03, 'weight': L1_weight},
+                           # >>>>>>>>>
                            {'a': 3.9, 'loc': 0, 'scale': 6.1e-04, 'weight': L1_weight},
                            {'a': 3.8, 'loc': 0, 'scale': 6.4e-04, 'weight': L1_weight},
                            {'avg': 2.3e-02, 'stdev': 6.1e-03, 'weight': L1_weight},
