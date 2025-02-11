@@ -1,9 +1,9 @@
 """
-This script contains the time-dependent parameter functions associated with the age-stratified spatially-explicit two-strain sequential infection SIR model
+This script contains the time-dependent parameter functions associated with the North Carolina influenza forecasting models
 """
 
 __author__      = "Tijs Alleman"
-__copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
+__copyright__   = "Copyright (c) 2025 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
 import numpy as np
 from influenza_USA.shared.utils import get_smooth_temporal_modifier
@@ -60,10 +60,35 @@ from influenza_USA.shared.utils import construct_initial_susceptible
 class make_initial_condition_function():
 
     def __init__(self, spatial_resolution, age_resolution, spatial_coordinates):
-        # retrieve the demography (susceptible pool)
         self.demography = construct_initial_susceptible(spatial_resolution, age_resolution, spatial_coordinates)
+        pass
 
-    def initial_condition_function(self, f_I1, f_I2, f_R1_R2, f_R1):
+    def initial_condition_function_oneStrain(self, f_I, f_R):
+        """
+        A function setting the model's initial condition.
+        
+        input
+        -----
+
+        f_I: float
+            Fraction of the population initially infected
+        
+        f_R1: float
+            Fraction of the population initially immune
+
+        output
+        ------
+
+        initial_condition: dict
+            Keys: 'S', ... . Values: np.ndarray (n_age x n_loc).
+        """
+
+        return {'S':  (1 - f_I - f_R) * self.demography,
+                'I':f_I * self.demography,   
+                'R': f_R * self.demography,
+                }
+
+    def initial_condition_function_twoStrain(self, f_I1, f_I2, f_R1_R2, f_R1):
         """
         A function setting the model's initial condition.
         

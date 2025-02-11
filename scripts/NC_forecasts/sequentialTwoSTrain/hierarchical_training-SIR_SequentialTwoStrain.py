@@ -3,7 +3,7 @@ This script does..
 """
 
 __author__      = "Tijs Alleman"
-__copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
+__copyright__   = "Copyright (c) 2025 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
 import os
 import emcee
@@ -13,8 +13,8 @@ from datetime import datetime
 from multiprocessing import get_context
 from influenza_USA.shared.utils import name2fips
 from pySODM.optimization.objective_functions import validate_calibrated_parameters
-from influenza_USA.SIR_SequentialTwoStrain.hierarchical_calibration import log_posterior_probability, dump_sampler_to_xarray, traceplot, plot_fit, hyperdistributions
-from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain, get_NC_influenza_data
+from influenza_USA.NC_forecasts.hierarchical_calibration import log_posterior_probability, dump_sampler_to_xarray, traceplot, plot_fit, hyperdistributions
+from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data
 
 ##############
 ## Settings ##
@@ -44,7 +44,7 @@ discard = 0
 thin = 1
 
 # Make folder structure
-samples_path=fig_path=f'../../data/interim/calibration/hierarchical-training/{name2fips(state)}/' # Path to backend
+samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/' # Path to backend
 # check if samples folder exists, if not, make it
 if not os.path.exists(samples_path):
     os.makedirs(samples_path)
@@ -64,7 +64,7 @@ datasets = [get_NC_influenza_data(start_calibration, end_calibration, season) fo
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
+model = initialise_model(strains=True, spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
 
 ##########################################
 ## Setup posterior probability function ##
@@ -100,7 +100,7 @@ hyperpars_shapes = {
 ####################################
 
 # get independent fit parameters
-pars_model_0 = pd.read_csv('../../data/interim/calibration/calibrated_parameters.csv', index_col=0)[seasons]
+pars_model_0 = pd.read_csv('../../../data/interim/calibration/calibrated_parameters.csv', index_col=0)[seasons]
 
 # parameters
 pars_0 = list(pars_model_0.transpose().values.flatten())

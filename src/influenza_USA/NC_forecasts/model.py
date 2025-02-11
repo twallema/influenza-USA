@@ -1,21 +1,56 @@
 """
-This script contains the integration function of an age-stratified spatially-explicit two-strain sequential infection SIR model.
+This script contains the integration function of a single strain and a two-strain sequential infection SIR model, used to forecast influenza in North Carolina.
 """
 
 __author__      = "Tijs Alleman"
-__copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
+__copyright__   = "Copyright (c) 2025 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
-
+# import packages
 import numpy as np
 from pySODM.models.base import ODE
 
-###################
-## Deterministic ##
-###################
-
-class ODE_SIR_SequentialTwoStrain(ODE):
+# define integration function
+class SIR_oneStrain(ODE):
     """
-    Influenza model with vaccines and age/spatial stratification
+    Influenza model with one strain
+    """
+    
+    states = ['S','I','R',                      # states
+              'I_inc', 'H_inc_0', 'H_inc',      # outcomes
+              ]
+    parameters = ['beta', 'N', 'T_r', 'T_h', 'rho_i', 'rho_h', 'CHR']
+    dimensions = ['age_group', 'location']
+
+    @staticmethod
+    def integrate(t, S, I, R, I_inc, H_inc_0, H_inc, beta, N, T_r, T_h, rho_i, rho_h, CHR):
+
+        # compute total population
+        T = S+I+R
+
+        # compute new infected 
+        I_new = beta * S * np.matmul(N, I/T)
+
+        # U-shaped severity curve
+        rho_i = (rho_i * CHR)[:, np.newaxis]
+        rho_h = (rho_h * CHR)[:, np.newaxis]
+
+        # calculate state differentials
+        dS = - I_new
+        dI = I_new - (1/T_r) * I
+        dR = (1/T_r) * I
+
+        # calculate outcome differentials 
+        ## ED visits
+        dI_inc = I_new*rho_i - I_inc
+        ## hospitalisations
+        dH_inc_0 = I_new*rho_h - (1/T_h)*H_inc_0
+        dH_inc = (1/T_h)*H_inc_0 - H_inc
+
+        return dS, dI, dR, dI_inc, dH_inc_0, dH_inc
+
+class SIR_SequentialTwoStrain(ODE):
+    """
+    Influenza model with two strains, with which one can be infected sequentially
     """
     
     states = ['S','I1','I2','R1','R2','I12','I21','R',                  # states

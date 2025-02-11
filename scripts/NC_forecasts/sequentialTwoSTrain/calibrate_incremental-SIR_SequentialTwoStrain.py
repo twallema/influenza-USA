@@ -15,7 +15,7 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
 from influenza_USA.shared.utils import name2fips
-from influenza_USA.SIR_SequentialTwoStrain.utils import initialise_SIR_SequentialTwoStrain, get_NC_influenza_data, pySODM_to_hubverse # influenza model
+from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data, pySODM_to_hubverse # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
@@ -38,24 +38,25 @@ L1_weight = 1                                       # Forcing strength on tempor
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
+use_ED_visits = True                                      # use both ED admission (hospitalisation) and ED visits (ILI) data 
 ## dates
-start_calibration = datetime(season_start+1, 1, 21)                             # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 5, 1)                                # and incrementally (weekly) calibrate until this date
-end_validation = datetime(season_start+1, 5, 1)                                 # enddate used on plots
+start_calibration = datetime(season_start+1, 1, 21)         # incremental calibration will start from here
+end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
+end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
-n_pso = 2000                                                                  # Number of PSO iterations
-multiplier_pso = 10                                                             # PSO swarm size
+n_pso = 2000                                                # Number of PSO iterations
+multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 20000                                                                  # Number of MCMC iterations
-multiplier_mcmc = 3                                                             # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 10000                                                                # Print diagnostics every `print_n`` iterations
-discard = 1000                                                                 # Discard first `discard` iterations as burn-in
-thin = 10000                                                                     # Thinning factor emcee chains
-processes = 16                                                                   # Number of CPUs to use
-n = 750                                                                         # Number of simulations performed in MCMC goodness-of-fit figure
+n_mcmc = 20000                                              # Number of MCMC iterations
+multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
+print_n = 10000                                             # Print diagnostics every `print_n`` iterations
+discard = 1000                                              # Discard first `discard` iterations as burn-in
+thin = 10000                                                # Thinning factor emcee chains
+processes = 16                                              # Number of CPUs to use
+n = 750                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
-pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                    # parameters to calibrate
+pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
 bounds = [(1, 21), (1e-4,0.15), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
 labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -99,6 +100,18 @@ beta1 = beta2 = 0.0215
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
 delta_beta_temporal = [-0.08, -0.05, -0.05, 0.001, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04] # 0.01
+theta = [T_h, rho_i, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + delta_beta_temporal
+
+## cut off 'T_h' and 'rho_i' if not using ILI data
+n_rows_figs = 4
+if not use_ED_visits:
+    pars = pars[2:]
+    bounds = bounds[2:]
+    labels = labels[2:]
+    theta = theta[2:]
+    log_prior_prob_fcn = log_prior_prob_fcn[2:]
+    log_prior_prob_fcn_args = log_prior_prob_fcn_args[2:]
+    n_rows_figs = 3
 
 #####################
 ## Load NC dataset ##
@@ -111,7 +124,7 @@ data_interim = get_NC_influenza_data(start_simulation, end_validation, season)
 ## Setup model ##
 #################
 
-model = initialise_SIR_SequentialTwoStrain(spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
+model = initialise_model(strains=True, spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
 
 #####################
 ## Calibrate model ##
@@ -132,7 +145,10 @@ if __name__ == '__main__':
 
         # Make folder structure
         identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
-        samples_path=fig_path=f'../../data/interim/calibration/{season}/{name2fips(state)}/{identifier}/' # Path to backend
+        if use_ED_visits:
+            samples_path=fig_path=f'../../../data/interim/calibration/{season}/{name2fips(state)}/use_ED_visits/{identifier}/' # Path to backend
+        else:
+            samples_path=fig_path=f'../../../data/interim/calibration/{season}/{name2fips(state)}/not_use_ED_visits/{identifier}/' # Path to backend
         run_date = datetime.today().strftime("%Y-%m-%d") # get current date
         # check if samples folder exists, if not, make it
         if not os.path.exists(samples_path):
@@ -148,11 +164,16 @@ if __name__ == '__main__':
 
         # prepare data-related arguments of posterior probability
         data = [df_calib['H_inc_A'], df_calib['H_inc_B'], df_calib['I_inc'].dropna()]
-        weights = [1/max(df_calib['H_inc_A']), 1/max(df_calib['H_inc_B']), 1/max(df_calib['I_inc'].dropna())]
-        weights = np.array(weights) / np.mean(weights)
         states = ['H1_inc', 'H2_inc', 'I_inc']
         log_likelihood_fnc = [ll_poisson, ll_poisson, ll_poisson]
         log_likelihood_fnc_args = [[],[],[]]
+        if not use_ED_visits:
+            data = data[:-1]
+            states = states[:-1]
+            log_likelihood_fnc = log_likelihood_fnc[:-1]
+            log_likelihood_fnc_args = log_likelihood_fnc_args[:-1]
+        weights = [1/max(df) for df in data]
+        weights = np.array(weights) / np.mean(weights)
 
         # Setup objective function (no priors defined = uniform priors based on bounds)
         objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args,
@@ -162,9 +183,6 @@ if __name__ == '__main__':
         #################
         ## Nelder-Mead ##
         #################
-
-        # set ballpark theta
-        theta = [T_h, rho_i, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + delta_beta_temporal # len(model.parameters['delta_beta_temporal']) * [delta_beta_temporal,]
 
         # perform optimization 
         ## PSO
@@ -182,7 +200,7 @@ if __name__ == '__main__':
         # Simulate model
         out = model.sim([start_simulation, end_validation])
         # Visualize
-        fig, ax = plt.subplots(4, 1, sharex=True, figsize=(8.3, 11.7/5*4))
+        fig, ax = plt.subplots(n_rows_figs, 1, sharex=True, figsize=(8.3, 11.7/5*n_rows_figs))
         props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
         ## State
         x_calibration_data = df_calib.index.unique().values
@@ -208,12 +226,13 @@ if __name__ == '__main__':
         ax[2].grid(False)
         ax[2].set_title(f'{state} (Flu B)')
         ## ILI
-        ax[3].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        if not df_valid.empty:
-            ax[3].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[3].plot(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
-        ax[3].grid(False)
-        ax[3].set_title('Influenza-like illness')
+        if use_ED_visits:
+            ax[3].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[3].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[3].plot(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
+            ax[3].grid(False)
+            ax[3].set_title('Influenza-like illness')
         ## format dates
         ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
         for tick in ax[-1].get_xticklabels():
@@ -273,7 +292,7 @@ if __name__ == '__main__':
         # ----------------------------------------
 
         # get function
-        from influenza_USA.SIR_SequentialTwoStrain.TDPF import transmission_rate_function
+        from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
         f = transmission_rate_function(sigma=2.5)
         # pre-allocate output
         y = []
@@ -290,7 +309,7 @@ if __name__ == '__main__':
         # ------------
 
         # Visualize
-        fig, ax = plt.subplots(5, 1, sharex=True, figsize=(8.3, 11.7))
+        fig, ax = plt.subplots(n_rows_figs+1, 1, sharex=True, figsize=(8.3, 11.7/5*(n_rows_figs+1)))
         props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
         ## State
         x_calibration_data = df_calib.index.unique().values
@@ -329,23 +348,26 @@ if __name__ == '__main__':
         ax[2].set_title('Influenza B')
         ax[2].set_ylabel('Weekly hospital inc. (-)')
         ## ILI incidences
-        ax[3].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        if not df_valid.empty:
-            ax[3].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[3].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
-        ax[3].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
-                            7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
-        ax[3].grid(False)
-        ax[3].set_title(f'Influenza-like illness')
-        ax[3].set_ylabel('Weekly ILI inc. (-)')
+        next_ax = 3
+        if use_ED_visits:
+            next_ax = 4
+            ax[3].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[3].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[3].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
+                                7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+            ax[3].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
+                                7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
+            ax[3].grid(False)
+            ax[3].set_title(f'Influenza-like illness')
+            ax[3].set_ylabel('Weekly ILI inc. (-)')
         ## Temporal betas
-        ax[4].plot(x, y, color='black')
-        ax[4].fill_between(x, lower, upper, color='black', alpha=0.1)
-        ax[4].grid(False)
-        ax[4].set_title('Temporal modifiers transmission coefficient')
-        ax[4].set_ylabel('$\\Delta \\beta (t)$')
-        ax[4].set_ylim([0.70,1.30])
+        ax[next_ax].plot(x, y, color='black')
+        ax[next_ax].fill_between(x, lower, upper, color='black', alpha=0.1)
+        ax[next_ax].grid(False)
+        ax[next_ax].set_title('Temporal modifiers transmission coefficient')
+        ax[next_ax].set_ylabel('$\\Delta \\beta (t)$')
+        ax[next_ax].set_ylim([0.70,1.30])
         ## format dates
         ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
         for tick in ax[-1].get_xticklabels():
