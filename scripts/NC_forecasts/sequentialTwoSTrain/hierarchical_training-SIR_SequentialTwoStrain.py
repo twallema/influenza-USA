@@ -85,15 +85,15 @@ if not use_ED_visits:
 
 # define model parameters to calibrate to every season and their bounds
 # not how we're not cutting out the parameters associated with the ED visit data
-pars_model_names = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']
-pars_model_bounds = [(0.1, 15), (1e-5,0.05), (1e-5,0.01), (1e-5,0.01), (0.001,0.05), (0.001,0.05), (0.001,0.999), (0.001,0.999), (1e-7,5e-4), (1e-7,5e-4), (-0.5,0.5)]
+pars_model_names = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']
+pars_model_bounds = [(1e-5,0.05), (0.1, 15), (1e-5,0.01), (1e-5,0.01), (0.001,0.05), (0.001,0.05), (0.001,0.999), (0.001,0.999), (1e-7,5e-4), (1e-7,5e-4), (-0.5,0.5)]
 _, pars_model_shapes = validate_calibrated_parameters(pars_model_names, model.parameters)
 n_pars = sum([v[0] for v in pars_model_shapes.values()])
 
 # define hyperparameters 
 hyperpars_shapes = {
-    'T_h_rate': (1,),
     'rho_i_a': (1,), 'rho_i_scale': (1,),
+    'T_h_rate': (1,),
     'rho_h1_a': (1,), 'rho_h1_scale': (1,),
     'rho_h2_a': (1,), 'rho_h2_scale': (1,),
     'beta1_mu': (1,), 'beta1_sigma': (1,),
@@ -118,8 +118,9 @@ pars_0 = list(pars_model_0.transpose().values.flatten())
 #print(pd.concat([pars_model_0.transpose().mean().rename('avg'), pars_model_0.transpose().std().rename('stdev')], axis=1))
 
 # hyperparameters
-hyperpars_0 = [3.6, # T_h
+hyperpars_0 = [
                3.5, 5.2e-03, # rho_i
+               3.6, # T_h
                4.8, 5.7e-04, # rho_h1
                4.8, 5.7e-04, # rho_h2
                0.023, 0.006, # beta1

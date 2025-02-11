@@ -56,9 +56,9 @@ processes = 16                                              # Number of CPUs to 
 n = 750                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
-pars = ['T_h', 'rho_i', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
-bounds = [(1, 21), (1e-4,0.15), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
-labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
+pars = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
+bounds = [(1e-4,0.15), (1, 21), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
+labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
 # log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
@@ -68,19 +68,19 @@ labels = [r'$T_h$', r'$\rho_{i}$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1
 log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_beta] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
 log_prior_prob_fcn_args = [ 
                            # ED visits
-                           {'a': 1, 'loc': 0, 'scale': 4.5, 'weight': L1_weight},
-                           {'a': 3.5, 'loc': 0, 'scale': 5.5e-03, 'weight': L1_weight},
+                           {'a': 3.5, 'loc': 0, 'scale': 5.5e-03, 'weight': L1_weight},     # rho_i
+                           {'a': 1, 'loc': 0, 'scale': 4.5, 'weight': L1_weight},           # T_h
                            # >>>>>>>>>
-                           {'a': 3.9, 'loc': 0, 'scale': 6.1e-04, 'weight': L1_weight},
-                           {'a': 3.8, 'loc': 0, 'scale': 6.4e-04, 'weight': L1_weight},
-                           {'avg': 2.3e-02, 'stdev': 6.1e-03, 'weight': L1_weight},
-                           {'avg': 2.1e-02, 'stdev': 3.9e-03, 'weight': L1_weight},
-                           {'a': 6.9, 'b': 5.9, 'loc': 0, 'scale': 1, 'weight': L1_weight},
-                           {'a': 7.4, 'b': 7.1, 'loc': 0, 'scale': 1, 'weight': L1_weight},
-                           {'a': 1.6, 'loc': 0, 'scale': 7.6e-05, 'weight': L1_weight},
-                           {'a': 2.7, 'loc': 0, 'scale': 8.8e-05, 'weight': L1_weight},
-                           {'avg': -0.07, 'stdev': 0.05, 'weight': L1_weight},
-                           {'avg': -0.04, 'stdev': 0.04, 'weight': L1_weight},
+                           {'a': 3.9, 'loc': 0, 'scale': 6.1e-04, 'weight': L1_weight},     # rho_h1
+                           {'a': 3.8, 'loc': 0, 'scale': 6.4e-04, 'weight': L1_weight},     # rho_h2
+                           {'avg': 2.3e-02, 'stdev': 6.1e-03, 'weight': L1_weight},         # beta1
+                           {'avg': 2.1e-02, 'stdev': 3.9e-03, 'weight': L1_weight},         # beta2
+                           {'a': 6.9, 'b': 5.9, 'loc': 0, 'scale': 1, 'weight': L1_weight}, # f_R1_R2
+                           {'a': 7.4, 'b': 7.1, 'loc': 0, 'scale': 1, 'weight': L1_weight}, # f_R1
+                           {'a': 1.6, 'loc': 0, 'scale': 7.6e-05, 'weight': L1_weight},     # f_I1
+                           {'a': 2.7, 'loc': 0, 'scale': 8.8e-05, 'weight': L1_weight},     # f_I2
+                           {'avg': -0.07, 'stdev': 0.05, 'weight': L1_weight},              # delta_beta_temporal
+                           {'avg': -0.04, 'stdev': 0.04, 'weight': L1_weight},              # ...
                            {'avg': -0.05, 'stdev': 0.05, 'weight': L1_weight},
                            {'avg': 0.01, 'stdev': 0.08, 'weight': L1_weight},
                            {'avg': 0.06, 'stdev': 0.09, 'weight': L1_weight},
@@ -95,25 +95,25 @@ log_prior_prob_fcn_args = [
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ## starting guestimate NM
-T_h = 3.5
 rho_i = 0.02
+T_h = 3.5
 rho_h1 = 0.002
 rho_h2 = 0.002
 beta1 = beta2 = 0.0215
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
 delta_beta_temporal = [-0.08, -0.05, -0.05, 0.001, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04] # 0.01
-theta = [T_h, rho_i, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + delta_beta_temporal
+theta = [rho_i, T_h, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + delta_beta_temporal
 
-## cut off 'T_h' and 'rho_i' if not using ILI data
+## cut off 'rho_i' if not using ILI data
 n_rows_figs = 4
 if not use_ED_visits:
-    pars = pars[2:]
-    bounds = bounds[2:]
-    labels = labels[2:]
-    theta = theta[2:]
-    log_prior_prob_fcn = log_prior_prob_fcn[2:]
-    log_prior_prob_fcn_args = log_prior_prob_fcn_args[2:]
+    pars = pars[1:]
+    bounds = bounds[1:]
+    labels = labels[1:]
+    theta = theta[1:]
+    log_prior_prob_fcn = log_prior_prob_fcn[1:]
+    log_prior_prob_fcn_args = log_prior_prob_fcn_args[1:]
     n_rows_figs = 3
 
 #####################

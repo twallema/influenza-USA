@@ -80,16 +80,16 @@ def log_posterior_probability(theta, model, datasets, pars_model_names, pars_mod
         theta_season = list_to_dict(theta_season, parameters_shapes, retain_floats=True)
 
         # compute priors of the season's parameters using the hyperparameters
-        lpp += expon.logpdf(theta_season['T_h'], scale=theta_hyperpars['T_h_rate']) # T_h
-        lpp += gamma.logpdf(theta_season['rho_i'], loc=0, a=theta_hyperpars['rho_i_a'], scale=theta_hyperpars['rho_i_scale']) # rho_i
-        lpp += gamma.logpdf(theta_season['rho_h1'], loc=0, a=theta_hyperpars['rho_h1_a'], scale=theta_hyperpars['rho_h1_scale']) # rho_h1
-        lpp += gamma.logpdf(theta_season['rho_h2'], loc=0, a=theta_hyperpars['rho_h2_a'], scale=theta_hyperpars['rho_h2_scale']) # rho_h2
-        lpp += norm.logpdf(theta_season['beta1'], loc=theta_hyperpars['beta1_mu'], scale=theta_hyperpars['beta1_sigma']) # beta1
-        lpp += norm.logpdf(theta_season['beta2'], loc=theta_hyperpars['beta2_mu'], scale=theta_hyperpars['beta2_sigma']) # beta2
-        lpp += beta.logpdf(theta_season['f_R1_R2'], a=theta_hyperpars['f_R1_R2_a'], b=theta_hyperpars['f_R1_R2_b']) # f_R1_R2
-        lpp += beta.logpdf(theta_season['f_R1'], a=theta_hyperpars['f_R1_a'], b=theta_hyperpars['f_R1_b']) # f_R1
-        lpp += gamma.logpdf(theta_season['f_I1'], a=theta_hyperpars['f_I1_a'], loc=0, scale=theta_hyperpars['f_I1_scale']) # f_I1
-        lpp += gamma.logpdf(theta_season['f_I2'], a=theta_hyperpars['f_I2_a'], loc=0, scale=theta_hyperpars['f_I2_scale']) # f_I2
+        lpp += gamma.logpdf(theta_season['rho_i'], loc=0, a=theta_hyperpars['rho_i_a'], scale=theta_hyperpars['rho_i_scale'])       # rho_i
+        lpp += expon.logpdf(theta_season['T_h'], scale=theta_hyperpars['T_h_rate'])                                                 # T_h
+        lpp += gamma.logpdf(theta_season['rho_h1'], loc=0, a=theta_hyperpars['rho_h1_a'], scale=theta_hyperpars['rho_h1_scale'])    # rho_h1
+        lpp += gamma.logpdf(theta_season['rho_h2'], loc=0, a=theta_hyperpars['rho_h2_a'], scale=theta_hyperpars['rho_h2_scale'])    # rho_h2
+        lpp += norm.logpdf(theta_season['beta1'], loc=theta_hyperpars['beta1_mu'], scale=theta_hyperpars['beta1_sigma'])            # beta1
+        lpp += norm.logpdf(theta_season['beta2'], loc=theta_hyperpars['beta2_mu'], scale=theta_hyperpars['beta2_sigma'])            # beta2
+        lpp += beta.logpdf(theta_season['f_R1_R2'], a=theta_hyperpars['f_R1_R2_a'], b=theta_hyperpars['f_R1_R2_b'])                 # f_R1_R2
+        lpp += beta.logpdf(theta_season['f_R1'], a=theta_hyperpars['f_R1_a'], b=theta_hyperpars['f_R1_b'])                          # f_R1
+        lpp += gamma.logpdf(theta_season['f_I1'], a=theta_hyperpars['f_I1_a'], loc=0, scale=theta_hyperpars['f_I1_scale'])          # f_I1
+        lpp += gamma.logpdf(theta_season['f_I2'], a=theta_hyperpars['f_I2_a'], loc=0, scale=theta_hyperpars['f_I2_scale'])          # f_I2
         lpp += np.sum(norm.logpdf(theta_season['delta_beta_temporal'], loc=theta_hyperpars['delta_beta_temporal_mu'], scale=theta_hyperpars['delta_beta_temporal_sigma']))
         
         # negative arguments in hyperparameters lead to a nan lpp --> redact to -np.inf and move on
