@@ -13,7 +13,7 @@ from datetime import datetime
 from multiprocessing import get_context
 from influenza_USA.shared.utils import name2fips
 from pySODM.optimization.objective_functions import validate_calibrated_parameters
-from influenza_USA.NC_forecasts.hierarchical_calibration_sequentialTwoStrain import log_posterior_probability, dump_sampler_to_xarray, traceplot, plot_fit, hyperdistributions
+from influenza_USA.NC_forecasts.hierarchical_calibration_oneStrain import log_posterior_probability, dump_sampler_to_xarray, traceplot, plot_fit, hyperdistributions
 from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data
 
 ##############
@@ -34,12 +34,12 @@ start_calibration_month = 10                                                    
 end_calibration_month = 5                                                                   # end calibration on month 5, day 1
 
 # Define number of chains
-max_n = 5000
-n_chains = 500
+max_n = 10000
+n_chains = 400
 pert = 0.05
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'test'
-print_n = 10
+print_n = 1000
 backend = None
 discard = 0
 thin = 1
@@ -68,15 +68,15 @@ datasets = [get_NC_influenza_data(start_calibration, end_calibration, season) fo
 ## Setup model ##
 #################
 
-model = initialise_model(strains=True, spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
+model = initialise_model(strains=False, spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
 
 ##########################################
 ## Setup posterior probability function ##
 ##########################################
 
 # define model states we want to calibrate to
-states_model = ['I_inc', 'H1_inc', 'H2_inc']
-states_data = ['I_inc', 'H_inc_A', 'H_inc_B']
+states_model = ['I_inc', 'H_inc']
+states_data = ['I_inc', 'H_inc']
 
 # cut out 'I_inc'
 if not use_ED_visits:
@@ -85,8 +85,8 @@ if not use_ED_visits:
 
 # define model parameters to calibrate to every season and their bounds
 # not how we're not cutting out the parameters associated with the ED visit data
-pars_model_names = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']
-pars_model_bounds = [(1e-5,0.05), (0.1, 15), (1e-5,0.01), (1e-5,0.01), (0.001,0.05), (0.001,0.05), (0.001,0.999), (0.001,0.999), (1e-7,5e-4), (1e-7,5e-4), (-0.5,0.5)]
+pars_model_names = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']
+pars_model_bounds = [(1e-5,0.15), (0.1, 15), (1e-5,0.015), (0.001,0.06), (0.001,0.999), (1e-9,1e-3), (-1,1)]
 _, pars_model_shapes = validate_calibrated_parameters(pars_model_names, model.parameters)
 n_pars = sum([v[0] for v in pars_model_shapes.values()])
 
@@ -94,14 +94,10 @@ n_pars = sum([v[0] for v in pars_model_shapes.values()])
 hyperpars_shapes = {
     'rho_i_a': (1,), 'rho_i_scale': (1,),
     'T_h_rate': (1,),
-    'rho_h1_a': (1,), 'rho_h1_scale': (1,),
-    'rho_h2_a': (1,), 'rho_h2_scale': (1,),
-    'beta1_mu': (1,), 'beta1_sigma': (1,),
-    'beta2_mu': (1,), 'beta2_sigma': (1,),
-    'f_R1_R2_a': (1,), 'f_R1_R2_b': (1,),
-    'f_R1_a': (1,), 'f_R1_b': (1,),
-    'f_I1_a': (1,), 'f_I1_scale': (1,),
-    'f_I2_a': (1,), 'f_I2_scale': (1,),
+    'rho_h_a': (1,), 'rho_h_scale': (1,),
+    'beta_mu': (1,), 'beta_sigma': (1,),
+    'f_R_a': (1,), 'f_R_b': (1,),
+    'f_I_a': (1,), 'f_I_scale': (1,),
     'delta_beta_temporal_mu': (len(model.parameters['delta_beta_temporal']),), 'delta_beta_temporal_sigma': (len(model.parameters['delta_beta_temporal']),),
 }
 
@@ -110,27 +106,21 @@ hyperpars_shapes = {
 ####################################
 
 # get independent fit parameters
-pars_model_0 = pd.read_csv('../../../data/interim/calibration/calibrated_parameters-sequentialTwoStrain.csv', index_col=0)[seasons]
+pars_model_0 = pd.read_csv('../../../data/interim/calibration/calibrated_parameters-oneStrain.csv', index_col=0)[seasons]
 
 # parameters
 pars_0 = list(pars_model_0.transpose().values.flatten())
-# print avg/stdev to inform hyperparameters
-#print(pd.concat([pars_model_0.transpose().mean().rename('avg'), pars_model_0.transpose().std().rename('stdev')], axis=1))
 
 # hyperparameters
 hyperpars_0 = [
-               3.5, 5.2e-03, # rho_i
-               3.6, # T_h
-               4.8, 5.7e-04, # rho_h1
-               4.8, 5.7e-04, # rho_h2
-               0.023, 0.006, # beta1
-               0.023, 0.004, # beta2
-               5, 5, # f_R1_R2
-               5, 5, # f_R1
-               2, 9e-05, # f_I1
-               2, 9e-05, # f_I2
-               -0.08, -0.05, -0.05, 0.005, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04, # delta_beta_temporal_mu
-               0.04, 0.04, 0.04, 0.07, 0.07, 0.09, 0.08, 0.08, 0.09, 0.07, 0.16, 0.07, # delta_beta_temporal_sigma
+               4.2, 1.0e-02, # rho_i
+               2.0, # T_h
+               4.0, 1.5e-03, # rho_h
+               0.025, 0.005, # beta
+               5, 5, # f_R
+               5, 2.6e-05, # f_I
+               -0.070, -0.043, -0.023, 0.010, 0.12, -0.125, 0.024, 0.102, 0.033, 0.047, 0.036, -0.037, # delta_beta_temporal_mu
+               0.026, 0.038, 0.026, 0.049, 0.067, 0.099, 0.086, 0.073, 0.122, 0.083, 0.164, 0.078, # delta_beta_temporal_sigma
                 ]
 
 # combine
