@@ -134,7 +134,7 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
 
 def get_NC_influenza_data(startdate, enddate, season):
     """
-    Get the North Carolina Influenza dataset -- containing ED visits, hospitalisation and subtype information -- for a given season
+    Get the North Carolina Influenza dataset -- containing ED visits, ED admissions and subtype information -- for a given season
 
     input
     -----
@@ -188,6 +188,35 @@ def get_NC_influenza_data(startdate, enddate, season):
     return df_merged[['H_inc', 'I_inc', 'H_inc_A', 'H_inc_B']].loc[slice(startdate,enddate)]
 
 
+def get_NC_NHSN_data(startdate, enddate):
+    """
+    Get the North Carolina Influenza hospital admissions from the NHSN HRD dataset
+
+    input
+    -----
+
+    - startdate: str/datetime
+        - start of dataset
+    
+    - enddate: str/datetime
+        - end of dataset
+
+    output
+    ------
+
+    - data: pd.DataFrame
+        - index: 'date' [datetime], columns: 'H_inc', 'I_inc', 'H_inc_A', 'H_inc_B' (frequency: weekly, converted to daily)
+    """
+
+    # get data
+    data = pd.read_csv(os.path.join(os.path.dirname(__file__),f'../../../data/interim/cases/NHSN-HRD_interim.csv'), index_col=0, parse_dates=True, dtype={'fips_state': str})
+
+    # slice NC out
+    data = data[data['fips_state'] == '37000']['H_inc']
+
+    return data.loc[slice(startdate,enddate)]
+
+
 def pySODM_to_hubverse(simout: xr.Dataset,
                         reference_date: datetime,
                         target: str,
@@ -230,7 +259,7 @@ def pySODM_to_hubverse(simout: xr.Dataset,
     location = list(simout.coords['location'].values)
     output_type_id = simout.coords['draws'].values if not quantiles else [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99]
     # fixed metadata
-    horizon = range(-1,3)
+    horizon = range(-1,4)
     output_type = 'samples' if not quantiles else 'quantile'
     # derived metadata
     target_end_date = [reference_date + timedelta(weeks=h) for h in horizon]

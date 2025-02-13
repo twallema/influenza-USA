@@ -62,6 +62,8 @@ Contains an overview of the raw data sources, and the conversion scripts used to
 
 + `ED-visits_NC_10-25.csv`: Weekly visits to Emergency Departments in North Carolina for Influenza-like illness (ILI) from 2010 to 2025. Indexed on Saturday. Downloaded from: https://ncdetect.org/respiratory-dashboard/ > Overall Trends. Made available here: https://github.com/ACCIDDA/NC_Forecasting_Collab/blob/main/nc_data/cleaned/20250116_hosp_admissions.csv by Matthew Mietchen.
 
++ `NHSN-HRD_raw.csv`: Contains the weekly hospital admissions for Influenza, RSV and COVID-19, in every US state. Currently ends on 2025-02-01. Download link: https://data.cdc.gov/api/views/ua7e-t2fy/rows.csv?accessType=DOWNLOAD
+
 ### initial condition
 
 + `initial_condition_2017-2018.csv`: Contains the initial condition and model parameters of Josh' reference model, obtained by calibrating the model (no age groups or spatial patches) to the 2017-2018 Influenza season.
@@ -130,6 +132,8 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `subtypes_NC_14-25.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Data for 2014-2024 were extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. Data for 2025 were downloaded from https://covid19.ncdhhs.gov/dashboard/respiratory-virus-surveillance.
 
++ `NHSN-HRD_interim.csv`: Contains the weekly hospital admissions for Influenza in every US state. Currently ends on 2025-02-01. Converted from `data/raw/cases/NHSN-HRD_raw.csv` using `data/conversion/cases/format-NHSN-HRD-dataset.py`.
+
 ### Calibration
 
 + `calibrated_parameters.csv`: Contains the North Carolina two strain sequential infection model's parameters, when calibrated seperately to the seasons 2014-2015 until 2023-2024. Used as initial starting point for the Bayesian hierarchical model training.
@@ -165,3 +169,5 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 ### Cases
 
 + `build-hospitalisations_per_state.py`: A script formatting the weekly flu hospitalisation incidence data per US state from 2009-2024 in `data/raw/cases/weekly_flu_incid_complete.csv` into `data/interim/hospitalisations_per_state.csv`. Swaps the US state name for it's FIPS code and guarantees the data always start in week 40 of the year.
+
++ `format-NHSN-HRD-dataset.py`: Used to convert the raw NHSN HRD dataset (`data/raw/cases/`) to a nicer format.
