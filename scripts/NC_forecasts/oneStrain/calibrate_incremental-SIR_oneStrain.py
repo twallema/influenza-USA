@@ -265,7 +265,7 @@ if __name__ == '__main__':
         out = add_poisson_noise(out)
 
         # Save as a .csv in hubverse format / raw netcdf
-        df = pySODM_to_hubverse(out, end_date+timedelta(weeks=1), 'wk inc flu hosp', 'H_inc', samples_path)
+        df = pySODM_to_hubverse(out, end_date+timedelta(weeks=1), 'wk inc flu hosp', 'H_inc', samples_path, quantiles=True)
         out.to_netcdf(samples_path+f'{identifier}_simulation-output.nc')
 
         # Construct delta_beta_temporal trajectory

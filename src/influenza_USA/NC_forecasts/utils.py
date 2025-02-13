@@ -192,7 +192,8 @@ def pySODM_to_hubverse(simout: xr.Dataset,
                         reference_date: datetime,
                         target: str,
                         model_state: str,
-                        path: str=None) -> pd.DataFrame:
+                        path: str=None,
+                        quantiles: bool=False) -> pd.DataFrame:
     """
     Convert pySODM simulation result to Hubverse format
 
@@ -210,6 +211,9 @@ def pySODM_to_hubverse(simout: xr.Dataset,
     - path: str
         - path to save result in. if no path provided, does not save result.
 
+    - quantiles: str
+        - save quantiles instead of individual trajectories.
+
     Returns
     -------
 
@@ -224,10 +228,10 @@ def pySODM_to_hubverse(simout: xr.Dataset,
 
     # deduce information from simout
     location = list(simout.coords['location'].values)
-    output_type_id = simout.coords['draws'].values
+    output_type_id = simout.coords['draws'].values if not quantiles else [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99]
     # fixed metadata
     horizon = range(-1,3)
-    output_type = 'samples'
+    output_type = 'samples' if not quantiles else 'quantile'
     # derived metadata
     target_end_date = [reference_date + timedelta(weeks=h) for h in horizon]
 
@@ -241,9 +245,18 @@ def pySODM_to_hubverse(simout: xr.Dataset,
 
     # fill in dataframe
     for loc in location:
-        for draw in output_type_id:
-            df.loc[((df['output_type_id'] == draw) & (df['location'] == loc)), 'value'] = 7*simout[model_state].sum(dim='age_group').sel({'location': loc, 'draws': draw}).interp(date=target_end_date).values
+        if not quantiles:
+            for draw in output_type_id:
+                df.loc[((df['output_type_id'] == draw) & (df['location'] == loc)), 'value'] = \
+                    7*simout[model_state].sum(dim='age_group').sel({'location': loc, 'draws': draw}).interp(date=target_end_date).values
+        else:
+            for q in output_type_id:
+                df.loc[((df['output_type_id'] == q) & (df['location'] == loc)), 'value'] = \
+                    7*simout[model_state].sum(dim='age_group').sel({'location': loc}).quantile(q=q, dim='draws').interp(date=target_end_date).values
     
+    # hubverse uses
+    df['location'] = df['location'].apply(lambda x: x[:2])
+
     # save result
     if path:
         df.to_csv(path+reference_date.strftime('%Y-%m-%d')+'-JHU_IDD'+'-hierarchSIM.csv', index=False)
