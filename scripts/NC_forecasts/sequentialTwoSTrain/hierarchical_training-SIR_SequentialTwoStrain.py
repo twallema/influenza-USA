@@ -28,21 +28,22 @@ ar = 'full'                                         # age resolution: 'collapsed
 dd = False                                          # vary contact matrix by daytype
 
 # calibration settings
-use_ED_visits = True                                                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
-seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2023-2024']    # season to include in calibration excercise
-start_calibration_month = 10                                                                # start calibration on month 10, day 1
-end_calibration_month = 5                                                                   # end calibration on month 5, day 1
+use_ED_visits = True                                                                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
+seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024']       # season to include in calibration excercise
+start_calibration_month = 10                                                                                # start calibration on month 10, day 1
+end_calibration_month = 5                                                                                   # end calibration on month 5, day 1
 
 # Define number of chains
-max_n = 5000
+max_n = 25000
 n_chains = 500
-pert = 0.05
+pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
-identifier = 'test'
-print_n = 10
+identifier = 'exclude-None'
+print_n = 5000
 backend = None
 discard = 0
 thin = 1
+processes = int(os.environ.get('NUM_CORES', '16'))
 
 # Make folder structure
 if use_ED_visits:
@@ -163,7 +164,7 @@ else:
 
 # setup sampler
 if __name__ == '__main__':
-    with get_context("spawn").Pool(processes=16) as pool:
+    with get_context("spawn").Pool(processes=processes) as pool:
         # setup sampler
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_probability, backend=backend, pool=pool,
                                         moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1),
