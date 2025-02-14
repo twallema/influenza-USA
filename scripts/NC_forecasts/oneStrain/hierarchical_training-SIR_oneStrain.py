@@ -44,6 +44,8 @@ print_n = 10000
 backend =  None
 discard = 0
 thin = 1
+processes = int(os.environ.get('NUM_CORES', '16'))
+print(processes)
 
 # Make folder structure
 if use_ED_visits:
@@ -154,7 +156,7 @@ else:
 
 # setup sampler
 if __name__ == '__main__':
-    with get_context("spawn").Pool(processes=mp.cpu_count()) as pool:
+    with get_context("spawn").Pool(processes=processes) as pool:
         # setup sampler
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_probability, backend=backend, pool=pool,
                                         moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1),
