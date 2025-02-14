@@ -1,11 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=hierarchical_training
-#SBATCH --output=hierarchical_training.out
-#SBATCH --error=hierarchical_training.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=48
 #SBATCH --cpus-per-task=1
-#SBATCH --time=24:00:00
+#SBATCH --time=36:00:00
 #SBATCH --partition=defq
 
 # Load any necessary modules or dependencies
@@ -15,7 +13,7 @@ module load anaconda3
 conda activate INFLUENZA-USA
 
 # Run your Python script
-python myscript.py
+python hierarchical_training-SIR_oneStrain.py
 
 # Deactivate the virtual environment
 conda deactivate
