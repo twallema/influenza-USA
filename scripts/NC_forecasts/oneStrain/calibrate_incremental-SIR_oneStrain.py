@@ -40,7 +40,7 @@ stdev = 0.10                                        # Expected standard deviatio
 # optimization parameters
 use_ED_visits = True                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
 ## dates
-start_calibration = datetime(season_start+1, 4, 25)         # incremental calibration will start from here
+start_calibration = datetime(season_start, 12, 1)           # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
@@ -49,10 +49,10 @@ multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
 n_mcmc = 30000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 5000                                             # Print diagnostics every `print_n`` iterations
-discard = 10000                                              # Discard first `discard` iterations as burn-in
-thin = 1000                                                # Thinning factor emcee chains
-processes = 2                                              # Number of CPUs to use
+print_n = 5000                                              # Print diagnostics every `print_n`` iterations
+discard = 10000                                             # Discard first `discard` iterations as burn-in
+thin = 1000                                                 # Thinning factor emcee chains
+processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
 n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters

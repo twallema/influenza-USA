@@ -40,7 +40,7 @@ stdev = 0.10                                        # Expected standard deviatio
 # optimization parameters
 use_ED_visits = True                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
 ## dates
-start_calibration = datetime(season_start+1, 1, 21)         # incremental calibration will start from here
+start_calibration = datetime(season_start, 12, 1)         # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
@@ -52,7 +52,7 @@ multiplier_mcmc = 3                                         # Total number of Ma
 print_n = 10000                                             # Print diagnostics every `print_n`` iterations
 discard = 1000                                              # Discard first `discard` iterations as burn-in
 thin = 10000                                                # Thinning factor emcee chains
-processes = 16                                              # Number of CPUs to use
+processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
 n = 750                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
