@@ -45,7 +45,6 @@ backend =  None
 discard = 0
 thin = 1
 processes = int(os.environ.get('NUM_CORES', '16'))
-print(processes)
 
 # Make folder structure
 if use_ED_visits:
