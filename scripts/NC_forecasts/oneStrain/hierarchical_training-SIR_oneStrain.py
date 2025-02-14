@@ -9,6 +9,7 @@ import os
 import emcee
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
 from datetime import datetime
 from multiprocessing import get_context
 from influenza_USA.shared.utils import name2fips
@@ -34,12 +35,12 @@ start_calibration_month = 10                                                    
 end_calibration_month = 5                                                                                # end calibration on month 5, day 1
 
 # Define number of chains
-max_n = 15000
+max_n = 20000
 n_chains = 400
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-None'
-print_n = 1000
+print_n = 10000
 backend =  None
 discard = 0
 thin = 1
@@ -153,7 +154,7 @@ else:
 
 # setup sampler
 if __name__ == '__main__':
-    with get_context("spawn").Pool(processes=16) as pool:
+    with get_context("spawn").Pool(processes=mp.cpu_count()) as pool:
         # setup sampler
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_probability, backend=backend, pool=pool,
                                         moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1),
