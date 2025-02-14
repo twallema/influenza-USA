@@ -28,19 +28,19 @@ ar = 'full'                                         # age resolution: 'collapsed
 dd = False                                          # vary contact matrix by daytype
 
 # calibration settings
-use_ED_visits = True                                                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
-seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2023-2024']    # season to include in calibration excercise
-start_calibration_month = 10                                                                # start calibration on month 10, day 1
-end_calibration_month = 5                                                                   # end calibration on month 5, day 1
+use_ED_visits = True                                                                                     # use both ED admission (hospitalisation) and ED visits (ILI) data 
+seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024']    # season to include in calibration excercise
+start_calibration_month = 10                                                                             # start calibration on month 10, day 1
+end_calibration_month = 5                                                                                # end calibration on month 5, day 1
 
 # Define number of chains
-max_n = 10000
+max_n = 15000
 n_chains = 400
-pert = 0.05
+pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
-identifier = 'test'
+identifier = 'exclude-None'
 print_n = 1000
-backend = None
+backend =  None
 discard = 0
 thin = 1
 
@@ -113,14 +113,14 @@ pars_0 = list(pars_model_0.transpose().values.flatten())
 
 # hyperparameters
 hyperpars_0 = [
-               4.2, 1.0e-02, # rho_i
-               2.0, # T_h
-               4.0, 1.5e-03, # rho_h
-               0.025, 0.005, # beta
-               5, 5, # f_R
-               5, 2.6e-05, # f_I
-               -0.070, -0.043, -0.023, 0.010, 0.12, -0.125, 0.024, 0.102, 0.033, 0.047, 0.036, -0.037, # delta_beta_temporal_mu
-               0.026, 0.038, 0.026, 0.049, 0.067, 0.099, 0.086, 0.073, 0.122, 0.083, 0.164, 0.078, # delta_beta_temporal_sigma
+               4.6, 1.0e-02, # rho_i
+               1.3, # T_h
+               4.6, 1.3e-03, # rho_h
+               0.027, 0.0057, # beta
+               8, 10.8, # f_R
+               4.4, 2.9e-05, # f_I
+               -0.05, -0.04, -0.02, 0.01, 0.13, -0.11, 0.02, 0.10, 0.03, 0.03, 0.05, -0.04, # delta_beta_temporal_mu
+               0.04, 0.05, 0.04, 0.06, 0.11, 0.12, 0.11, 0.10, 0.16, 0.10, 0.18, 0.10, # delta_beta_temporal_sigma
                 ]
 
 # combine
