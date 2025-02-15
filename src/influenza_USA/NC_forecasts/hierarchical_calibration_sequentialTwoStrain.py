@@ -269,13 +269,13 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
             y=[]
             ul=[]
             for d in x:
-                ll.append(f(d, {}, 1, samples_xr['delta_beta_temporal_mu'].mean(dim=['iteration', 'chain']).values - samples_xr['delta_beta_temporal_sigma'].mean(dim=['iteration', 'chain']).values))
-                y.append(f(d, {}, 1, samples_xr['delta_beta_temporal_mu'].mean(dim=['iteration', 'chain']).values))
-                ul.append(f(d, {}, 1, samples_xr['delta_beta_temporal_mu'].mean(dim=['iteration', 'chain']).values + samples_xr['delta_beta_temporal_sigma'].mean(dim=['iteration', 'chain']).values))
+                ll.append(f(d, {}, 1, samples_xr['delta_beta_temporal_mu'].median(dim=['iteration', 'chain']).values - samples_xr['delta_beta_temporal_sigma'].median(dim=['iteration', 'chain']).values))
+                y.append(f(d, {}, 1, samples_xr['delta_beta_temporal_mu'].median(dim=['iteration', 'chain']).values))
+                ul.append(f(d, {}, 1, samples_xr['delta_beta_temporal_mu'].median(dim=['iteration', 'chain']).values + samples_xr['delta_beta_temporal_sigma'].median(dim=['iteration', 'chain']).values))
             ax.plot(x, np.squeeze(np.array(y)), color='red', alpha=0.8)
             ax.fill_between(x, np.squeeze(np.array(ll)), np.squeeze(np.array(ul)), color='red', alpha=0.1)
             # add parameter box
-            ax.text(0.02, 0.97, f"avg={list(np.round(samples_xr['delta_beta_temporal_mu'].mean(dim=['iteration', 'chain']).values,2))}\nstdev={list(np.round(samples_xr['delta_beta_temporal_sigma'].mean(dim=['iteration', 'chain']).values,2))}", transform=ax.transAxes, fontsize=5,
+            ax.text(0.02, 0.97, f"avg={list(np.round(samples_xr['delta_beta_temporal_mu'].median(dim=['iteration', 'chain']).values,2))}\nstdev={list(np.round(samples_xr['delta_beta_temporal_sigma'].median(dim=['iteration', 'chain']).values,2))}", transform=ax.transAxes, fontsize=5,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
             ax.set_ylabel(r'$\Delta \beta_{t}$')
