@@ -8,7 +8,7 @@ A script to format the weekly flu hospitalisation incidence in the US states in 
 
 import os
 import pandas as pd
-from influenza_USA.SVI2RHD.utils import name2fips
+from influenza_USA.shared.utils import name2fips
 
 ########################
 ## Load & format data ##
