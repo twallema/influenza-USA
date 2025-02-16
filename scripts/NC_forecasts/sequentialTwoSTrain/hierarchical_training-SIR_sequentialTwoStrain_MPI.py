@@ -39,7 +39,7 @@ n_chains = 500
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-None'
-print_n = 5000
+print_n = 30000
 backend = None
 discard = 0
 thin = 1
@@ -190,6 +190,6 @@ if __name__ == '__main__':
                 # .. visualise hyperdistributions
                 hyperdistributions(samples, samples_path+str(identifier)+'_HYPERDIST_'+run_date+'.pdf', pars_model_shapes, pars_model_bounds, 300)
                 # ..generate goodness-of-fit
-                plot_fit(model, datasets, samples, pars_model_names, samples_path, identifier, run_date)
+                #plot_fit(model, datasets, samples, pars_model_names, samples_path, identifier, run_date)
                 # ..generate traceplots
                 traceplot(samples, pars_model_shapes, hyperpars_shapes, samples_path, identifier, run_date)

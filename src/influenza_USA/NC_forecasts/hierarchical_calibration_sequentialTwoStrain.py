@@ -262,7 +262,7 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
             for i, season in enumerate(samples_xr.coords['season']):
                 y = []
                 for d in x:
-                    y.append(f(d, {}, 1, samples_xr['delta_beta_temporal'].mean(dim=['iteration', 'chain']).sel(season=season).values))
+                    y.append(f(d, {}, 1, samples_xr['delta_beta_temporal'].median(dim=['iteration', 'chain']).sel(season=season).values))
                 ax.plot(x, np.squeeze(np.array(y)), color='black', linewidth=0.5, alpha=0.2)
             ### visualise hyperdistribution
             ll=[]
