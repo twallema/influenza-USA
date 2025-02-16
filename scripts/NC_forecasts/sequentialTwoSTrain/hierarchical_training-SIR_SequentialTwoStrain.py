@@ -163,8 +163,18 @@ else:
         raise FileNotFoundError("backend not found.")    
 
 # setup sampler
+import schwimmbad
+
 if __name__ == '__main__':
-    with get_context("spawn").Pool(processes=processes) as pool:
+
+    with schwimmbad.MPIPool() as pool:
+        if not pool.is_master():
+            pool.wait()
+            import sys
+            sys.exit(0)
+
+    #with get_context("spawn").Pool(processes=processes) as pool:
+
         # setup sampler
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_probability, backend=backend, pool=pool,
                                         moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1),
