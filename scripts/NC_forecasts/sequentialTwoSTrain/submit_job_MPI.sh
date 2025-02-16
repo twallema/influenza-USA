@@ -3,7 +3,7 @@
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
-#SBATCH --time=1:00:00
+#SBATCH --time=72:00:00
 
 # Pin the number of cores for use in python calibration script
 export NUM_CORES=$((SLURM_NNODES * SLURM_NTASKS_PER_NODE))

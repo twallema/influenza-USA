@@ -162,11 +162,11 @@ else:
     except:
         raise FileNotFoundError("backend not found.")    
 
-from schwimmbad import MPIPool
+import schwimmbad
 
 if __name__ == '__main__':
 
-    with MPIPool() as pool:
+    with schwimmbad.MPIPool() as pool:
         if not pool.is_master():
             pool.wait()
             import sys
