@@ -15,7 +15,7 @@ module load anaconda3
 conda activate INFLUENZA-USA
 
 # Run the Python script using MPI
-mpirun -np $NUM_CORES python hierarchical_training-SIR_sequentialTwoStrain.py
+mpirun -np $NUM_CORES python hierarchical_training-SIR_sequentialTwoStrain_MPI.py
 
 # Deactivate the virtual environment
 conda deactivate
