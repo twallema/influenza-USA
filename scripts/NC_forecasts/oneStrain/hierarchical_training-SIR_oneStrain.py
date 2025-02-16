@@ -48,9 +48,9 @@ processes = int(os.environ.get('NUM_CORES', '16'))
 
 # Make folder structure
 if use_ED_visits:
-    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/use_ED_visits/' # Path to backend
+    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/oneStrain/use_ED_visits/' # Path to backend
 else:
-    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/not_use_ED_visits/' # Path to backend
+    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/oneStrain/not_use_ED_visits/' # Path to backend
 # check if samples folder exists, if not, make it
 if not os.path.exists(samples_path):
     os.makedirs(samples_path)
@@ -115,14 +115,14 @@ pars_0 = list(pars_model_0.transpose().values.flatten())
 
 # hyperparameters
 hyperpars_0 = [
-               4.6, 1.0e-02, # rho_i
-               1.3, # T_h
-               4.6, 1.3e-03, # rho_h
-               0.027, 0.0057, # beta
-               8, 10.8, # f_R
-               4.4, 2.9e-05, # f_I
-               -0.05, -0.04, -0.02, 0.01, 0.13, -0.11, 0.02, 0.10, 0.03, 0.03, 0.05, -0.04, # delta_beta_temporal_mu
-               0.04, 0.05, 0.04, 0.06, 0.11, 0.12, 0.11, 0.10, 0.16, 0.10, 0.18, 0.10, # delta_beta_temporal_sigma
+               5.8, 8.5e-03,                                                                # rho_i
+               1.7,                                                                         # T_h
+               5.3, 1.1e-03,                                                                # rho_h
+               0.027, 0.0059,                                                               # beta
+               11.1, 15.2,                                                                  # f_R
+               4.7, 2.6e-05,                                                                # f_I
+               -0.06, -0.03, -0.02, 0.02, 0.14, -0.11, 0.02, 0.10, 0.03, 0.03, 0.05, -0.04, # delta_beta_temporal_mu
+               0.04, 0.05, 0.03, 0.06, 0.1, 0.13, 0.10, 0.10, 0.16, 0.11, 0.20, 0.11,       # delta_beta_temporal_sigma
                 ]
 
 # combine
