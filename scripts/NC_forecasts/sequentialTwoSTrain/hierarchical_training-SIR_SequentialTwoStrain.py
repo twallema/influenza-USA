@@ -39,7 +39,7 @@ n_chains = 500
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-None'
-print_n = 5000
+print_n = 5
 backend = None
 discard = 0
 thin = 1
@@ -47,9 +47,9 @@ processes = int(os.environ.get('NUM_CORES', '16'))
 
 # Make folder structure
 if use_ED_visits:
-    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/use_ED_visits/' # Path to backend
+    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/sequentialTwoStrain/use_ED_visits/' # Path to backend
 else:
-    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/{name2fips(state)}/not_use_ED_visits/' # Path to backend
+    samples_path=fig_path=f'../../../data/interim/calibration/hierarchical-training/sequentialTwoStrain/not_use_ED_visits/' # Path to backend
 # check if samples folder exists, if not, make it
 if not os.path.exists(samples_path):
     os.makedirs(samples_path)
@@ -120,18 +120,18 @@ pars_0 = list(pars_model_0.transpose().values.flatten())
 
 # hyperparameters
 hyperpars_0 = [
-               3.5, 5.2e-03, # rho_i
-               3.6, # T_h
-               4.8, 5.7e-04, # rho_h1
-               4.8, 5.7e-04, # rho_h2
-               0.023, 0.006, # beta1
-               0.023, 0.004, # beta2
-               5, 5, # f_R1_R2
-               5, 5, # f_R1
-               2, 9e-05, # f_I1
-               2, 9e-05, # f_I2
-               -0.08, -0.05, -0.05, 0.005, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04, # delta_beta_temporal_mu
-               0.04, 0.04, 0.04, 0.07, 0.07, 0.09, 0.08, 0.08, 0.09, 0.07, 0.16, 0.07, # delta_beta_temporal_sigma
+               3.5, 5.5e-03,                                                                    # rho_i
+               4.5,                                                                             # T_h
+               3.9, 6.1e-04,                                                                    # rho_h1
+               3.8, 6.4e-04,                                                                    # rho_h2
+               0.023, 0.0061,                                                                   # beta1
+               0.021, 0.0039,                                                                   # beta2
+               6.9, 5.9,                                                                        # f_R1_R2
+               7.4, 7.1,                                                                        # f_R1
+               1.6, 7.6e-05,                                                                    # f_I1
+               2.7, 8.8e-05,                                                                    # f_I2
+               -0.07, -0.04, -0.05, 0.01, 0.06, -0.12, 0.02, 0.10, 0.04, 0.06, 0.07, -0.03,     # delta_beta_temporal_mu
+               0.05, 0.04, 0.05, 0.08, 0.09, 0.09, 0.12, 0.08, 0.09, 0.13, 0.07, 0.15, 0.07,    # delta_beta_temporal_sigma
                 ]
 
 # combine
