@@ -162,18 +162,9 @@ else:
     except:
         raise FileNotFoundError("backend not found.")    
 
-# setup sampler
-import schwimmbad
-
 if __name__ == '__main__':
 
-    with schwimmbad.MPIPool() as pool:
-        if not pool.is_master():
-            pool.wait()
-            import sys
-            sys.exit(0)
-
-    #with get_context("spawn").Pool(processes=processes) as pool:
+    with get_context("spawn").Pool(processes=processes) as pool:
 
         # setup sampler
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_probability, backend=backend, pool=pool,
