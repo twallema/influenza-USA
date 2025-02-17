@@ -185,7 +185,7 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
     fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(8.3,11.7/5*4))
 
     for _, (ax, par_name, bound) in enumerate(zip(axes.flatten(), pars_model_names, bounds)):
-
+        
         # define x based on plausible range
         x = np.linspace(start=bound[0],stop=bound[1],num=100)
 
@@ -275,6 +275,7 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
             ax.set_ylabel(r'$\Delta \beta_{t}$')
+            ax.set_ylim([0.7, 1.3])
 
     fig.delaxes(axes[3,1])
     plt.tight_layout()

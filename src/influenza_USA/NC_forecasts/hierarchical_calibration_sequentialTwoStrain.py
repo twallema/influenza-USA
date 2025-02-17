@@ -279,7 +279,8 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
             ax.set_ylabel(r'$\Delta \beta_{t}$')
-
+            ax.set_ylim([0.7, 1.3])
+            
     fig.delaxes(axes[5,1])
     plt.tight_layout()
     plt.savefig(path_filename)
