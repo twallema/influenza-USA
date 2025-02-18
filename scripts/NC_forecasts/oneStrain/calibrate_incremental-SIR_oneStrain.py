@@ -38,55 +38,62 @@ L1_weight = 1                                       # Forcing strength on tempor
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
-use_ED_visits = True                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
+informed = True                                             # use priors informed by previous seasons
+use_ED_visits = False                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
 ## dates
 start_calibration = datetime(season_start, 12, 1)           # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
+end_calibration = datetime(season_start+1, 4, 7)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 30000                                              # Number of MCMC iterations
+n_mcmc = 1000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 5000                                              # Print diagnostics every `print_n`` iterations
-discard = 10000                                             # Discard first `discard` iterations as burn-in
-thin = 1000                                                 # Thinning factor emcee chains
+print_n = 1000                                              # Print diagnostics every `print_n`` iterations
+discard = 800                                             # Discard first `discard` iterations as burn-in
+thin = 10                                                 # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 200                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
 bounds = [(1e-4,0.15), (1, 21), (1e-4,0.01), (0.005,0.06), (0.01,0.99), (1e-7,1e-3), (-0.5,0.5)]                # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-log_prior_prob_fcn = 6*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
-log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
-                           {'bounds':  bounds[5]}, {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
+if not informed:
+    log_prior_prob_fcn = 6*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
+    log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
+                                {'bounds':  bounds[5]}, {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# log_prior_prob_fcn = 3*[log_prior_gamma] + 1*[log_prior_normal] + 1*[log_prior_beta] + 1*[log_prior_gamma] + 12*[log_prior_normal,] 
-# log_prior_prob_fcn_args = [ 
-#                            # ED visits
-#                            {'a': 3.5, 'loc': 0, 'scale': 5.5e-03, 'weight': L1_weight},     # rho_i
-#                            {'a': 1, 'loc': 0, 'scale': 4.5, 'weight': L1_weight},           # T_h
-#                            # >>>>>>>>>
-#                            {'a': 3.9, 'loc': 0, 'scale': 6.1e-04, 'weight': L1_weight},     # rho_h
-#                            {'avg': 2.3e-02, 'stdev': 6.1e-03, 'weight': L1_weight},         # beta
-#                            {'a': 6.9, 'b': 5.9, 'loc': 0, 'scale': 1, 'weight': L1_weight}, # f_R
-#                            {'a': 1.6, 'loc': 0, 'scale': 7.6e-05, 'weight': L1_weight},     # f_I
-#                            {'avg': -0.07, 'stdev': 0.05, 'weight': L1_weight},              # delta_beta_temporal
-#                            {'avg': -0.04, 'stdev': 0.04, 'weight': L1_weight},              # ...
-#                            {'avg': -0.05, 'stdev': 0.05, 'weight': L1_weight},
-#                            {'avg': 0.01, 'stdev': 0.08, 'weight': L1_weight},
-#                            {'avg': 0.06, 'stdev': 0.09, 'weight': L1_weight},
-#                            {'avg': -0.12, 'stdev': 0.12, 'weight': L1_weight},
-#                            {'avg': 0.02, 'stdev': 0.08, 'weight': L1_weight},
-#                            {'avg': 0.10, 'stdev': 0.09, 'weight': L1_weight},
-#                            {'avg': 0.04, 'stdev': 0.13, 'weight': L1_weight},
-#                            {'avg': 0.06, 'stdev': 0.07, 'weight': L1_weight},
-#                            {'avg': 0.07, 'stdev': 0.15, 'weight': L1_weight},
-#                            {'avg': -0.03, 'stdev': 0.07, 'weight': L1_weight},
-#                            ]          # arguments of prior functions
+else:
+    # load and select priors
+    priors = pd.read_csv('../../../data/interim/calibration/summary-hyperparameters.csv')
+    priors = priors.loc[((priors['model'] == 'oneStrain') & (priors['use_ED_visits'] == use_ED_visits)), ('parameter', f'exclude-{season}')].set_index('parameter').squeeze()
+    # assign values
+    log_prior_prob_fcn = 3*[log_prior_gamma] + 1*[log_prior_normal] + 1*[log_prior_beta] + 1*[log_prior_gamma] + 12*[log_prior_normal,] 
+    log_prior_prob_fcn_args = [ 
+                            # ED visits
+                            {'a': priors['rho_i_a'], 'loc': 0, 'scale': priors['rho_i_scale']},                             # rho_i
+                            {'a': 1, 'loc': 0, 'scale': priors['T_h_rate']},                                                # T_h
+                            # >>>>>>>>>
+                            {'a': priors['rho_h_a'], 'loc': 0, 'scale': priors['rho_h_scale']},                             # rho_h
+                            {'avg': priors['beta_mu'], 'stdev': priors['beta_sigma']},                                      # beta
+                            {'a': priors['f_R_a'], 'b': priors['f_R_b'], 'loc': 0, 'scale': 1},                             # f_R
+                            {'a': priors['f_I_a'], 'loc': 0, 'scale': priors['f_I_scale']},                                 # f_I
+                            {'avg': priors['delta_beta_temporal_mu_0'], 'stdev': priors['delta_beta_temporal_sigma_0']},    # delta_beta_temporal
+                            {'avg': priors['delta_beta_temporal_mu_1'], 'stdev': priors['delta_beta_temporal_sigma_1']},    # ...
+                            {'avg': priors['delta_beta_temporal_mu_2'], 'stdev': priors['delta_beta_temporal_sigma_2']},
+                            {'avg': priors['delta_beta_temporal_mu_3'], 'stdev': priors['delta_beta_temporal_sigma_3']},
+                            {'avg': priors['delta_beta_temporal_mu_4'], 'stdev': priors['delta_beta_temporal_sigma_4']},
+                            {'avg': priors['delta_beta_temporal_mu_5'], 'stdev': priors['delta_beta_temporal_sigma_5']},
+                            {'avg': priors['delta_beta_temporal_mu_6'], 'stdev': priors['delta_beta_temporal_sigma_6']},
+                            {'avg': priors['delta_beta_temporal_mu_7'], 'stdev': priors['delta_beta_temporal_sigma_7']},
+                            {'avg': priors['delta_beta_temporal_mu_8'], 'stdev': priors['delta_beta_temporal_sigma_8']},
+                            {'avg': priors['delta_beta_temporal_mu_9'], 'stdev': priors['delta_beta_temporal_sigma_9']},
+                            {'avg': priors['delta_beta_temporal_mu_10'], 'stdev': priors['delta_beta_temporal_sigma_10']},
+                            {'avg': priors['delta_beta_temporal_mu_11'], 'stdev': priors['delta_beta_temporal_sigma_11']},
+                            ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ## starting guestimate NM
@@ -143,9 +150,9 @@ if __name__ == '__main__':
         # Make folder structure
         identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
         if use_ED_visits:
-            samples_path=fig_path=f'../../../data/interim/calibration/{season}/{name2fips(state)}/use_ED_visits/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/use_ED_visits/{season}/{identifier}/' # Path to backend
         else:
-            samples_path=fig_path=f'../../../data/interim/calibration/{season}/{name2fips(state)}/not_use_ED_visits/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/not_use_ED_visits/{season}/{identifier}/' # Path to backend
         run_date = datetime.today().strftime("%Y-%m-%d") # get current date
         # check if samples folder exists, if not, make it
         if not os.path.exists(samples_path):
@@ -202,6 +209,8 @@ if __name__ == '__main__':
         ## State
         x_calibration_data = df_calib.index.unique().values
         x_validation_data = df_valid.index.unique().values
+        if not use_ED_visits:
+            ax = [ax,]
         ax[0].scatter(x_calibration_data, 7*df_calib['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
             ax[0].scatter(x_validation_data, 7*df_valid['H_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
@@ -325,7 +334,7 @@ if __name__ == '__main__':
         ax[next_ax].grid(False)
         ax[next_ax].set_title('Temporal modifiers transmission coefficient')
         ax[next_ax].set_ylabel('$\\Delta \\beta (t)$')
-        ax[next_ax].set_ylim([0.70,1.30])
+        ax[next_ax].set_ylim([0.6,1.4])
         ## format dates
         ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
         for tick in ax[-1].get_xticklabels():

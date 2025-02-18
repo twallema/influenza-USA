@@ -15,7 +15,7 @@ module load anaconda3
 conda activate INFLUENZA-USA
 
 # Run your Python script
-python hierarchical_training-SIR_oneStrain.py
+python calibrate_incremental-SIR_oneStrain.py
 
 # Deactivate the virtual environment
 conda deactivate
