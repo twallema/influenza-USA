@@ -1,4 +1,4 @@
-﻿model,use_ED_visits,parameter,exclude-None,exclude-2023-2024,exclude-2019-2020,exclude-2018-2019,exclude-2017-2018,exclude-2016-2017,exclude-2015-2016,exclude-2014-2015
+﻿model,use_ED_visits,parameter,exclude-2024-2025,exclude-2023-2024,exclude-2019-2020,exclude-2018-2019,exclude-2017-2018,exclude-2016-2017,exclude-2015-2016,exclude-2014-2015
 oneStrain,FALSE,rho_i_a,4.20E+00,4.10E+00,4.20E+00,4.30E+00,3.80E+00,4.60E+00,3.40E+00,4.80E+00
 oneStrain,FALSE,rho_i_scale,1.20E-02,1.20E-02,1.00E-02,1.30E-02,1.10E-02,1.20E-02,1.30E-02,1.20E-02
 oneStrain,FALSE,T_h_rate,2.20E+00,2.00E+00,2.10E+00,1.90E+00,2.10E+00,2.20E+00,2.10E+00,2.20E+00

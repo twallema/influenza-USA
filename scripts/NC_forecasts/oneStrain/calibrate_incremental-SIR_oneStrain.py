@@ -22,13 +22,36 @@ from pySODM.optimization.utils import assign_theta, add_poisson_noise
 from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal, log_prior_beta
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler
 
+#####################
+## Parse arguments ##
+#####################
+
+import argparse
+# helper function
+def str_to_bool(value):
+    """Convert string arguments to boolean (for SLURM environment variables)."""
+    return value.lower() in ["true", "1", "yes"]
+
+# parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("--use_ED_visits", type=str_to_bool)
+parser.add_argument("--informed", type=str_to_bool)
+parser.add_argument("--season", type=str)
+args = parser.parse_args()
+
+# assign to desired variables
+use_ED_visits = args.use_ED_visits
+informed = args.informed
+season = args.season
+print(use_ED_visits, informed, season)
+
 ##############
 ## Settings ##
 ##############
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2014-2015'                                # season to calibrate
+#season = '2014-2015'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -38,8 +61,8 @@ L1_weight = 1                                       # Forcing strength on tempor
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
-informed = True                                             # use priors informed by previous seasons
-use_ED_visits = True                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
+#informed = True                                             # use priors informed by previous seasons
+#use_ED_visits = True                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
 ## dates
 start_calibration = datetime(season_start, 12, 1)           # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 4, 7)            # and incrementally (weekly) calibrate until this date
