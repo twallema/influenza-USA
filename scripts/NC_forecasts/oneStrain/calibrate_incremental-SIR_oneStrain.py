@@ -271,7 +271,11 @@ if __name__ == '__main__':
                             draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr}, processes=1)
         
         # Add sampling noise
-        out = add_poisson_noise(out)
+        try:
+            out = add_poisson_noise(out)
+        except:
+            print('no poisson resampling performed')
+            pass
 
         # Save as a .csv in hubverse format / raw netcdf
         df = pySODM_to_hubverse(out, end_date+timedelta(weeks=1), 'wk inc flu hosp', 'H_inc', samples_path, quantiles=True)
