@@ -6,7 +6,7 @@ It automatically calibrates to incrementally larger datasets between `start_cali
 __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2025 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
-import os
+import sys,os
 import random
 import emcee
 import numpy as np
@@ -14,10 +14,9 @@ import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.shared.utils import name2fips
 from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data, pySODM_to_hubverse # influenza model
 # pySODM packages
-from pySODM.optimization import nelder_mead, pso
+from pySODM.optimization import nelder_mead
 from pySODM.optimization.utils import assign_theta, add_poisson_noise
 from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal, log_prior_beta
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler
@@ -44,6 +43,7 @@ use_ED_visits = args.use_ED_visits
 informed = args.informed
 season = args.season
 print(use_ED_visits, informed, season)
+sys.stdout.flush()
 
 ##############
 ## Settings ##
@@ -290,14 +290,15 @@ if __name__ == '__main__':
             return parameters
         
         # Simulate model
-        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n,
-                            draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr}, processes=1)
+        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n, processes=1, method='RK23', rtol=5e-3,
+                            draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr})
         
         # Add sampling noise
         try:
             out = add_poisson_noise(out)
         except:
             print('no poisson resampling performed')
+            sys.stdout.flush()
             pass
 
         # Save as a .csv in hubverse format / raw netcdf
