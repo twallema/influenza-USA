@@ -6,7 +6,7 @@ It automatically calibrates to incrementally larger datasets between `start_cali
 __author__      = "Tijs Alleman"
 __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins Bloomberg School of Public Health. All Rights Reserved."
 
-import os
+import sys,os
 import random
 import emcee
 import numpy as np
@@ -22,13 +22,34 @@ from pySODM.optimization.utils import assign_theta, add_poisson_noise
 from pySODM.optimization.objective_functions import log_posterior_probability, ll_poisson, log_prior_normal, log_prior_uniform, log_prior_gamma, log_prior_normal, log_prior_beta
 from pySODM.optimization.mcmc import perturbate_theta, run_EnsembleSampler
 
+#####################
+## Parse arguments ##
+#####################
+
+import argparse
+# helper function
+def str_to_bool(value):
+    """Convert string arguments to boolean (for SLURM environment variables)."""
+    return value.lower() in ["true", "1", "yes"]
+
+# parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("--use_ED_visits", type=str_to_bool)        # use ED visits in addition to ED admissions
+parser.add_argument("--informed", type=str_to_bool)             # use informed priors
+parser.add_argument("--season", type=str)                       # season to calibrate
+args = parser.parse_args()
+
+# assign to desired variables
+use_ED_visits = args.use_ED_visits
+informed = args.informed
+season = args.season
+
 ##############
 ## Settings ##
 ##############
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2024-2025'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
@@ -38,60 +59,65 @@ L1_weight = 1                                       # Forcing strength on tempor
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
 
 # optimization parameters
-use_ED_visits = True                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
 ## dates
-start_calibration = datetime(season_start, 12, 1)         # incremental calibration will start from here
+start_calibration = datetime(season_start+1, 2, 2)          # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 20000                                              # Number of MCMC iterations
+n_mcmc = 15000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 10000                                             # Print diagnostics every `print_n`` iterations
-discard = 1000                                              # Discard first `discard` iterations as burn-in
-thin = 10000                                                # Thinning factor emcee chains
+print_n = 15000                                             # Print diagnostics every `print_n`` iterations
+discard = 8000                                              # Discard first `discard` iterations as burn-in
+thin = 500                                                  # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 750                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
 bounds = [(1e-4,0.15), (1, 21), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
-# log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
-#                            {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
-#                            {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
+if not informed:
+    log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
+    log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
+                               {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
+                               {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_beta] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
-log_prior_prob_fcn_args = [ 
-                           # ED visits
-                           {'a': 3.5, 'loc': 0, 'scale': 5.5e-03, 'weight': L1_weight},     # rho_i
-                           {'a': 1, 'loc': 0, 'scale': 4.5, 'weight': L1_weight},           # T_h
-                           # >>>>>>>>>
-                           {'a': 3.9, 'loc': 0, 'scale': 6.1e-04, 'weight': L1_weight},     # rho_h1
-                           {'a': 3.8, 'loc': 0, 'scale': 6.4e-04, 'weight': L1_weight},     # rho_h2
-                           {'avg': 2.3e-02, 'stdev': 6.1e-03, 'weight': L1_weight},         # beta1
-                           {'avg': 2.1e-02, 'stdev': 3.9e-03, 'weight': L1_weight},         # beta2
-                           {'a': 6.9, 'b': 5.9, 'loc': 0, 'scale': 1, 'weight': L1_weight}, # f_R1_R2
-                           {'a': 7.4, 'b': 7.1, 'loc': 0, 'scale': 1, 'weight': L1_weight}, # f_R1
-                           {'a': 1.6, 'loc': 0, 'scale': 7.6e-05, 'weight': L1_weight},     # f_I1
-                           {'a': 2.7, 'loc': 0, 'scale': 8.8e-05, 'weight': L1_weight},     # f_I2
-                           {'avg': -0.07, 'stdev': 0.05, 'weight': L1_weight},              # delta_beta_temporal
-                           {'avg': -0.04, 'stdev': 0.04, 'weight': L1_weight},              # ...
-                           {'avg': -0.05, 'stdev': 0.05, 'weight': L1_weight},
-                           {'avg': 0.01, 'stdev': 0.08, 'weight': L1_weight},
-                           {'avg': 0.06, 'stdev': 0.09, 'weight': L1_weight},
-                           {'avg': -0.12, 'stdev': 0.12, 'weight': L1_weight},
-                           {'avg': 0.02, 'stdev': 0.08, 'weight': L1_weight},
-                           {'avg': 0.10, 'stdev': 0.09, 'weight': L1_weight},
-                           {'avg': 0.04, 'stdev': 0.13, 'weight': L1_weight},
-                           {'avg': 0.06, 'stdev': 0.07, 'weight': L1_weight},
-                           {'avg': 0.07, 'stdev': 0.15, 'weight': L1_weight},
-                           {'avg': -0.03, 'stdev': 0.07, 'weight': L1_weight},
-                           ]          # arguments of prior functions
+else:
+    # load and select priors
+    priors = pd.read_csv('../../../data/interim/calibration/summary-hyperparameters.csv')
+    priors = priors.loc[((priors['model'] == 'sequentialTwoStrain') & (priors['use_ED_visits'] == use_ED_visits)), ('parameter', f'exclude-{season}')].set_index('parameter').squeeze()
+    # assign values
+    log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_beta] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
+    log_prior_prob_fcn_args = [ 
+                            # ED visits
+                            {'a': priors['rho_i_a'], 'loc': 0, 'scale': priors['rho_i_scale']},                             # rho_i
+                            {'a': 1, 'loc': 0, 'scale': priors['T_h_rate']},                                                # T_h
+                            # >>>>>>>>>
+                            {'a': priors['rho_h1_a'], 'loc': 0, 'scale': priors['rho_h1_scale']},                           # rho_h1
+                            {'a': priors['rho_h2_a'], 'loc': 0, 'scale': priors['rho_h2_scale']},                           # rho_h2
+                            {'avg': priors['beta1_mu'], 'stdev': priors['beta1_sigma']},                                    # beta1
+                            {'avg': priors['beta2_mu'], 'stdev': priors['beta2_sigma']},                                    # beta2
+                            {'a': priors['f_R1_R2_a'], 'b': priors['f_R1_R2_b'], 'loc': 0, 'scale': 1},                     # f_R1_R2
+                            {'a': priors['f_R1_a'], 'b': priors['f_R1_b'], 'loc': 0, 'scale': 1},                           # f_R1
+                            {'a': priors['f_I1_a'], 'loc': 0, 'scale': priors['f_I1_scale']},                               # f_I1
+                            {'a': priors['f_I2_a'], 'loc': 0, 'scale': priors['f_I2_scale']},                               # f_I2
+                            {'avg': priors['delta_beta_temporal_mu_0'], 'stdev': priors['delta_beta_temporal_sigma_0']},    # delta_beta_temporal
+                            {'avg': priors['delta_beta_temporal_mu_1'], 'stdev': priors['delta_beta_temporal_sigma_1']},    # ...
+                            {'avg': priors['delta_beta_temporal_mu_2'], 'stdev': priors['delta_beta_temporal_sigma_2']},
+                            {'avg': priors['delta_beta_temporal_mu_3'], 'stdev': priors['delta_beta_temporal_sigma_3']},
+                            {'avg': priors['delta_beta_temporal_mu_4'], 'stdev': priors['delta_beta_temporal_sigma_4']},
+                            {'avg': priors['delta_beta_temporal_mu_5'], 'stdev': priors['delta_beta_temporal_sigma_5']},
+                            {'avg': priors['delta_beta_temporal_mu_6'], 'stdev': priors['delta_beta_temporal_sigma_6']},
+                            {'avg': priors['delta_beta_temporal_mu_7'], 'stdev': priors['delta_beta_temporal_sigma_7']},
+                            {'avg': priors['delta_beta_temporal_mu_8'], 'stdev': priors['delta_beta_temporal_sigma_8']},
+                            {'avg': priors['delta_beta_temporal_mu_9'], 'stdev': priors['delta_beta_temporal_sigma_9']},
+                            {'avg': priors['delta_beta_temporal_mu_10'], 'stdev': priors['delta_beta_temporal_sigma_10']},
+                            {'avg': priors['delta_beta_temporal_mu_11'], 'stdev': priors['delta_beta_temporal_sigma_11']},
+                            ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ## starting guestimate NM
@@ -102,7 +128,7 @@ rho_h2 = 0.002
 beta1 = beta2 = 0.0215
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
-delta_beta_temporal = [-0.08, -0.05, -0.05, 0.001, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04] # 0.01
+delta_beta_temporal = [-0.07, -0.04, -0.05, 0.01, 0.06, -0.12, 0.02, 0.10, 0.04, 0.06, 0.07, -0.03] # 0.01
 theta = [rho_i, T_h, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + delta_beta_temporal
 
 ## cut off 'rho_i' if not using ILI data
