@@ -42,8 +42,6 @@ args = parser.parse_args()
 use_ED_visits = args.use_ED_visits
 informed = args.informed
 season = args.season
-print(use_ED_visits, informed, season)
-sys.stdout.flush()
 
 ##############
 ## Settings ##

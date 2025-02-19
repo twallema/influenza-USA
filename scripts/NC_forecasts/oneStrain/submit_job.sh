@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=24
-#SBATCH --time=60:00:00
+#SBATCH --time=72:00:00
 
 # Submit as follows:
 # sbatch --export=ALL,USE_ED_VISITS=False,INFORMED=True,SEASON="2014-2015" submit_job.sh
