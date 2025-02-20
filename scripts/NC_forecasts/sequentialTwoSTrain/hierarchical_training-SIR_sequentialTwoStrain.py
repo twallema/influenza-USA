@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from multiprocessing import get_context
-from influenza_USA.shared.utils import name2fips
 from pySODM.optimization.objective_functions import validate_calibrated_parameters
 from influenza_USA.NC_forecasts.hierarchical_calibration_sequentialTwoStrain import log_posterior_probability, dump_sampler_to_xarray, traceplot, plot_fit, hyperdistributions
 from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data
@@ -22,7 +21,6 @@ from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2024-2025'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype

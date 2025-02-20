@@ -23,7 +23,6 @@ from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-season = '2024-2025'                                # season to calibrate
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
 ar = 'full'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
