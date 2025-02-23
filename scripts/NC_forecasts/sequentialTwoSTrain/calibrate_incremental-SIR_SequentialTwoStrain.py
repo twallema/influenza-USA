@@ -60,7 +60,7 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start+1, 2, 2)          # incremental calibration will start from here
+start_calibration = datetime(season_start, 12, 1)          # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
@@ -77,7 +77,7 @@ n = 500                                                     # Number of simulati
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
-bounds = [(1e-4,0.15), (1, 21), (1e-4,0.01), (1e-4,0.01), (0.005,0.06), (0.005,0.06), (0.01,0.99), (0.01,0.99), (1e-7,1e-3), (1e-7,1e-3), (-0.5,0.5)]        # parameter bounds
+bounds = [(1e-4,0.04), (0.5, 7), (1e-4,5e-3), (1e-4,5e-3), (0.01,0.03), (0.1,0.03), (0.2,0.8), (0.2,0.7), (1e-7,5e-4), (1e-7,5e-4), (-0.25,0.25)]        # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
@@ -128,7 +128,7 @@ rho_h2 = 0.002
 beta1 = beta2 = 0.0215
 f_R1_R2 = f_R1 = 0.5
 f_I1 = f_I2 = 5e-5
-delta_beta_temporal = [-0.07, -0.04, -0.05, 0.01, 0.06, -0.12, 0.02, 0.10, 0.04, 0.06, 0.07, -0.03] # 0.01
+delta_beta_temporal = [-0.07, -0.04, -0.05, 0.01, 0.06, -0.12, 0.02, 0.10, 0.04, 0.06, 0.07, -0.03]
 theta = [rho_i, T_h, rho_h1, rho_h2, beta1, beta2, f_R1_R2, f_R1, f_I1, f_I2] + delta_beta_temporal
 
 ## cut off 'rho_i' if not using ILI data
