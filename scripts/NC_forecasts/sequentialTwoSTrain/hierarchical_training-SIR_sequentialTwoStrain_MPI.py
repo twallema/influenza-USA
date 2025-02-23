@@ -27,8 +27,8 @@ ar = 'full'                                         # age resolution: 'collapsed
 dd = False                                          # vary contact matrix by daytype
 
 # calibration settings
-use_ED_visits = False                                                                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
-seasons = ['2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024']       # season to include in calibration excercise
+use_ED_visits = True                                                                                        # use both ED admission (hospitalisation) and ED visits (ILI) data 
+seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024']       # season to include in calibration excercise
 start_calibration_month = 10                                                                                # start calibration on month 10, day 1
 end_calibration_month = 5                                                                                   # end calibration on month 5, day 1
 
@@ -37,11 +37,11 @@ max_n = 30000
 n_chains = 500
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
-identifier = 'exclude-2014-2015'
+identifier = 'exclude-2024-2025'
 print_n = 30001
 backend = None
 discard = 0
-thin = 1
+thin = 10
 processes = int(os.environ.get('NUM_CORES', '16'))
 
 # Make folder structure
