@@ -64,29 +64,34 @@ start_calibration = datetime(season_start, 12, 1)          # incremental calibra
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
-n_pso = 2000                                                # Number of PSO iterations
+n_pso = 200                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 15000                                              # Number of MCMC iterations
+n_mcmc = 100                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 15000                                             # Print diagnostics every `print_n`` iterations
-discard = 8000                                              # Discard first `discard` iterations as burn-in
-thin = 500                                                  # Thinning factor emcee chains
+print_n = 100                                             # Print diagnostics every `print_n`` iterations
+discard = 50                                              # Discard first `discard` iterations as burn-in
+thin = 5                                                  # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 50                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
-bounds = [(1e-4,0.04), (0.5, 7), (1e-4,5e-3), (1e-4,5e-3), (0.01,0.03), (0.1,0.03), (0.2,0.8), (0.2,0.7), (1e-7,5e-4), (1e-7,5e-4), (-0.25,0.25)]        # parameter bounds
+bounds = [(1e-4,0.05), (0.5, 7), (1e-4,5e-3), (1e-4,5e-3), (0.01,0.03), (0.01,0.03), (0.2,0.8), (0.2,0.7), (1e-7,5e-4), (1e-7,5e-4), (-0.25,0.25)]        # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h,1}$', r'$\rho_{h,2}$', r'$\beta_{1}$',  r'$\beta_{2}$', r'$f_{R1+R2}$', r'$f_{R1}$', r'$f_{I1}$', r'$f_{I2}$', r'$\Delta \beta_{t}$'] # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
+    # change name to build save path
+    informed = 'uninformed'
+    # assign priors
     log_prior_prob_fcn = 10*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
     log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
                                {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'bounds':  bounds[8]}, {'bounds':  bounds[9]},
                                {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 else:
+    # change name to build save path
+    informed='informed'
     # load and select priors
     priors = pd.read_csv('../../../data/interim/calibration/summary-hyperparameters.csv')
     priors = priors.loc[((priors['model'] == 'sequentialTwoStrain') & (priors['use_ED_visits'] == use_ED_visits)), ('parameter', f'exclude-{season}')].set_index('parameter').squeeze()
@@ -175,9 +180,9 @@ if __name__ == '__main__':
         # Make folder structure
         identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
         if use_ED_visits:
-            samples_path=fig_path=f'../../../data/interim/calibration/{season}/{name2fips(state)}/use_ED_visits/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/sequentialTwoStrain/{informed}/use_ED_visits/{season}/{identifier}/' # Path to backend
         else:
-            samples_path=fig_path=f'../../../data/interim/calibration/{season}/{name2fips(state)}/not_use_ED_visits/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/sequentialTwoStrain/{informed}/not_use_ED_visits/{season}/{identifier}/'
         run_date = datetime.today().strftime("%Y-%m-%d") # get current date
         # check if samples folder exists, if not, make it
         if not os.path.exists(samples_path):
@@ -304,14 +309,19 @@ if __name__ == '__main__':
             return parameters
         
         # Simulate model
-        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n,
-                            draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr}, processes=1)
+        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n, processes=1, method='RK23', rtol=5e-3,
+                            draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr})
         
         # Aggregate hospitalised for Flu A and Flu B
         out['H_inc'] = out['H1_inc'] + out['H2_inc']
 
         # Add sampling noise
-        out = add_poisson_noise(out)
+        try:
+            out = add_poisson_noise(out)
+        except:
+            print('no poisson resampling performed')
+            sys.stdout.flush()
+            pass
 
         # Save as a .csv in hubverse format / raw netcdf
         df = pySODM_to_hubverse(out, end_date+timedelta(weeks=1), 'wk inc flu hosp', 'H_inc', samples_path, quantiles=True)
