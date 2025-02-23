@@ -64,16 +64,16 @@ start_calibration = datetime(season_start, 12, 1)          # incremental calibra
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
-n_pso = 200                                                # Number of PSO iterations
+n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 100                                              # Number of MCMC iterations
+n_mcmc = 15000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 100                                             # Print diagnostics every `print_n`` iterations
-discard = 50                                              # Discard first `discard` iterations as burn-in
-thin = 5                                                  # Thinning factor emcee chains
+print_n = 15000                                            # Print diagnostics every `print_n`` iterations
+discard = 8000                                             # Discard first `discard` iterations as burn-in
+thin = 500                                                  # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 50                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
