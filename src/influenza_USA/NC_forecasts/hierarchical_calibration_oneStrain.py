@@ -91,7 +91,15 @@ def log_posterior_probability(theta, model, datasets, pars_model_names, pars_mod
         # negative arguments in hyperparameters lead to a nan lpp --> redact to -np.inf and move on
         if math.isnan(lpp):
             return -np.inf
-
+        
+        # nor are negative betas
+        if theta_hyperpars['beta_mu'] <= 0:
+            return -np.inf
+        
+        # or huge delta_beta_temporal_mu/sigma
+        if ((any(((x < -0.5) | (x > 0.5)) for x in theta_hyperpars['delta_beta_temporal_mu'])) | (any(((x < 0) | (x > 0.50)) for x in theta_hyperpars['delta_beta_temporal_sigma']))):
+            return -np.inf
+        
         # Assign model parameters
         model.parameters.update(theta_season)
 
