@@ -211,8 +211,9 @@ if __name__ == '__main__':
 
         # Setup objective function (no priors defined = uniform priors based on bounds)
         objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args,
-                                                    log_prior_prob_fnc=log_prior_prob_fcn, log_prior_prob_fnc_args=log_prior_prob_fcn_args,
-                                                        start_sim=start_simulation, weights=weights, labels=labels)
+                                                        log_prior_prob_fnc=log_prior_prob_fcn, log_prior_prob_fnc_args=log_prior_prob_fcn_args,
+                                                        start_sim=start_simulation, weights=weights, labels=labels,
+                                                        simulation_kwargs={'method': 'RK23', 'rtol': 5e-3})
 
         #################
         ## Nelder-Mead ##
@@ -222,7 +223,7 @@ if __name__ == '__main__':
         ## PSO
         #theta, _ = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)
         ## Nelder-Mead
-        theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,], kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}},
+        theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,],
                                         processes=1, max_iter=n_pso, no_improv_break=1000)
 
         ######################
@@ -289,7 +290,7 @@ if __name__ == '__main__':
         # Sample n_mcmc iterations
         sampler, samples_xr = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 
                                                     moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1), (emcee.moves.StretchMove(live_dangerously=True), 0.50)],
-                                                    settings_dict=settings, objective_function_kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}}
+                                                    settings_dict=settings
                                             )                                                                               
  
         #######################
