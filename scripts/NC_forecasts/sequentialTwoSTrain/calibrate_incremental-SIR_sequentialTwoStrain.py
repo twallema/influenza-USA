@@ -34,14 +34,16 @@ def str_to_bool(value):
 
 # parse arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--use_ED_visits", type=str_to_bool)        # use ED visits in addition to ED admissions
-parser.add_argument("--informed", type=str_to_bool)             # use informed priors
-parser.add_argument("--season", type=str)                       # season to calibrate
+parser.add_argument("--use_ED_visits", type=str_to_bool, help="Use ED visit data (ILI) in addition to ED admission data (hosp. adm.).")
+parser.add_argument("--informed", type=str_to_bool, default=None, help="Use priors informed by posterior hyperdistributions.")
+parser.add_argument("--hyperparameters", type=str, default=None, help="Name of posterior hyperdistribution. Provide a valid column name in 'summary-hyperparameters.csv' to load the hyperdistributions.")
+parser.add_argument("--season", type=str, help="Season to calibrate to. Format: '20XX-20XX'")
 args = parser.parse_args()
 
 # assign to desired variables
 use_ED_visits = args.use_ED_visits
 informed = args.informed
+hyperparameters = args.hyperparameters
 season = args.season
 
 ##############
@@ -60,7 +62,7 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 1)          # incremental calibration will start from here
+start_calibration = datetime(season_start+1, 2, 14)          # incremental calibration will start from here
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
@@ -73,7 +75,7 @@ print_n = 15000                                            # Print diagnostics e
 discard = 8000                                             # Discard first `discard` iterations as burn-in
 thin = 500                                                  # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 750                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
@@ -94,7 +96,7 @@ else:
     informed='informed'
     # load and select priors
     priors = pd.read_csv('../../../data/interim/calibration/summary-hyperparameters.csv')
-    priors = priors.loc[((priors['model'] == 'sequentialTwoStrain') & (priors['use_ED_visits'] == use_ED_visits)), ('parameter', f'exclude-{season}')].set_index('parameter').squeeze()
+    priors = priors.loc[((priors['model'] == 'sequentialTwoStrain') & (priors['use_ED_visits'] == use_ED_visits)), ('parameter', f'{hyperparameters}')].set_index('parameter').squeeze()
     # assign values
     log_prior_prob_fcn = 4*[log_prior_gamma] + 2*[log_prior_normal] + 2*[log_prior_beta] + 2*[log_prior_gamma] + 12*[log_prior_normal,] 
     log_prior_prob_fcn_args = [ 
@@ -213,6 +215,7 @@ if __name__ == '__main__':
         objective_function = log_posterior_probability(model, pars, bounds, data, states, log_likelihood_fnc, log_likelihood_fnc_args,
                                                         log_prior_prob_fnc=log_prior_prob_fcn, log_prior_prob_fnc_args=log_prior_prob_fcn_args,
                                                         start_sim=start_simulation, weights=weights, labels=labels,
+                                                        simulation_kwargs={'method': 'RK23', 'rtol': 5e-3}
                                                         )
 
         #################
@@ -224,8 +227,7 @@ if __name__ == '__main__':
         #theta, _ = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)
         ## Nelder-Mead
         theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,],
-                                        processes=1, max_iter=n_pso, no_improv_break=1000,
-                                        kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}})
+                                        processes=1, max_iter=n_pso, no_improv_break=1000)
 
         ######################
         ## Visualize result ##
@@ -286,12 +288,12 @@ if __name__ == '__main__':
         ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
-                  'season': season, 'starting_estimate': list(theta),
+                  'season': season, 'starting_estimate': theta,
                   'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd}
         # Sample n_mcmc iterations
         sampler, samples_xr = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 
                                                     moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1), (emcee.moves.StretchMove(live_dangerously=True), 0.50)],
-                                                    settings_dict=settings, objective_function_kwargs={'simulation_kwargs': {'method': 'RK23', 'rtol': 5e-3}}
+                                                    settings_dict=settings
                                             )                                                                               
  
         #######################
