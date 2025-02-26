@@ -136,7 +136,10 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 ### Calibration
 
-+ `calibrated_parameters.csv`: Contains the North Carolina two strain sequential infection model's parameters, when calibrated seperately to the seasons 2014-2015 until 2023-2024. Used as initial starting point for the Bayesian hierarchical model training.
++ `single-season-optimal-parameters-oneStrain.csv`: Contains the oneStrain North Carolina infection model's parameters, when calibrated seperately to the seasons 2014-2015 until 2023-2024. Used as initial starting point for the Bayesian hierarchical model training.
+
+ + `single-season-optimal-parameters-sequentialTwoStrain.csv`: Contains the sequentialTwoStrain North Carolina infection model's parameters, when calibrated seperately to the seasons 2014-2015 until 2023-2024. Used as initial starting point for the Bayesian hierarchical model training.
+
 
 ## Conversion
 

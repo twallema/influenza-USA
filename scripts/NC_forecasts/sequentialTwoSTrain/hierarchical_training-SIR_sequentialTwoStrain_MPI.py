@@ -110,7 +110,7 @@ hyperpars_shapes = {
 ####################################
 
 # get independent fit parameters
-pars_model_0 = pd.read_csv('../../../data/interim/calibration/calibrated_parameters-sequentialTwoStrain.csv', index_col=0)[seasons]
+pars_model_0 = pd.read_csv('../../../data/interim/calibration/single-season-optimal-parameters-sequentialTwoStrain.csv', index_col=0)[seasons]
 
 # parameters
 pars_0 = list(pars_model_0.transpose().values.flatten())
