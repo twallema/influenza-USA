@@ -128,6 +128,7 @@ for season in seasons:
 # concatenate season results
 output = pd.concat(gather_seasons, axis=0)
 
+print(output.mean())
 print(output.groupby(by=['season']).mean())
 print(output.groupby(by=['season', 'horizon']).mean())
 
