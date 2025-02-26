@@ -33,14 +33,16 @@ def str_to_bool(value):
 
 # parse arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--use_ED_visits", type=str_to_bool)
-parser.add_argument("--informed", type=str_to_bool)
-parser.add_argument("--season", type=str)
+parser.add_argument("--use_ED_visits", type=str_to_bool, help="Use ED visit data (ILI) in addition to ED admission data (hosp. adm.).")
+parser.add_argument("--informed", type=str_to_bool, default=None, help="Use priors informed by posterior hyperdistributions.")
+parser.add_argument("--hyperparameters", type=str, default=None, help="Name of posterior hyperdistribution. Provide a valid column name in 'summary-hyperparameters.csv' to load the hyperdistributions.")
+parser.add_argument("--season", type=str, help="Season to calibrate to. Format: '20XX-20XX'")
 args = parser.parse_args()
 
 # assign to desired variables
 use_ED_visits = args.use_ED_visits
 informed = args.informed
+hyperparameters = args.hyperparameters
 season = args.season
 
 ##############
@@ -59,24 +61,24 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 1)           # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 4, 7)            # and incrementally (weekly) calibrate until this date
-end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
+start_calibration = datetime(season_start+1, 4, 25)           # incremental calibration will start from here
+end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
+end_validation = datetime(season_start+1, 6, 1)             # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 15000                                              # Number of MCMC iterations
+n_mcmc = 5000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 15000                                              # Print diagnostics every `print_n`` iterations
-discard = 8000                                             # Discard first `discard` iterations as burn-in
-thin = 500                                                 # Thinning factor emcee chains
+print_n = 5000                                              # Print diagnostics every `print_n`` iterations
+discard = 4000                                             # Discard first `discard` iterations as burn-in
+thin = 100                                                 # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 1000                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
-bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0.2,0.6), (1e-7,3e-4), (-0.25,0.25)]                # parameter bounds
+bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0.2,0.6), (1e-7,3e-4), (-0.01,0.01)]                # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
@@ -92,7 +94,7 @@ else:
     informed='informed'
     # load and select priors
     priors = pd.read_csv('../../../data/interim/calibration/summary-hyperparameters.csv')
-    priors = priors.loc[((priors['model'] == 'oneStrain') & (priors['use_ED_visits'] == use_ED_visits)), ('parameter', f'exclude-{season}')].set_index('parameter').squeeze()
+    priors = priors.loc[((priors['model'] == 'oneStrain') & (priors['use_ED_visits'] == use_ED_visits)), (['parameter', f'{hyperparameters}'])].set_index('parameter').squeeze()
     # assign values
     log_prior_prob_fcn = 3*[log_prior_gamma] + 1*[log_prior_normal] + 1*[log_prior_beta] + 1*[log_prior_gamma] + 12*[log_prior_normal,] 
     log_prior_prob_fcn_args = [ 
@@ -266,7 +268,7 @@ if __name__ == '__main__':
         ndim, nwalkers, pos = perturbate_theta(theta, pert=0.20*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
-                  'season': season, 'starting_estimate': list(theta),
+                  'season': season, 'starting_estimate': theta,
                   'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd}
         # Sample n_mcmc iterations
         sampler, samples_xr = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 

@@ -6,7 +6,7 @@
 #SBATCH --time=40:00:00
 
 # Submit as follows:
-# sbatch --export=ALL,USE_ED_VISITS=False,INFORMED=True,SEASON="2014-2015" submit_job.sh
+# sbatch --export=ALL,USE_ED_VISITS=False,INFORMED=True,HYPERPARAMETERS="exclude-2014-2015",SEASON="2014-2015" submit_job.sh
 
 # Pin the number of cores for use in python calibration script
 export NUM_CORES=$SLURM_CPUS_PER_TASK
@@ -18,7 +18,7 @@ module load anaconda3
 conda activate INFLUENZA-USA
 
 # Run your Python script
-python calibrate_incremental-SIR_oneStrain.py --use_ED_visits "$USE_ED_VISITS" --informed "$INFORMED" --season "${SEASON}"
+python calibrate_incremental-SIR_oneStrain.py --use_ED_visits "$USE_ED_VISITS" --informed "$INFORMED" --hyperparameters "${HYPERPARAMETERS}" --season "${SEASON}"
 
 # Deactivate the virtual environment
 conda deactivate
