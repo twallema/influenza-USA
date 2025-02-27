@@ -8,6 +8,8 @@ __copyright__   = "Copyright (c) 2024 by T.W. Alleman, IDD Group, Johns Hopkins 
 import os
 import numpy as np
 import pandas as pd
+from typing import Tuple
+from datetime import datetime, timedelta
 
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
@@ -487,3 +489,32 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     if 0 <= days_difference < smoothed_series.shape[0]:
         return smoothed_series[days_difference, :]  # Always returns a 1D array
     return np.ones(num_space)  # Default value if index is out of bounds
+
+def get_epiweek(date: datetime) -> Tuple[str, str]:
+    """Convert a date string ("YYYY-MM-DD") to CDC epiweek year and week.
+    """
+
+    # Compute Thursday of the same week
+    days_to_thursday = (3 - date.weekday()) % 7
+    thursday = date + timedelta(days=days_to_thursday)
+
+    # Get the epidemiological year (based on Thursday's year)
+    epi_year = thursday.year
+
+    # Compute the first Thursday of the epidemiological year
+    first_thursday = datetime(epi_year, 1, 4) + timedelta(days=(3 - datetime(epi_year, 1, 4).weekday()) % 7)
+
+    # Compute the MMWR week number (difference in weeks from the first Thursday)
+    epi_week = ((thursday - first_thursday).days // 7) + 1
+
+    return epi_year, epi_week
+
+def get_season(date: datetime, switch_month: int) -> str:
+    """
+    Returns the current respiratory season name '20xx-20xx'
+    """
+    year = date.year
+    if date < datetime(year, switch_month, 1):
+        return f"{year-1}-{year}"
+    else:
+        return f"{year}-{year+1}"
