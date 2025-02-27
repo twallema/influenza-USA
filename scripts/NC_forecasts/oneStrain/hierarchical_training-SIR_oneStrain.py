@@ -9,10 +9,8 @@ import os
 import emcee
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 from datetime import datetime
 from multiprocessing import get_context
-from influenza_USA.shared.utils import name2fips
 from pySODM.optimization.objective_functions import validate_calibrated_parameters
 from influenza_USA.NC_forecasts.hierarchical_calibration_oneStrain import log_posterior_probability, dump_sampler_to_xarray, traceplot, plot_fit, hyperdistributions
 from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data
