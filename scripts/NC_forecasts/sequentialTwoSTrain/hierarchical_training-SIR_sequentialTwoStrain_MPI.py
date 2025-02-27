@@ -10,8 +10,6 @@ import emcee
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from multiprocessing import get_context
-from influenza_USA.shared.utils import name2fips
 from pySODM.optimization.objective_functions import validate_calibrated_parameters
 from influenza_USA.NC_forecasts.hierarchical_calibration_sequentialTwoStrain import log_posterior_probability, dump_sampler_to_xarray, traceplot, plot_fit, hyperdistributions
 from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data
@@ -33,12 +31,12 @@ start_calibration_month = 10                                                    
 end_calibration_month = 5                                                                                   # end calibration on month 5, day 1
 
 # Define number of chains
-max_n = 30000
+max_n = 25000
 n_chains = 500
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-2024-2025'
-print_n = 30001
+print_n = 25001
 backend = None
 discard = 0
 thin = 10
