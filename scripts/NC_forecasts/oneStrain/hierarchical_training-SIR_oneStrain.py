@@ -32,7 +32,7 @@ start_calibration_month = 10                                                    
 end_calibration_month = 5                                                                                # end calibration on month 5, day 1
 
 # Define number of chains
-max_n = 20000
+max_n = 25000
 n_chains = 400
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")

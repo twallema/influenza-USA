@@ -68,13 +68,13 @@ end_validation = datetime(season_start+1, 6, 1)             # enddate used on pl
 n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 5000                                              # Number of MCMC iterations
+n_mcmc = 15000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 5000                                              # Print diagnostics every `print_n`` iterations
-discard = 4000                                             # Discard first `discard` iterations as burn-in
+print_n = 15000                                              # Print diagnostics every `print_n`` iterations
+discard = 8000                                             # Discard first `discard` iterations as burn-in
 thin = 100                                                 # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 1000                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
@@ -293,7 +293,7 @@ if __name__ == '__main__':
             return parameters
         
         # Simulate model
-        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n, processes=1, method='RK23', rtol=5e-3,
+        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n, processes=1, method='RK23', rtol=1e-3,
                             draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr})
         
         # Add sampling noise
