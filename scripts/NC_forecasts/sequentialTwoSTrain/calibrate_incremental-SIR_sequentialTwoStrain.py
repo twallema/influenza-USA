@@ -14,7 +14,6 @@ import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as datetime
-from influenza_USA.shared.utils import name2fips
 from influenza_USA.NC_forecasts.utils import initialise_model, get_NC_influenza_data, pySODM_to_hubverse # influenza model
 # pySODM packages
 from pySODM.optimization import nelder_mead, pso
@@ -62,8 +61,8 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start+1, 2, 14)          # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
+start_calibration = datetime(season_start, 12, 1)          # incremental calibration will start from here
+end_calibration = datetime(season_start+1, 4, 7)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                # Number of PSO iterations
@@ -75,7 +74,7 @@ print_n = 15000                                            # Print diagnostics e
 discard = 8000                                             # Discard first `discard` iterations as burn-in
 thin = 500                                                  # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 750                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h1', 'rho_h2', 'beta1', 'beta2', 'f_R1_R2', 'f_R1', 'f_I1', 'f_I2', 'delta_beta_temporal']                                      # parameters to calibrate
@@ -295,7 +294,7 @@ if __name__ == '__main__':
                                                     moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1), (emcee.moves.StretchMove(live_dangerously=True), 0.50)],
                                                     settings_dict=settings
                                             )                                                                               
- 
+
         #######################
         ## Visualize results ##
         #######################
@@ -313,7 +312,7 @@ if __name__ == '__main__':
             return parameters
         
         # Simulate model
-        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n, processes=1, method='RK23', rtol=5e-3,
+        out = model.sim([start_simulation, end_validation+timedelta(weeks=4)], N=n, processes=1, method='RK23',
                             draw_function=draw_fcn, draw_function_kwargs={'samples_xr': samples_xr})
         
         # Aggregate hospitalised for Flu A and Flu B
