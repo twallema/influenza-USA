@@ -32,8 +32,18 @@ model = initialise_model(strains=True, spatial_resolution=sr, age_resolution=ar,
 ## Visualize result ##
 ######################
 
+# wrap timer
+import timeit
+def to_time():
+    model.sim([start_sim, end_sim])
+# Measure the execution time for 20 repetitions
+execution_time = timeit.timeit(to_time, number=20)
+print(f"Total execution time for 20 runs: {execution_time:.6f} seconds")
+print(f"Average execution time per run: {execution_time / 20:.6f} seconds")
+
 # Simulate model
 out = model.sim([start_sim, end_sim])
+
 
 # Visualize
 fig, ax = plt.subplots(2, 1, sharex=True, figsize=(8.3, 11.7/2))
