@@ -2,8 +2,8 @@
 #SBATCH --job-name=incremental-calibration
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
-#SBATCH --time=40:00:00
+#SBATCH --cpus-per-task=48
+#SBATCH --time=24:00:00
 
 # Submit as follows:
 # sbatch --export=ALL,USE_ED_VISITS=False,INFORMED=True,HYPERPARAMETERS="exclude-2014-2015",SEASON="2014-2015" submit_job.sh
