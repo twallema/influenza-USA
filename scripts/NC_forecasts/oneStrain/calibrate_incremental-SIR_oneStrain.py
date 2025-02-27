@@ -61,9 +61,9 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start+1, 4, 25)           # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
-end_validation = datetime(season_start+1, 6, 1)             # enddate used on plots
+start_calibration = datetime(season_start, 12, 1)           # incremental calibration will start from here
+end_calibration = datetime(season_start+1, 4, 7)            # and incrementally (weekly) calibrate until this date
+end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
