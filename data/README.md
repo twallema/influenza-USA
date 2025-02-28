@@ -130,7 +130,7 @@ The radiation (basic) and departure-diffusion radiation models were fitted with 
 
 + `hosp-admissions_FluSurvNet_USA_09-24.csv`: Contains the weekly flu hospitalisation incidence from 2009-2024 at the US state level. Data start in week 40. Dataset has four columns: 'season_start', 'date', 'location' (fips), 'H_inc'.
 
-+ `subtypes_NC_14-25.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Data for 2014-2024 were extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. Data for 2025 were downloaded from https://covid19.ncdhhs.gov/dashboard/respiratory-virus-surveillance.
++ `subtypes_NC_14-25.csv`: Number of positive tests reported by PHE facilities attributed to Influenza A versus Influenza B Influenza. Data for 2014-2024 were extracted from the end-of-season reports available in the raw data folder: `influenza-surveillance-summary_NC_xx-xx.pdf`. Data for 2025 were downloaded from https://covid19.ncdhhs.gov/dashboard/respiratory-virus-surveillance. The seasons 2012-2013 and 2013-2014 contain the reported season's cumulative totals, repeated from Oct-May.
 
 + `NHSN-HRD_interim.csv`: Contains the weekly hospital admissions for Influenza in every US state. Currently ends on 2025-02-01. Converted from `data/raw/cases/NHSN-HRD_raw.csv` using `data/conversion/cases/format-NHSN-HRD-dataset.py`.
 

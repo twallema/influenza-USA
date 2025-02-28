@@ -218,7 +218,7 @@ def get_NC_NHSN_data(startdate, enddate):
 
 def get_NC_cumulatives_per_season():
     """
-    A function that returns, for each season, the current season, one season ago and two seasons ago cumulative total H_inc, I_inc, H_inc_A and H_inc_B
+    A function that returns, for each season, the cumulative total H_inc, I_inc, H_inc_A and H_inc_B in the season - 0, season - 1 and season - 2.
     """
     # define seasons we want output for
     seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024', '2024-2025']
