@@ -217,6 +217,43 @@ def get_NC_NHSN_data(startdate, enddate):
 
     return data.loc[slice(startdate,enddate)]
 
+def get_NC_cumulatives_per_season():
+    """
+    A function that returns, for each season, the cumulative total H_inc, I_inc, H_inc_A and H_inc_B in the season - 0, season - 1 and season - 2.
+    """
+    # define seasons we want output for
+    seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024', '2024-2025']
+
+    # loop over them
+    seasons_collect = []
+    for season in seasons:
+        # get the season start
+        season_start = int(season[0:4])
+        # go back two seasons
+        horizons_collect = []
+        for i in [0, -1, -2]:
+            # get the data
+            data = get_NC_influenza_data(datetime(season_start+i,10,1), datetime(season_start+1+i,5,1), f'{season_start+i}-{season_start+1+i}')*7
+            # calculate cumulative totals
+            column_sums = {
+                "horizon": i,
+                "H_inc": data["H_inc"].sum(),
+                "I_inc": data["I_inc"].sum(),
+                "H_inc_A": data["H_inc_A"].sum(),
+                 "H_inc_B": data["H_inc_B"].sum(),
+            }
+            # create the DataFrame
+            horizons_collect.append(pd.DataFrame([column_sums]))
+        # concatenate data
+        data = pd.concat(horizons_collect)
+        # add current season
+        data['season'] = season    
+        # add to archive
+        seasons_collect.append(data)
+    # concatenate across seasons
+    data = pd.concat(seasons_collect).set_index('season')
+
+    return data
 
 def pySODM_to_hubverse(simout: xr.Dataset,
                         reference_date: datetime,
