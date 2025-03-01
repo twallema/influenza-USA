@@ -426,10 +426,10 @@ def fips2name(fips_code):
         lu = df[((df['fips_state'] == fips_state) & (df['fips_county'] == fips_county))][['name_state', 'name_county']]
         return lu['name_state'].values[0], lu['name_county'].values[0]
 
-
+import math
 from datetime import datetime
 from scipy.ndimage import gaussian_filter1d
-def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
+def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma=None):
     """
     A function returning the value of a temporal modifier on `simulation_date` after smoothing with a gaussian filter
 
@@ -437,14 +437,14 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     -----
 
     modifier_vector: np.ndarray
-        1D numpy array (time) or 2D numpy array (time x space).
-        Each entry represents a value of the modifier in a time interval, with time intervals divided between Oct 15 and Apr 15.
+        1D numpy array (time) or 2D numpy array (time x spatial unit).
+        Each entry represents a value of a knotted temporal modifier, the length of each modifier is equal to the number of days between Oct 15 and Apr 15 divided by `len(modifier_vector)`.
 
     simulation_date: datetime
         current simulation date
 
-    sigma: float
-        smoother standard deviation. higher values represent more smooth trajectories.
+    sigma: float or None
+        gaussian smoother's standard deviation. higher values represent more smooth trajectories but increase runtime. None represents no smoothing (fastest).
 
     output
     ------
@@ -471,10 +471,7 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     padding = np.ones((31, num_space))
     padded_vector = np.vstack([padding, expanded_vector, padding])
 
-    # Step 3: Apply a gaussian 1D smoother
-    smoothed_series = gaussian_filter1d(padded_vector, sigma=sigma, axis=0)
-
-    # Step 4: Compute the number of days since the last October 1
+    # Step 3: Compute the number of days since the last Sept 15
     year = simulation_date.year
     # Compute the last October 1
     sept15_this_year = datetime(year, 9, 15)
@@ -485,10 +482,24 @@ def get_smooth_temporal_modifier(modifier_vector, simulation_date, sigma):
     # Calculate the difference in days
     days_difference = (simulation_date - last_sept15).days
 
-    # Step 5: Return the smoothed value(s) for the specified day
-    if 0 <= days_difference < smoothed_series.shape[0]:
-        return smoothed_series[days_difference, :]  # Always returns a 1D array
-    return np.ones(num_space)  # Default value if index is out of bounds
+    # Step 4: If outside of range return 1
+    if days_difference < 0 or days_difference >= padded_vector.shape[0]:
+        return np.ones(num_space)  # Default value if out of range
+
+    # Step 5: apply the Gaussian filter only within a +- 4*sigma window
+    if not sigma:
+        sigma = 1 # just pick something
+        lower_bound = max(0, days_difference - math.ceil(4 * sigma))
+        upper_bound = min(padded_vector.shape[0], days_difference + math.ceil(4 * sigma)+1)
+        smoothed_subseries = padded_vector[lower_bound:upper_bound]
+    else:
+        lower_bound = max(0, days_difference - math.ceil(4 * sigma))
+        upper_bound = min(padded_vector.shape[0], days_difference + math.ceil(4 * sigma)+1)
+        smoothed_subseries = gaussian_filter1d(padded_vector[lower_bound:upper_bound], sigma=sigma, axis=0, mode="nearest")
+
+    # Return the smoothed value at the correct relative position
+    return smoothed_subseries[days_difference - lower_bound, :]
+
 
 def get_epiweek(date: datetime) -> Tuple[str, str]:
     """Convert a date string ("YYYY-MM-DD") to CDC epiweek year and week.

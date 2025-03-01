@@ -18,17 +18,17 @@ class SIR_oneStrain(ODE):
     states = ['S','I','R',                      # states
               'I_inc', 'H_inc_0', 'H_inc',      # outcomes
               ]
-    parameters = ['beta', 'N', 'T_r', 'T_h', 'rho_i', 'rho_h', 'CHR']
+    parameters = ['beta', 'delta_beta_t', 'N', 'T_r', 'T_h', 'rho_i', 'rho_h', 'CHR']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def integrate(t, S, I, R, I_inc, H_inc_0, H_inc, beta, N, T_r, T_h, rho_i, rho_h, CHR):
+    def integrate(t, S, I, R, I_inc, H_inc_0, H_inc, beta, delta_beta_t, N, T_r, T_h, rho_i, rho_h, CHR):
 
         # compute total population
         T = S+I+R
 
         # compute new infected 
-        I_new = beta * S * np.matmul(N, I/T)
+        I_new = delta_beta_t * beta * S * np.matmul(N, I/T)
 
         # U-shaped severity curve
         rho_i = (rho_i * CHR)[:, np.newaxis]
@@ -56,11 +56,11 @@ class SIR_SequentialTwoStrain(ODE):
     states = ['S','I1','I2','R1','R2','I12','I21','R',                  # states
               'I_inc', 'H1_inc', 'H2_inc', 'H1_inc_0', 'H2_inc_0',      # outcomes
               ]
-    parameters = ['beta1', 'beta2', 'N', 'T_r', 'T_h', 'rho_i', 'rho_h1', 'rho_h2', 'CHR']
+    parameters = ['beta1', 'beta2', 'delta_beta_t', 'N', 'T_r', 'T_h', 'rho_i', 'rho_h1', 'rho_h2', 'CHR']
     dimensions = ['age_group', 'location']
 
     @staticmethod
-    def integrate(t, S, I1, I2, R1, R2, I12, I21, R, I_inc, H1_inc, H2_inc, H1_inc_0, H2_inc_0, beta1, beta2, N, T_r, T_h, rho_i, rho_h1, rho_h2, CHR):
+    def integrate(t, S, I1, I2, R1, R2, I12, I21, R, I_inc, H1_inc, H2_inc, H1_inc_0, H2_inc_0, beta1, beta2, delta_beta_t, N, T_r, T_h, rho_i, rho_h1, rho_h2, CHR):
 
         # compute total population
         T = S+I1+I2+R1+R2+I12+I21+R
@@ -70,12 +70,12 @@ class SIR_SequentialTwoStrain(ODE):
         infpop_2 = (I2 + I12) / T
 
         # new infected with strain 1
-        I1_new = beta1 * S * np.matmul(N, infpop_1)
-        I21_new = beta1 * R2 * np.matmul(N, infpop_1)
+        I1_new = delta_beta_t * beta1 * S * np.matmul(N, infpop_1)
+        I21_new = delta_beta_t * beta1 * R2 * np.matmul(N, infpop_1)
 
         # new infected with strain 2
-        I2_new = beta2 * S * np.matmul(N, infpop_2)
-        I12_new = beta2 * R1 * np.matmul(N, infpop_2)
+        I2_new = delta_beta_t * beta2 * S * np.matmul(N, infpop_2)
+        I12_new = delta_beta_t * beta2 * R1 * np.matmul(N, infpop_2)
 
         # U-shaped severity curve
         rho_i = (rho_i * CHR)[:, np.newaxis]
