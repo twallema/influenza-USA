@@ -73,13 +73,13 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
         initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location']).initial_condition_function_twoStrain
         # time dependencies
         from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
-        TDPFs['beta1'] = transmission_rate_function(sigma=2.5)      
-        TDPFs['beta2'] = transmission_rate_function(sigma=2.5)     
+        TDPFs['delta_beta_t'] = transmission_rate_function(sigma=2.5)          
         # parameters
         params = {
             ## core parameters
             'beta1': 0.028*np.ones(G),                                                                                              # infectivity strain 1 (-)
             'beta2': 0.028*np.ones(G),                                                                                              # infectivity strain 2 (-)
+            'delta_beta_t': 1,                                                                                                        # modifier of transmission rate
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
             'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
@@ -103,11 +103,12 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
         initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location']).initial_condition_function_oneStrain
         # time dependencies
         from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
-        TDPFs['beta'] = transmission_rate_function(sigma=2.5)
+        TDPFs['delta_beta_t'] = transmission_rate_function(sigma=2.5)
         # load right parameters
         params = {
             ## core parameters
             'beta': 0.028*np.ones(G),                                                                                               # infectivity (-)
+            'delta_beta_t': 1,                                                                                                        # modifier of transmission rate
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
             'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
