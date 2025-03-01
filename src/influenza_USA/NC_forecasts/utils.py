@@ -120,7 +120,7 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
             'f_R': 0.50,                                                                                                            # initial fraction of recovered
             }
     # add parameter of TDPF
-    params['delta_beta_temporal'] = [0, 0, -0.1, 0.1, -0.1, 0.1, 0, 0, 0, 0, 0, 0] #np.zeros(12)              
+    params['delta_beta_temporal'] = np.zeros(12)              
 
     # time-dependencies on contacts
     if distinguish_daytype:
