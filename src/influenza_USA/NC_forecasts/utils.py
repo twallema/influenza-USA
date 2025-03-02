@@ -82,7 +82,7 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
             'delta_beta_t': 1,                                                                                                        # modifier of transmission rate
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
-            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
+            'CHR': compute_case_hospitalisation_rate('average', age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             ## outcomes
             'T_h': 5,                                                                                                               # delay hospitalisations
             'rho_i': 0.02,                                                                                                          # detected fraction infected
@@ -100,7 +100,8 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
         from influenza_USA.NC_forecasts.model import SIR_oneStrain as model
         # load right initial condition function
         from influenza_USA.NC_forecasts.TDPF import make_initial_condition_function
-        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location']).initial_condition_function_oneStrain
+        historic_cumulative_incidence = get_NC_cumulatives_per_season()['H_inc']
+        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location'], historic_cumulative_incidence).initial_condition_function_oneStrain
         # time dependencies
         from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
         TDPFs['delta_beta_t'] = transmission_rate_function(sigma=2.5)
@@ -111,14 +112,17 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
             'delta_beta_t': 1,                                                                                                        # modifier of transmission rate
             'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
             'T_r': 3.5,                                                                                                             # average time to recovery 
-            'CHR': compute_case_hospitalisation_rate(season, age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
+            'CHR': compute_case_hospitalisation_rate('average', age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
             ## outcomes
             'T_h': 5,                                                                                                               # delay hospitalisations
             'rho_i': 0.02,                                                                                                          # detected fraction infected
             'rho_h': 0.002,                                                                                                         # hospitalised fraction
             ## initial condition function
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
-            'f_R': 0.50,                                                                                                            # initial fraction of recovered
+            'f_R_min1': 6e-5,                                                                                                          # initial fraction of recovered
+            'f_R_min2': 6e-5,
+            'f_R_min3': 6e-5,
+            'season': season
             }
     # add parameter of TDPF
     params['delta_beta_temporal'] = np.zeros(12)              
@@ -231,7 +235,7 @@ def get_NC_cumulatives_per_season():
         season_start = int(season[0:4])
         # go back two seasons
         horizons_collect = []
-        for i in [0, -1, -2]:
+        for i in [0, -1, -2, -3]:
             # get the data
             data = get_NC_influenza_data(datetime(season_start+i,10,1), datetime(season_start+1+i,5,1), f'{season_start+i}-{season_start+1+i}')*7
             # calculate cumulative totals
@@ -251,7 +255,7 @@ def get_NC_cumulatives_per_season():
         # add to archive
         seasons_collect.append(data)
     # concatenate across seasons
-    data = pd.concat(seasons_collect).set_index('season')
+    data = pd.concat(seasons_collect).set_index(['season', 'horizon'])
 
     return data
 

@@ -22,7 +22,7 @@ from pySODM.optimization.objective_functions import ll_poisson, validate_calibra
 ## Define posterior probability function ##
 ###########################################
 
-def log_posterior_probability(theta, model, datasets, pars_model_names, pars_model_bounds, hyperpars_shapes, states_model, states_data):
+def log_posterior_probability(theta, model, datasets, seasons, pars_model_names, pars_model_bounds, hyperpars_shapes, states_model, states_data):
     """
     Computes the log posterior probability
 
@@ -59,7 +59,10 @@ def log_posterior_probability(theta, model, datasets, pars_model_names, pars_mod
     w /= np.mean(w)
 
     # loop over the seasons
-    for i, data in enumerate(datasets):
+    for i, (data, season) in enumerate(zip(datasets, seasons)):
+
+        # set the right season in the model to make sure the immunity is done right
+        model.parameters['season'] = season
 
         # get this season's parameters for the model
         theta_season = theta_pars[i*n_pars:(i+1)*n_pars]
@@ -84,7 +87,9 @@ def log_posterior_probability(theta, model, datasets, pars_model_names, pars_mod
         lpp += expon.logpdf(theta_season['T_h'], scale=theta_hyperpars['T_h_rate'])                                                 # T_h
         lpp += gamma.logpdf(theta_season['rho_h'], loc=0, a=theta_hyperpars['rho_h_a'], scale=theta_hyperpars['rho_h_scale'])       # rho_h
         lpp += norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma'])               # beta
-        lpp += beta.logpdf(theta_season['f_R'], a=theta_hyperpars['f_R_a'], b=theta_hyperpars['f_R_b'])                             # f_R
+        lpp += norm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma'])   # f_R_min1
+        lpp += norm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma'])   # f_R_min2
+        lpp += norm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma'])   # f_R_min3
         lpp += gamma.logpdf(theta_season['f_I'], a=theta_hyperpars['f_I_a'], loc=0, scale=theta_hyperpars['f_I_scale'])             # f_I
         lpp += np.sum(norm.logpdf(theta_season['delta_beta_temporal'], loc=theta_hyperpars['delta_beta_temporal_mu'], scale=theta_hyperpars['delta_beta_temporal_sigma']))
         
@@ -190,7 +195,7 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
     pars_model_names = pars_model_shapes.keys()
 
     # make figure
-    fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(8.3,11.7/5*4))
+    fig, axes = plt.subplots(nrows=5, ncols=2, figsize=(8.3,11.7/5*5))
 
     for _, (ax, par_name, bound) in enumerate(zip(axes.flatten(), pars_model_names, bounds)):
         
@@ -227,7 +232,7 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
             ax.set_ylabel(par_name)
         ## NORMAL
-        elif par_name in ['beta',]:
+        elif par_name in ['beta', 'f_R_min1', 'f_R_min2', 'f_R_min3']:
             mu_name = f'{par_name}_mu'
             sigma_name = f'{par_name}_sigma'
             # draw a random chain and iteration
@@ -239,21 +244,6 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
             ax.plot(x, norm.pdf(x, loc=samples_xr[mu_name].median(dim=['iteration', 'chain']).values, scale=samples_xr[sigma_name].median(dim=['iteration', 'chain']).values), color='red', linestyle='--')
             # add parameter box
             ax.text(0.05, 0.95, f"avg={samples_xr[mu_name].median(dim=['iteration', 'chain']).values:.1e}, stdev={samples_xr[sigma_name].median(dim=['iteration', 'chain']).values:.1e}", transform=ax.transAxes, fontsize=7,
-                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
-            ax.set_ylabel(par_name)
-        ## BETA
-        elif par_name in ['f_R',]:
-            a_name = f'{par_name}_a'
-            b_name = f'{par_name}_b'
-            # draw a random chain and iteration
-            for _ in range(N):
-                i = random.randint(0, len(samples_xr.coords['iteration'])-1)
-                j = random.randint(0, len(samples_xr.coords['chain'])-1)
-                ax.plot(x, beta.pdf(x, a=samples_xr[a_name].sel({'iteration': i, 'chain': j}).values, b=samples_xr[b_name].sel({'iteration': i, 'chain': j}).values), alpha=0.05, color='black')        
-            # draw mean
-            ax.plot(x, beta.pdf(x, a=samples_xr[a_name].median(dim=['iteration', 'chain']).values, b=samples_xr[b_name].median(dim=['iteration', 'chain']).values), color='red', linestyle='--')
-            # add parameter box
-            ax.text(0.05, 0.95, f"a={samples_xr[a_name].median(dim=['iteration', 'chain']).values:.1f}, b={samples_xr[b_name].median(dim=['iteration', 'chain']).values:.1f}", transform=ax.transAxes, fontsize=7,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
             ax.set_ylabel(par_name)
         ## TEMPORAL BETAS
@@ -285,7 +275,7 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
             ax.set_ylabel(r'$\Delta \beta_{t}$')
             ax.set_ylim([0.7, 1.3])
 
-    fig.delaxes(axes[3,1])
+    fig.delaxes(axes[4,1])
     plt.tight_layout()
     plt.savefig(path_filename)
     plt.close()
@@ -309,6 +299,8 @@ def draw_function(parameters, samples_xr, season, pars_model_names):
     # assign parameters
     for var in pars_model_names:
         parameters[var] = samples_xr[var].sel({'iteration': i, 'chain': j, 'season': season}).values
+    # assign right season
+    parameters['season'] = season
     return parameters
 
 def plot_fit(model, datasets, samples_xr, pars_model_names, path, identifier, run_date):

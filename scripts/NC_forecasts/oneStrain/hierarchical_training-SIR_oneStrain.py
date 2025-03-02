@@ -27,19 +27,19 @@ dd = False                                          # vary contact matrix by day
 
 # calibration settings
 use_ED_visits = True                                                                                     # use both ED admission (hospitalisation) and ED visits (ILI) data 
-seasons = ['2014-2015', '2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024']    # season to include in calibration excercise
+seasons = ['2015-2016', '2016-2017', '2017-2018', '2018-2019', '2019-2020', '2023-2024']    # season to include in calibration excercise
 start_calibration_month = 10                                                                             # start calibration on month 10, day 1
 end_calibration_month = 5                                                                                # end calibration on month 5, day 1
 
 # Define number of chains
 max_n = 25000
-n_chains = 400
+n_chains = 350
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
-identifier = 'exclude-None'
-print_n = 10000
+identifier = 'exclude-2024-2025'
+print_n = 1000
 backend =  None
-discard = 0
+discard = 500
 thin = 1
 processes = int(os.environ.get('NUM_CORES', '16'))
 
@@ -67,7 +67,7 @@ datasets = [get_NC_influenza_data(start_calibration, end_calibration, season) fo
 ## Setup model ##
 #################
 
-model = initialise_model(strains=False, spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
+model = initialise_model(strains=False, spatial_resolution=sr, age_resolution=ar, state=state, season='2014-2015', distinguish_daytype=dd)
 
 ##########################################
 ## Setup posterior probability function ##
@@ -84,8 +84,8 @@ if not use_ED_visits:
 
 # define model parameters to calibrate to every season and their bounds
 # not how we're not cutting out the parameters associated with the ED visit data
-pars_model_names = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']
-pars_model_bounds = [(1e-5,0.15), (0.1, 15), (1e-5,0.015), (0.001,0.06), (0.001,0.999), (1e-9,1e-3), (-1,1)]
+pars_model_names = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']
+pars_model_bounds = [(1e-5,0.15), (0.1, 15), (1e-5,0.015), (0.001,0.06), (0,0.0002), (0,0.0002), (0,0.0002), (1e-9,1e-3), (-1,1)]
 _, pars_model_shapes = validate_calibrated_parameters(pars_model_names, model.parameters)
 n_pars = sum([v[0] for v in pars_model_shapes.values()])
 
@@ -95,7 +95,9 @@ hyperpars_shapes = {
     'T_h_rate': (1,),
     'rho_h_a': (1,), 'rho_h_scale': (1,),
     'beta_mu': (1,), 'beta_sigma': (1,),
-    'f_R_a': (1,), 'f_R_b': (1,),
+    'f_R_min1_mu': (1,), 'f_R_min1_sigma': (1,),
+    'f_R_min2_mu': (1,), 'f_R_min2_sigma': (1,),
+    'f_R_min3_mu': (1,), 'f_R_min3_sigma': (1,),
     'f_I_a': (1,), 'f_I_scale': (1,),
     'delta_beta_temporal_mu': (len(model.parameters['delta_beta_temporal']),), 'delta_beta_temporal_sigma': (len(model.parameters['delta_beta_temporal']),),
 }
@@ -116,7 +118,9 @@ hyperpars_0 = [
                1.7,                                                                         # T_h
                5.7, 1.1e-03,                                                                # rho_h
                0.027, 0.0057,                                                               # beta
-               12.0, 16.5,                                                                  # f_R
+               6e-5, 1e-5,                                                                  # f_R_min1
+               6e-5, 1e-5,                                                                  # f_R_min2
+               6e-5, 1e-5,                                                                  # f_R_min3
                4.3, 2.8e-05,                                                                # f_I
                -0.06, -0.04, -0.02, 0.01, 0.13, -0.13, 0.02, 0.11, 0.03, 0.03, 0.08, -0.04, # delta_beta_temporal_mu
                0.04, 0.05, 0.03, 0.05, 0.1, 0.13, 0.11, 0.10, 0.14, 0.10, 0.23, 0.10,       # delta_beta_temporal_sigma
@@ -157,7 +161,7 @@ if __name__ == '__main__':
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior_probability, backend=backend, pool=pool,
                                         moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1),
                                                (emcee.moves.StretchMove(live_dangerously=True), 0.50)],
-                                        args=(model, datasets, pars_model_names, pars_model_bounds, hyperpars_shapes, states_model, states_data)
+                                        args=(model, datasets, seasons, pars_model_names, pars_model_bounds, hyperpars_shapes, states_model, states_data)
                                         )
         # sample
         for sample in sampler.sample(pos, iterations=max_n, progress=True, store=True, skip_initial_state_check=True):
