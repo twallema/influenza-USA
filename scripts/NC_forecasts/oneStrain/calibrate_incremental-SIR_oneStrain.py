@@ -69,11 +69,11 @@ n_pso = 2000                                                # Number of PSO iter
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
 n_mcmc = 30000                                              # Number of MCMC iterations
-multiplier_mcmc = 5                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
+multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
 print_n = 30000                                              # Print diagnostics every `print_n`` iterations
 discard = 20000                                             # Discard first `discard` iterations as burn-in
-thin = 1000                                                 # Thinning factor emcee chains
-processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
+thin = 500                                                 # Thinning factor emcee chains
+processes = 3 #int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
 n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
@@ -274,7 +274,7 @@ if __name__ == '__main__':
                   'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd}
         # Sample n_mcmc iterations
         sampler, samples_xr = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 
-                                                    moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1), (emcee.moves.StretchMove(live_dangerously=True), 0.50)],
+                                                    moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1), (emcee.moves.StretchMove(live_dangerously=True), 0.50)], discard=discard, thin=thin,
                                                     settings_dict=settings
                                             )                                                                               
  
