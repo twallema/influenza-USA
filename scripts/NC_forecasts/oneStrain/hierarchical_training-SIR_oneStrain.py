@@ -34,12 +34,12 @@ end_calibration_month = 5                                                       
 # Define number of chains
 max_n = 25000
 n_chains = 350
-pert = 0.10
+pert = 0.8
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-2024-2025'
-print_n = 1
-backend =  'exclude-2024-2025_BACKEND_2025-03-01.hdf5'
-discard = 450
+print_n = 50
+backend = None
+discard = 0
 thin = 1
 processes = int(os.environ.get('NUM_CORES', '16'))
 
@@ -85,7 +85,7 @@ if not use_ED_visits:
 # define model parameters to calibrate to every season and their bounds
 # not how we're not cutting out the parameters associated with the ED visit data
 pars_model_names = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']
-pars_model_bounds = [(1e-5,0.15), (0.1, 15), (1e-5,0.015), (0.001,0.06), (0,0.0002), (0,0.0002), (0,0.0002), (1e-9,1e-3), (-1,1)]
+pars_model_bounds = [(1e-5,0.15), (0.1, 15), (1e-5,0.015), (0.001,0.06), (0,0.02), (0,0.02), (0,0.02), (1e-9,1e-3), (-1,1)]
 _, pars_model_shapes = validate_calibrated_parameters(pars_model_names, model.parameters)
 n_pars = sum([v[0] for v in pars_model_shapes.values()])
 
@@ -118,9 +118,9 @@ hyperpars_0 = [
                1.7,                                                                         # T_h
                5.7, 1.1e-03,                                                                # rho_h
                0.027, 0.0057,                                                               # beta
-               6e-5, 1e-5,                                                                  # f_R_min1
-               6e-5, 1e-5,                                                                  # f_R_min2
-               6e-5, 1e-5,                                                                  # f_R_min3
+               1e-4, 1e-5,                                                                  # f_R_min1
+               1e-6, 1e-7,                                                                  # f_R_min2
+               1e-6, 1e-7,                                                                  # f_R_min3
                4.3, 2.8e-05,                                                                # f_I
                -0.06, -0.04, -0.02, 0.01, 0.13, -0.13, 0.02, 0.11, 0.03, 0.03, 0.08, -0.04, # delta_beta_temporal_mu
                0.04, 0.05, 0.03, 0.05, 0.1, 0.13, 0.11, 0.10, 0.14, 0.10, 0.23, 0.10,       # delta_beta_temporal_sigma
@@ -175,6 +175,6 @@ if __name__ == '__main__':
                 # .. visualise hyperdistributions
                 hyperdistributions(samples, samples_path+str(identifier)+'_HYPERDIST_'+run_date+'.pdf', pars_model_shapes, pars_model_bounds, 300)
                 # ..generate goodness-of-fit
-                plot_fit(model, datasets, samples, pars_model_names, samples_path, identifier, run_date)
+                #plot_fit(model, datasets, samples, pars_model_names, samples_path, identifier, run_date)
                 # ..generate traceplots
                 traceplot(samples, pars_model_shapes, hyperpars_shapes, samples_path, identifier, run_date)
