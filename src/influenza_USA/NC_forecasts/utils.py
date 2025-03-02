@@ -70,7 +70,8 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
         from influenza_USA.NC_forecasts.model import SIR_SequentialTwoStrain as model
         # load right initial condition function
         from influenza_USA.NC_forecasts.TDPF import make_initial_condition_function
-        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location']).initial_condition_function_twoStrain
+        historic_cumulative_incidence = get_NC_cumulatives_per_season()['H_inc']
+        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location'], historic_cumulative_incidence).initial_condition_function_twoStrain
         # time dependencies
         from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
         TDPFs['delta_beta_t'] = transmission_rate_function(sigma=2.5)          
