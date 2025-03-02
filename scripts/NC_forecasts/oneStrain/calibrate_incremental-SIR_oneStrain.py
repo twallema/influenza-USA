@@ -175,9 +175,9 @@ if __name__ == '__main__':
         # Make folder structure
         identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
         if use_ED_visits:
-            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}/use_ED_visits/{season}/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}_{hyperparameters}/use_ED_visits/{season}/{identifier}/' # Path to backend
         else:
-            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}/not_use_ED_visits/{season}/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}_{hyperparameters}/not_use_ED_visits/{season}/{identifier}/' # Path to backend
         run_date = datetime.today().strftime("%Y-%m-%d") # get current date
         # check if samples folder exists, if not, make it
         if not os.path.exists(samples_path):
