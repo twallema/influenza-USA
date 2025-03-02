@@ -37,9 +37,9 @@ n_chains = 350
 pert = 0.10
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-2024-2025'
-print_n = 1000
-backend =  None
-discard = 500
+print_n = 1
+backend =  'exclude-2024-2025_BACKEND_2025-03-01.hdf5'
+discard = 450
 thin = 1
 processes = int(os.environ.get('NUM_CORES', '16'))
 
