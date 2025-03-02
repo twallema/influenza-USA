@@ -61,33 +61,33 @@ stdev = 0.10                                        # Expected standard deviatio
 
 # optimization parameters
 ## dates
-start_calibration = datetime(season_start, 12, 1)           # incremental calibration will start from here
-end_calibration = datetime(season_start+1, 4, 7)            # and incrementally (weekly) calibrate until this date
+start_calibration = datetime(season_start+1, 4, 25)           # incremental calibration will start from here
+end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
 n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 15000                                              # Number of MCMC iterations
-multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 15000                                              # Print diagnostics every `print_n`` iterations
-discard = 8000                                             # Discard first `discard` iterations as burn-in
-thin = 100                                                 # Thinning factor emcee chains
+n_mcmc = 30000                                              # Number of MCMC iterations
+multiplier_mcmc = 5                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
+print_n = 30000                                              # Print diagnostics every `print_n`` iterations
+discard = 20000                                             # Discard first `discard` iterations as burn-in
+thin = 1000                                                 # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
 n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
-pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
-bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0.2,0.6), (1e-7,3e-4), (-0.01,0.01)]                # parameter bounds
-labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
+pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
+bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0,0.01), (0,0.01), (0,0.01), (1e-7,3e-4), (-0.5,0.5)]                # parameter bounds
+labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R,-1}$', r'$f_{R,-2}$', r'$f_{R,-3}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
     # change name to build save path
     informed = 'uninformed'
     # assign priors
-    log_prior_prob_fcn = 6*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
+    log_prior_prob_fcn = 8*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
     log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
-                                {'bounds':  bounds[5]}, {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
+                                {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 else:
     # change name to build save path
@@ -126,10 +126,12 @@ rho_i = 0.02
 T_h = 3.5
 rho_h = 0.002
 beta = 0.034
-f_R = 0.5
+f_R_min1 = 1e-4
+f_R_min2 = 1e-6
+f_R_min3 = 1e-6
 f_I = 1e-4
 delta_beta_temporal = [-0.08, -0.05, -0.05, 0.001, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04] # 0.01
-theta = [rho_i, T_h, rho_h, beta, f_R, f_I] + delta_beta_temporal
+theta = [rho_i, T_h, rho_h, beta, f_R_min1, f_R_min2, f_R_min3, f_I] + delta_beta_temporal
 
 ## cut off 'rho_i' if not using ILI data
 n_rows_figs = 2
@@ -153,7 +155,7 @@ data_interim = get_NC_influenza_data(start_simulation, end_validation, season)
 ## Setup model ##
 #################
 
-model = initialise_model(strains=False, spatial_resolution=sr, age_resolution=ar, state=state, season='average', distinguish_daytype=dd)
+model = initialise_model(strains=False, spatial_resolution=sr, age_resolution=ar, state=state, season=season, distinguish_daytype=dd)
 
 #####################
 ## Calibrate model ##
@@ -265,7 +267,7 @@ if __name__ == '__main__':
         ##########
 
         # Perturbate previously obtained estimate
-        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.20*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
+        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.33*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
                   'season': season, 'starting_estimate': theta,
