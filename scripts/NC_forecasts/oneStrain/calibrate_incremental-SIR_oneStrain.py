@@ -68,25 +68,25 @@ end_validation = datetime(season_start+1, 5, 1)             # enddate used on pl
 n_pso = 2000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 30000                                              # Number of MCMC iterations
+n_mcmc = 20000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 30000                                              # Print diagnostics every `print_n`` iterations
-discard = 20000                                             # Discard first `discard` iterations as burn-in
+print_n = 20000                                              # Print diagnostics every `print_n`` iterations
+discard = 10000                                             # Discard first `discard` iterations as burn-in
 thin = 500                                                 # Thinning factor emcee chains
-processes = 3 #int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
+processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
 n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
-bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0,0.01), (0,0.01), (0,0.01), (1e-7,3e-4), (-0.5,0.5)]                # parameter bounds
+bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.005,0.05), (0,0.01), (0,0.01), (0,0.01), (1e-7,3e-4), (-0.5,0.5)]                # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R,-1}$', r'$f_{R,-2}$', r'$f_{R,-3}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
     # change name to build save path
     informed = 'uninformed'
     # assign priors
-    log_prior_prob_fcn = 8*[log_prior_uniform,] + [log_prior_normal,]                                                                                   # prior probability functions
-    log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'bounds':  bounds[3]}, {'bounds':  bounds[4]},
+    log_prior_prob_fcn = 3*[log_prior_uniform,] + [log_prior_normal,]  + 4*[log_prior_uniform,] + [log_prior_normal,]                                                                           # prior probability functions
+    log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'avg':  0.026, 'stdev': 0.003}, {'bounds':  bounds[4]},
                                 {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 else:
