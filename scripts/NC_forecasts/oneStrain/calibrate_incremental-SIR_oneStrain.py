@@ -78,7 +78,7 @@ n = 500                                                     # Number of simulati
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
-bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0.2,0.6), (1e-7,3e-4), (-0.01,0.01)]                # parameter bounds
+bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0.2,0.6), (1e-7,3e-4), (-0.50,0.50)]                # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
