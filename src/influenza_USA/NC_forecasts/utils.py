@@ -109,22 +109,22 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
         # load right parameters
         params = {
             ## core parameters
-            'beta': 0.028*np.ones(G),                                                                                               # infectivity (-)
-            'delta_beta_t': 1,                                                                                                        # modifier of transmission rate
-            'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
+            'beta': 0.028*17.4,                                                                                                     # infectivity (-)
+            'delta_beta_t': 1,                                                                                                      # modifier of transmission rate
             'T_r': 3.5,                                                                                                             # average time to recovery 
-            'CHR': compute_case_hospitalisation_rate('average', age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
-            ## outcomes
             'T_h': 5,                                                                                                               # delay hospitalisations
             'rho_i': 0.02,                                                                                                          # detected fraction infected
             'rho_h': 0.002,                                                                                                         # hospitalised fraction
             ## initial condition function
             'f_I': 1e-4,                                                                                                            # initial fraction of infected
-            'f_R_min1': 6e-5,                                                                                                          # initial fraction of recovered
+            'f_R_min1': 6e-5,                                                                                                       # initial fraction of recovered
             'f_R_min2': 6e-5,
             'f_R_min3': 6e-5,
             'season': season
             }
+        # remove coordinates
+        coordinates = {}
+
     # add parameter of TDPF
     params['delta_beta_temporal'] = np.zeros(12)              
 
@@ -265,7 +265,8 @@ def pySODM_to_hubverse(simout: xr.Dataset,
                         target: str,
                         model_state: str,
                         path: str=None,
-                        quantiles: bool=False) -> pd.DataFrame:
+                        quantiles: bool=False,
+                        location: str='37') -> pd.DataFrame:
     """
     Convert pySODM simulation result to Hubverse format
 
@@ -285,6 +286,9 @@ def pySODM_to_hubverse(simout: xr.Dataset,
 
     - quantiles: str
         - save quantiles instead of individual trajectories.
+    
+    - location: str
+        - US state FIPS code. Defaults to North Carolina '37'.
 
     Returns
     -------
@@ -299,7 +303,7 @@ def pySODM_to_hubverse(simout: xr.Dataset,
     """
 
     # deduce information from simout
-    location = list(simout.coords['location'].values)
+    location = [location,]
     output_type_id = simout.coords['draws'].values if not quantiles else [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99]
     # fixed metadata
     horizon = range(-1,4)
@@ -320,11 +324,11 @@ def pySODM_to_hubverse(simout: xr.Dataset,
         if not quantiles:
             for draw in output_type_id:
                 df.loc[((df['output_type_id'] == draw) & (df['location'] == loc)), 'value'] = \
-                    7*simout[model_state].sum(dim='age_group').sel({'location': loc, 'draws': draw}).interp(date=target_end_date).values
+                    7*simout[model_state].sel({'draws': draw}).interp(date=target_end_date).values
         else:
             for q in output_type_id:
                 df.loc[((df['output_type_id'] == q) & (df['location'] == loc)), 'value'] = \
-                    7*simout[model_state].sum(dim='age_group').sel({'location': loc}).quantile(q=q, dim='draws').interp(date=target_end_date).values
+                    7*simout[model_state].quantile(q=q, dim='draws').interp(date=target_end_date).values
     
     # hubverse uses
     df['location'] = df['location'].apply(lambda x: x[:2])

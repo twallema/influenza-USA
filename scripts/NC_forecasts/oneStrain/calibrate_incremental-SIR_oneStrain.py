@@ -52,7 +52,7 @@ season = args.season
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
 sr = 'states'                                       # spatial resolution: 'states' or 'counties'
-ar = 'full'                                         # age resolution: 'collapsed' or 'full'
+ar = 'collapsed'                                         # age resolution: 'collapsed' or 'full'
 dd = False                                          # vary contact matrix by daytype
 season_start = int(season[0:4])                     # start of season
 start_simulation = datetime(season_start, 10, 1)    # date simulation is started
@@ -65,20 +65,20 @@ start_calibration = datetime(season_start+1, 4, 25)           # incremental cali
 end_calibration = datetime(season_start+1, 5, 1)            # and incrementally (weekly) calibrate until this date
 end_validation = datetime(season_start+1, 5, 1)             # enddate used on plots
 ## frequentist optimization
-n_pso = 2000                                                # Number of PSO iterations
+n_pso = 1000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 20000                                              # Number of MCMC iterations
+n_mcmc = 1000                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 20000                                              # Print diagnostics every `print_n`` iterations
-discard = 10000                                             # Discard first `discard` iterations as burn-in
-thin = 500                                                 # Thinning factor emcee chains
+print_n = 1000                                              # Print diagnostics every `print_n`` iterations
+discard = 500                                             # Discard first `discard` iterations as burn-in
+thin = 100                                                 # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
 n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
-bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.005,0.05), (0,0.01), (0,0.01), (0,0.01), (1e-7,3e-4), (-0.5,0.5)]                # parameter bounds
+bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,1), (0,0.01), (0,0.01), (0,0.01), (1e-7,1e-3), (-0.5,0.5)]                # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R,-1}$', r'$f_{R,-2}$', r'$f_{R,-3}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
@@ -86,7 +86,7 @@ if not informed:
     informed = 'uninformed'
     # assign priors
     log_prior_prob_fcn = 3*[log_prior_uniform,] + [log_prior_normal,]  + 4*[log_prior_uniform,] + [log_prior_normal,]                                                                           # prior probability functions
-    log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'avg':  0.026, 'stdev': 0.003}, {'bounds':  bounds[4]},
+    log_prior_prob_fcn_args = [{'bounds':  bounds[0]}, {'bounds':  bounds[1]}, {'bounds':  bounds[2]}, {'avg':  0.45, 'stdev': 0.05}, {'bounds':  bounds[4]},
                                 {'bounds':  bounds[5]}, {'bounds':  bounds[6]}, {'bounds':  bounds[7]}, {'avg':  0, 'stdev': stdev, 'weight': L1_weight}]   # arguments prior functions
 # INFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 else:
@@ -122,13 +122,13 @@ else:
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 ## starting guestimate NM
-rho_i = 0.02
+rho_i = 0.008
 T_h = 3.5
-rho_h = 0.002
-beta = 0.034
-f_R_min1 = 1e-4
-f_R_min2 = 1e-6
-f_R_min3 = 1e-6
+rho_h = 0.001
+beta = 0.45
+f_R_min1 = 5e-5
+f_R_min2 = 5e-5
+f_R_min3 = 5e-5
 f_I = 1e-4
 delta_beta_temporal = [-0.08, -0.05, -0.05, 0.001, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04] # 0.01
 theta = [rho_i, T_h, rho_h, beta, f_R_min1, f_R_min2, f_R_min3, f_I] + delta_beta_temporal
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         ax[0].scatter(x_calibration_data, 7*df_calib['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
             ax[0].scatter(x_validation_data, 7*df_valid['H_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
+        ax[0].plot(out['date'], 7*out['H_inc'], color='blue', alpha=1, linewidth=2)
         ax[0].grid(False)
         ax[0].set_title(f'{state}\nHospitalisations')
         ## ILI
@@ -250,7 +250,7 @@ if __name__ == '__main__':
             ax[1].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
             if not df_valid.empty:
                 ax[1].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-            ax[1].plot(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']), color='blue', alpha=1, linewidth=2)
+            ax[1].plot(out['date'], 7*out['I_inc'], color='blue', alpha=1, linewidth=2)
             ax[1].grid(False)
             ax[1].set_title('Influenza-like illness')
         ## format dates
@@ -260,6 +260,7 @@ if __name__ == '__main__':
         ## Print to screen
         plt.tight_layout()
         plt.savefig(fig_path+f'{identifier}_goodness-fit-NM.pdf')
+        plt.show()
         plt.close()
 
         ##########
@@ -307,7 +308,7 @@ if __name__ == '__main__':
             pass
 
         # Save as a .csv in hubverse format / raw netcdf
-        df = pySODM_to_hubverse(out, end_date+timedelta(weeks=1), 'wk inc flu hosp', 'H_inc', samples_path, quantiles=True)
+        df = pySODM_to_hubverse(out, end_date+timedelta(weeks=1), 'wk inc flu hosp', 'H_inc', samples_path, quantiles=True, location='37')
         out.to_netcdf(samples_path+f'{identifier}_simulation-output.nc')
 
         # Construct delta_beta_temporal trajectory
@@ -339,10 +340,10 @@ if __name__ == '__main__':
         ax[0].scatter(x_calibration_data, 7*df_calib['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
         if not df_valid.empty:
             ax[0].scatter(x_validation_data, 7*df_valid['H_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
-        ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
-                            7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
+        ax[0].fill_between(out['date'], 7*out['H_inc'].quantile(dim='draws', q=0.05/2),
+                            7*out['H_inc'].quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+        ax[0].fill_between(out['date'], 7*out['H_inc'].quantile(dim='draws', q=0.50/2),
+                            7*out['H_inc'].quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
         ax[0].grid(False)
         ax[0].set_title(f'{state}\nHospitalisations')
         ax[0].set_ylabel('Weekly hospital inc. (-)')
@@ -354,10 +355,10 @@ if __name__ == '__main__':
             ax[1].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
             if not df_valid.empty:
                 ax[1].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-            ax[1].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                                7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
-            ax[1].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
-                                7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
+            ax[1].fill_between(out['date'], 7*out['I_inc'].quantile(dim='draws', q=0.05/2),
+                                7*out['I_inc'].quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+            ax[1].fill_between(out['date'], 7*out['I_inc'].quantile(dim='draws', q=0.50/2),
+                                7*out['I_inc'].quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
             ax[1].grid(False)
             ax[1].set_title(f'Influenza-like illness')
             ax[1].set_ylabel('Weekly ILI inc. (-)')

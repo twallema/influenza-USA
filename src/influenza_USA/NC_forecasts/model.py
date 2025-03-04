@@ -12,27 +12,22 @@ from pySODM.models.base import ODE
 # define integration function
 class SIR_oneStrain(ODE):
     """
-    Influenza model with one strain
+    SIR model with one strain, observed ILI and hospitalisation incidences
     """
     
     states = ['S','I','R',                      # states
               'I_inc', 'H_inc_0', 'H_inc',      # outcomes
               ]
-    parameters = ['beta', 'delta_beta_t', 'N', 'T_r', 'T_h', 'rho_i', 'rho_h', 'CHR']
-    dimensions = ['age_group', 'location']
+    parameters = ['beta', 'delta_beta_t', 'T_r', 'T_h', 'rho_i', 'rho_h']
 
     @staticmethod
-    def integrate(t, S, I, R, I_inc, H_inc_0, H_inc, beta, delta_beta_t, N, T_r, T_h, rho_i, rho_h, CHR):
+    def integrate(t, S, I, R, I_inc, H_inc_0, H_inc, beta, delta_beta_t, T_r, T_h, rho_i, rho_h):
 
         # compute total population
         T = S+I+R
 
         # compute new infected 
-        I_new = delta_beta_t * beta * S * np.matmul(N, I/T)
-
-        # U-shaped severity curve
-        rho_i = (rho_i * CHR)[:, np.newaxis]
-        rho_h = (rho_h * CHR)[:, np.newaxis]
+        I_new = delta_beta_t * beta * S * I/T
 
         # calculate state differentials
         dS = - I_new

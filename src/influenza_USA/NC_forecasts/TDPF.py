@@ -94,9 +94,9 @@ class make_initial_condition_function():
         ## compute immunity (bounded linear model)
         f_R = (f_R_min1 * C_min1 + f_R_min2 * C_min2 + f_R_min3 * C_min3) / (1 + f_R_min1 * C_min1 + f_R_min2 * C_min2 + f_R_min3 * C_min3)
 
-        return {'S':  (1 - f_I - f_R) * self.demography,
-                'I':f_I * self.demography,   
-                'R': f_R * self.demography,
+        return {'S':  float((1 - f_I - f_R) * self.demography),
+                'I': float(f_I * self.demography),   
+                'R': float(f_R * self.demography),
                 }
 
     def initial_condition_function_twoStrain(self, f_I1, f_I2, f_R1_R2, f_R1):
