@@ -15,7 +15,7 @@ from influenza_USA.shared.utils import construct_coordinates_dictionary, name2fi
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
 
-def initialise_model(strains=True, spatial_resolution='states', age_resolution='full', state=None, season='average', distinguish_daytype=True):
+def initialise_model(strains=True, state=None, season='2023-2024'):
     """
     Initialises the two-strain sequential infection model. Optionally simulate a single state.
 
@@ -25,115 +25,86 @@ def initialise_model(strains=True, spatial_resolution='states', age_resolution='
     - strains: bool
         - True: loads two-strain sequential infection model, False: loads single strain model
 
-    - spatial_resolution: str
-        - 'collapsed', 'states' or 'counties'. 
-
-    - age_resolution: str
-        - 'collapsed' or 'full'. 
-
     - state: str
         - valid US state name.
 
     - season: str
-        - influenza season. used to set the model's U-shaped severity curve.
+        - influenza season. needed for the immunity link function.
         
-    - distinguish_daytype: bool
-        - differ contacts by weekday, weekendday and holiday.
-
     output
     ------
 
     - model: pySODM model
         - initialised pySODM two-strain sequential infection SIR model
+
+    remarks
+    -------
+
+    The `spatial_resolution` is set to 'states' while the `age_resolution` is set to 'collapsed'. 
     """
     
-    # model works at US state or county level
-    if ((spatial_resolution != 'states') & (spatial_resolution != 'counties')):
-        raise ValueError("this model was designed to work at the US state or county level. valid 'spatial_resolution' are 'states' or 'counties'. found: '{spatial_resolution}'.")
+    # preset `spatial_resolution` and `age_resolution`
+    spatial_resolution = 'states'
+    age_resolution = 'collapsed'
+    state_fips = [name2fips(state),]
 
-    # construct coordinates
-    _, G, coordinates = construct_coordinates_dictionary(spatial_resolution=spatial_resolution, age_resolution=age_resolution)
-
-    # slice state out of the coordinates
-    if state:
-        # get fips code (performs checks)
-        fips = name2fips(state)
-        # extract coordinates
-        coordinates['location'] = [coord for coord in coordinates['location'] if coord[0:2] == fips[0:2]]
-        # update spatial dimension size
-        G = len(coordinates['location'])
-
-    # load right model and parameters depending on strain
+    # load model
+    from influenza_USA.NC_forecasts.model import SIR_strains as model
+    # load initial condition function
+    from influenza_USA.NC_forecasts.TDPF import make_initial_condition_function
+    # load and init time dependencies
     TDPFs={}
-    if strains:
-        # load right model
-        from influenza_USA.NC_forecasts.model import SIR_SequentialTwoStrain as model
-        # load right initial condition function
-        from influenza_USA.NC_forecasts.TDPF import make_initial_condition_function
-        historic_cumulative_incidence = get_NC_cumulatives_per_season()['H_inc']
-        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location'], historic_cumulative_incidence).initial_condition_function_twoStrain
-        # time dependencies
-        from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
-        TDPFs['delta_beta_t'] = transmission_rate_function(sigma=2.5)          
+    from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
+    TDPFs['delta_beta_t'] = transmission_rate_function(sigma=2.5)   
+    
+    # load right model and parameters depending on strain
+    if not strains:
+        # initialise IC function
+        historic_cumulative_incidence = get_NC_cumulatives_per_season()['H_inc'].to_frame()
+        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, state_fips, historic_cumulative_incidence).initial_condition_function      
         # parameters
         params = {
             ## core parameters
-            'beta1': 0.028*np.ones(G),                                                                                              # infectivity strain 1 (-)
-            'beta2': 0.028*np.ones(G),                                                                                              # infectivity strain 2 (-)
-            'delta_beta_t': 1,                                                                                                        # modifier of transmission rate
-            'N': get_contact_matrix(daytype='all', age_resolution=age_resolution),                                                  # contact matrix (overall: 17.4 contact * hr / person, week (no holiday): 18.1, week (holiday): 14.5, weekend: 16.08)
-            'T_r': 3.5,                                                                                                             # average time to recovery 
-            'CHR': compute_case_hospitalisation_rate('average', age_resolution=age_resolution),                                        # case hosp. rate corrected for social contact and expressed relative to [0,5) yo
-            ## outcomes
-            'T_h': 5,                                                                                                               # delay hospitalisations
-            'rho_i': 0.02,                                                                                                          # detected fraction infected
-            'rho_h1': 0.002,                                                                                                        # hospitalised fraction (source: Josh)
-            'rho_h2': 0.002,                                                                                                        # hospitalised fraction (source: Josh)
+            'beta': np.array([0.030*17.4]),                                                                             # infectivity (-)
+            'delta_beta_t': 1,                                                                              # pre-allocation of modifier of transmission rate
+            'T_r': 3.5,                                                                                     # average time to recovery 
+            'T_h': 5,                                                                                       # delay hospitalisations
+            'rho_i': 0.02,                                                                                  # detected fraction infected
+            'rho_h': np.array([0.002,]),                                                                                 # hospitalised fraction
             ## initial condition function
-            'f_I1': 1e-4,                                                                                                           # initial fraction of infected with strain 1
-            'f_I2': 1e-5,                                                                                                           # initial fraction of infected with strain 2
-            'f_R1_R2': 0.75,                                                                                                        # sum of the initial fraction recovered from strain 1 and strain 2 --> needed to constraint initial R between 0 and 1 during calibration
-            'f_R1': 0.45,                                                                                                           # fraction of f_R1_R2 recovered from strain 1
-            }
-
-    else:
-        # load right model
-        from influenza_USA.NC_forecasts.model import SIR_oneStrain as model
-        # load right initial condition function
-        from influenza_USA.NC_forecasts.TDPF import make_initial_condition_function
-        historic_cumulative_incidence = get_NC_cumulatives_per_season()['H_inc']
-        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, coordinates['location'], historic_cumulative_incidence).initial_condition_function_oneStrain
-        # time dependencies
-        from influenza_USA.NC_forecasts.TDPF import transmission_rate_function
-        TDPFs['delta_beta_t'] = transmission_rate_function(sigma=2.5)
-        # load right parameters
-        params = {
-            ## core parameters
-            'beta': 0.028*17.4,                                                                                                     # infectivity (-)
-            'delta_beta_t': 1,                                                                                                      # modifier of transmission rate
-            'T_r': 3.5,                                                                                                             # average time to recovery 
-            'T_h': 5,                                                                                                               # delay hospitalisations
-            'rho_i': 0.02,                                                                                                          # detected fraction infected
-            'rho_h': 0.002,                                                                                                         # hospitalised fraction
-            ## initial condition function
-            'f_I': 1e-4,                                                                                                            # initial fraction of infected
-            'f_R_min1': 6e-5,                                                                                                       # initial fraction of recovered
-            'f_R_min2': 6e-5,
-            'f_R_min3': 6e-5,
+            'f_I': 1e-4,                                                                                    # initial fraction of infected
+            'season': season,                                                                               # current season 
+            'f_R_min1': 5e-5,                                                                               # importance of season - 1 on immunity
+            'f_R_min2': 5e-5,                                                                               # importance of season - 2 on immunity
+            'f_R_min3': 5e-5,                                                                               # importance of season - 3 on immunity
             'season': season
             }
-        # remove coordinates
-        coordinates = {}
-
+        # coordinates
+        coordinates = {'strain': ['A+B',]}
+    if strains:
+        # initialise IC function
+        historic_cumulative_incidence = get_NC_cumulatives_per_season()[['H_inc_A', 'H_inc_B']]
+        initial_condition_function = make_initial_condition_function(spatial_resolution, age_resolution, state_fips, historic_cumulative_incidence).initial_condition_function
+        # parameters
+        params = {
+            ## core parameters
+            'beta': np.array([0.030*17.4, 0.030*17.4]),                                                     # infectivity (-)
+            'delta_beta_t': 1,                                                                              # pre-allocation of modifier of transmission rate
+            'T_r': 3.5,                                                                                     # average time to recovery 
+            'T_h': 5,                                                                                       # delay hospitalisations
+            'rho_i': 0.02,                                                                                  # detected fraction infected
+            'rho_h': np.array([0.002, 0.002]),                                                              # hospitalised fraction
+            ## initial condition function
+            'f_I': np.array([1e-4, 1e-4]),                                                                  # initial fraction of infected
+            'season': season,                                                                               # current season
+            'f_R_min1': np.array([5e-5, 5e-5]),                                                             # importance of season - 1 on immunity
+            'f_R_min2': np.array([5e-5, 5e-5]),                                                             # importance of season - 2 on immunity
+            'f_R_min3': np.array([5e-5, 5e-5])                                                              # importance of season - 3 on immunity
+            }
+        # coordinates
+        coordinates = {'strain': ['A', 'B']}
     # add parameter of TDPF
     params['delta_beta_temporal'] = np.zeros(12)              
-
-    # time-dependencies on contacts
-    if distinguish_daytype:
-        from influenza_USA.shared.TDPF import make_contact_function
-        TDPFs['N'] = make_contact_function(get_contact_matrix(daytype='week_no-holiday', age_resolution=age_resolution),
-                                                get_contact_matrix(daytype='week_holiday', age_resolution=age_resolution),
-                                                get_contact_matrix(daytype='weekend', age_resolution=age_resolution)).contact_function
 
     # initalise pySODM model
     return model(initial_states=initial_condition_function, parameters=params, coordinates=coordinates, time_dependent_parameters=TDPFs)

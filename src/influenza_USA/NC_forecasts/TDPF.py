@@ -61,12 +61,12 @@ class make_initial_condition_function():
 
     def __init__(self, spatial_resolution, age_resolution, spatial_coordinates, historic_cumulative_incidence):
         # construct the demography
-        self.demography = construct_initial_susceptible(spatial_resolution, age_resolution, spatial_coordinates)
+        self.demography = float(construct_initial_susceptible(spatial_resolution, age_resolution, spatial_coordinates))
         # save the cumulative incidence
         self.historic_cumulative_incidence = historic_cumulative_incidence
         pass
 
-    def initial_condition_function_oneStrain(self, f_I, f_R_min1, f_R_min2, f_R_min3,  season):
+    def initial_condition_function(self, f_I, f_R_min1, f_R_min2, f_R_min3,  season):
         """
         A function setting the model's initial condition.
         
@@ -88,15 +88,15 @@ class make_initial_condition_function():
 
         # immunity link function
         ##  get data
-        C_min1 = self.historic_cumulative_incidence.loc[(season,-1)]
-        C_min2 = self.historic_cumulative_incidence.loc[(season,-2)]
-        C_min3 = self.historic_cumulative_incidence.loc[(season,-3)]
+        C_min1 = self.historic_cumulative_incidence.loc[(season,-1)].values
+        C_min2 = self.historic_cumulative_incidence.loc[(season,-2)].values
+        C_min3 = self.historic_cumulative_incidence.loc[(season,-3)].values
         ## compute immunity (bounded linear model)
         f_R = (f_R_min1 * C_min1 + f_R_min2 * C_min2 + f_R_min3 * C_min3) / (1 + f_R_min1 * C_min1 + f_R_min2 * C_min2 + f_R_min3 * C_min3)
 
-        return {'S':  float((1 - f_I - f_R) * self.demography),
-                'I': float(f_I * self.demography),   
-                'R': float(f_R * self.demography),
+        return {'S':  (1 - f_I - f_R) * self.demography,
+                'I': f_I * self.demography,   
+                'R': f_R * self.demography,
                 }
 
     def initial_condition_function_twoStrain(self, f_I1, f_I2, f_R1_R2, f_R1):
