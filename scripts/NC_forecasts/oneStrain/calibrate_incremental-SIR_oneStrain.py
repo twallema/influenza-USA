@@ -1,5 +1,5 @@
 """
-This script calibrates the single strain influenza model to North Carolina ED admission and ED visits data
+This script calibrates the (single or two strain) influenza model to North Carolina ED admission and ED visits data
 It automatically calibrates to incrementally larger datasets between `start_calibration` and `end_calibration`
 """
 
@@ -33,17 +33,12 @@ def str_to_bool(value):
 
 # parse arguments
 parser = argparse.ArgumentParser()
+parser.add_argument("--strains", type=str_to_bool, help="Use two strain model.")
 parser.add_argument("--use_ED_visits", type=str_to_bool, help="Use ED visit data (ILI) in addition to ED admission data (hosp. adm.).")
 parser.add_argument("--informed", type=str_to_bool, default=None, help="Use priors informed by posterior hyperdistributions.")
 parser.add_argument("--hyperparameters", type=str, default=None, help="Name of posterior hyperdistribution. Provide a valid column name in 'summary-hyperparameters.csv' to load the hyperdistributions.")
 parser.add_argument("--season", type=str, help="Season to calibrate to. Format: '20XX-20XX'")
 args = parser.parse_args()
-
-# assign to desired variables
-use_ED_visits = args.use_ED_visits
-informed = args.informed
-hyperparameters = args.hyperparameters
-season = args.season
 
 ##############
 ## Settings ##
@@ -51,10 +46,7 @@ season = args.season
 
 # model settings
 state = 'North Carolina'                            # state we'd like to calibrate to
-sr = 'states'                                       # spatial resolution: 'states' or 'counties'
-ar = 'collapsed'                                    # age resolution: 'collapsed' or 'full'
-dd = False                                          # vary contact matrix by daytype
-season_start = int(season[0:4])                     # start of season
+season_start = int(args.season[0:4])                     # start of season
 start_simulation = datetime(season_start, 10, 1)    # date simulation is started
 L1_weight = 1                                       # Forcing strength on temporal modifiers 
 stdev = 0.10                                        # Expected standard deviation on temporal modifiers
@@ -68,20 +60,20 @@ end_validation = datetime(season_start+1, 5, 1)             # enddate used on pl
 n_pso = 1000                                                # Number of PSO iterations
 multiplier_pso = 10                                         # PSO swarm size
 ## bayesian inference
-n_mcmc = 15000                                              # Number of MCMC iterations
+n_mcmc = 500                                              # Number of MCMC iterations
 multiplier_mcmc = 3                                         # Total number of Markov chains = number of parameters * multiplier_mcmc
-print_n = 15000                                              # Print diagnostics every `print_n`` iterations
-discard = 10000                                             # Discard first `discard` iterations as burn-in
-thin = 100                                                 # Thinning factor emcee chains
+print_n = 500                                              # Print diagnostics every `print_n`` iterations
+discard = 400                                             # Discard first `discard` iterations as burn-in
+thin = 10                                                 # Thinning factor emcee chains
 processes = int(os.environ.get('NUM_CORES', '16'))          # Number of CPUs to use
-n = 500                                                     # Number of simulations performed in MCMC goodness-of-fit figure
+n = 100                                                     # Number of simulations performed in MCMC goodness-of-fit figure
 
 # calibration parameters
-pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
-bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,1), (0,0.01), (0,0.01), (0,0.01), (1e-7,1e-3), (-0.5,0.5)]                # parameter bounds
+pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']                    # parameters to calibrate
+bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,1), (0,0.1), (0,0.1), (0,0.1), (1e-7,1e-3), (-0.5,0.5)]                # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R,-1}$', r'$f_{R,-2}$', r'$f_{R,-3}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-if not informed:
+if not args.informed:
     # change name to build save path
     informed = 'uninformed'
     # assign priors
@@ -94,7 +86,7 @@ else:
     informed='informed'
     # load and select priors
     priors = pd.read_csv('../../../data/interim/calibration/summary-hyperparameters.csv')
-    priors = priors.loc[((priors['model'] == 'oneStrain') & (priors['use_ED_visits'] == use_ED_visits)), (['parameter', f'{hyperparameters}'])].set_index('parameter').squeeze()
+    priors = priors.loc[((priors['model'] == 'oneStrain') & (priors['use_ED_visits'] == args.use_ED_visits)), (['parameter', f'{args.hyperparameters}'])].set_index('parameter').squeeze()
     # assign values
     log_prior_prob_fcn = 3*[log_prior_gamma] + 1*[log_prior_normal] + 1*[log_prior_beta] + 1*[log_prior_gamma] + 12*[log_prior_normal,] 
     log_prior_prob_fcn_args = [ 
@@ -121,41 +113,38 @@ else:
                             ]          # arguments of prior functions
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-## starting guestimate NM
-rho_i = 0.008
-T_h = 3.5
-rho_h = 0.001
-beta = 0.45
-f_R_min1 = 5e-5
-f_R_min2 = 5e-5
-f_R_min3 = 5e-5
-f_I = 1e-4
-delta_beta_temporal = [-0.08, -0.05, -0.05, 0.001, 0.07, -0.11, 0.02, 0.11, 0.05, 0.06, 0.04, -0.04] # 0.01
-theta = [rho_i, T_h, rho_h, beta, f_R_min1, f_R_min2, f_R_min3, f_I] + delta_beta_temporal
+## starting estimate NM (average of fitting seperately)
+initial_guess = pd.read_csv('../../../data/interim/calibration/single-season-optimal-parameters.csv')
+theta = initial_guess[initial_guess['strains'] == args.strains][args.season]
+#initial_guess["average"] = initial_guess.iloc[:, 2:].mean(axis=1)
+#theta = initial_guess["average"].values
 
 ## cut off 'rho_i' if not using ILI data
-n_rows_figs = 2
-if not use_ED_visits:
+if args.strains:
+    n_rows_figs = 4
+else:
+    n_rows_figs = 2
+if not args.use_ED_visits:
     pars = pars[1:]
     bounds = bounds[1:]
     labels = labels[1:]
     theta = theta[1:]
     log_prior_prob_fcn = log_prior_prob_fcn[1:]
     log_prior_prob_fcn_args = log_prior_prob_fcn_args[1:]
-    n_rows_figs = 1
+    n_rows_figs -= 1
 
 #####################
 ## Load NC dataset ##
 #####################
 
 # load dataset
-data_interim = get_NC_influenza_data(start_simulation, end_validation, season)
+data_interim = get_NC_influenza_data(start_simulation, end_validation, args.season)
 
 #################
 ## Setup model ##
 #################
 
-model = initialise_model(strains=False, state=state, season=season)
+model = initialise_model(strains=args.strains, state=state, season=args.season)
 
 #####################
 ## Calibrate model ##
@@ -176,10 +165,10 @@ if __name__ == '__main__':
 
         # Make folder structure
         identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
-        if use_ED_visits:
-            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}/use_ED_visits/{season}/{identifier}/' # Path to backend
+        if args.use_ED_visits:
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/strains_{args.strains}/{informed}/use_ED_visits/{args.season}/{identifier}/' # Path to backend
         else:
-            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}/not_use_ED_visits/{season}/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/strains_{args.strains}/{informed}/not_use_ED_visits/{args.season}/{identifier}/' # Path to backend
         run_date = datetime.today().strftime("%Y-%m-%d") # get current date
         # check if samples folder exists, if not, make it
         if not os.path.exists(samples_path):
@@ -193,16 +182,29 @@ if __name__ == '__main__':
         df_calib = data_interim.loc[slice(start_simulation, end_date)]
         df_valid = data_interim.loc[slice(end_date+timedelta(days=1), end_validation)]
 
-        # prepare data-related arguments of posterior probability
-        data = [df_calib['H_inc'], df_calib['I_inc'].dropna()]
+        # prepare datasets
+        ## strains
+        if args.strains:
+            gthr = []
+            for col, strain in zip(['H_inc_A', 'H_inc_B'], ['A', 'B']):
+                df = df_calib[col].reset_index()
+                df['strain'] = strain
+                df.columns = ['date', 'H_inc', 'strain']
+                gthr.append(df)
+            data = pd.concat(gthr).set_index(['date', 'strain']).squeeze()
+            data = [data, df_calib['I_inc'].dropna()]
+        else:
+            data = [df_calib['H_inc'], df_calib['I_inc'].dropna()]
         states = ['H_inc', 'I_inc']
         log_likelihood_fnc = [ll_poisson, ll_poisson]
         log_likelihood_fnc_args = [[],[]]
-        if not use_ED_visits:
+        ## inclusion ED visits
+        if not args.use_ED_visits:
             data = data[:-1]
             states = states[:-1]
             log_likelihood_fnc = log_likelihood_fnc[:-1]
             log_likelihood_fnc_args = log_likelihood_fnc_args[:-1]
+        ## relative data weights
         weights = [1/max(df) for df in data]
         weights = np.array(weights) / np.mean(weights)
 
@@ -216,63 +218,104 @@ if __name__ == '__main__':
         ## Nelder-Mead ##
         #################
 
-        # perform optimization 
-        ## PSO
-        #theta, _ = pso.optimize(objective_function, swarmsize=multiplier_pso*len(pars), max_iter=100, processes=processes, debug=True)
-        ## Nelder-Mead
         theta, _ = nelder_mead.optimize(objective_function, np.array(theta), len(objective_function.expanded_bounds)*[0.2,],
                                         processes=1, max_iter=n_pso, no_improv_break=1000)
 
-        ######################
-        ## Visualize result ##
-        ######################
+        #########################################
+        ## Visualize result of NM optimisation ##
+        #########################################
 
         # Assign results to model
         model.parameters = assign_theta(model.parameters, pars, theta)
         # Simulate model
         out = model.sim([start_simulation, end_validation], method='RK23', rtol=1e-2)
         # Visualize
-        fig, ax = plt.subplots(n_rows_figs, 1, sharex=True, figsize=(8.3, 11.7/5*n_rows_figs))
-        props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
-        ## State
-        x_calibration_data = df_calib.index.unique().values
-        x_validation_data = df_valid.index.unique().values
-        if not use_ED_visits:
-            ax = [ax,]
-        ax[0].scatter(x_calibration_data, 7*df_calib['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        if not df_valid.empty:
-            ax[0].scatter(x_validation_data, 7*df_valid['H_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[0].plot(out['date'], 7*out['H_inc'], color='blue', alpha=1, linewidth=2)
-        ax[0].grid(False)
-        ax[0].set_title(f'{state}\nHospitalisations')
-        ## ILI
-        if use_ED_visits:
-            ax[1].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        if not args.strains:
+            # make figure
+            fig, ax = plt.subplots(n_rows_figs, 1, sharex=True, figsize=(8.3, 11.7/5*n_rows_figs))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
+            ## State
+            x_calibration_data = df_calib.index.unique().values
+            x_validation_data = df_valid.index.unique().values
+            if not args.use_ED_visits:
+                ax = [ax,]
+            ax[0].scatter(x_calibration_data, 7*df_calib['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
             if not df_valid.empty:
-                ax[1].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-            ax[1].plot(out['date'], 7*out['I_inc'], color='blue', alpha=1, linewidth=2)
+                ax[0].scatter(x_validation_data, 7*df_valid['H_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[0].plot(out['date'], 7*out['H_inc'], color='blue', alpha=1, linewidth=2)
+            ax[0].grid(False)
+            ax[0].set_title(f'{state}\nHospitalisations')
+            ## ILI
+            if args.use_ED_visits:
+                ax[1].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                if not df_valid.empty:
+                    ax[1].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                ax[1].plot(out['date'], 7*out['I_inc'], color='blue', alpha=1, linewidth=2)
+                ax[1].grid(False)
+                ax[1].set_title('Influenza-like illness')
+            ## format dates
+            ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
+            for tick in ax[-1].get_xticklabels():
+                tick.set_rotation(30)
+            ## Print to screen
+            plt.tight_layout()
+            plt.savefig(fig_path+f'{identifier}_goodness-fit-NM.pdf')
+            plt.show()
+            plt.close()
+        else:
+            # make figure
+            fig, ax = plt.subplots(n_rows_figs, 1, sharex=True, figsize=(8.3, 11.7/5*n_rows_figs))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
+            ## State
+            x_calibration_data = df_calib.index.unique().values
+            x_validation_data = df_valid.index.unique().values
+            ax[0].scatter(x_calibration_data, 7*(df_calib['H_inc_A'] + df_calib['H_inc_B']), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[0].scatter(x_validation_data, 7*(df_valid['H_inc_A'] + df_valid['H_inc_B']), color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[0].plot(out['date'], 7*out['H_inc'].sum(dim=['strain']), color='blue', alpha=1, linewidth=2)
+            ax[0].grid(False)
+            ax[0].set_title(f'{state}\nHospitalisations')
+            ## Flu A
+            ax[1].scatter(x_calibration_data, 7*df_calib['H_inc_A'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[1].scatter(x_validation_data, 7*df_valid['H_inc_A'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[1].plot(out['date'], 7*out['H_inc'].sel(strain='A'), color='blue', alpha=1, linewidth=2)
             ax[1].grid(False)
-            ax[1].set_title('Influenza-like illness')
-        ## format dates
-        ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
-        for tick in ax[-1].get_xticklabels():
-            tick.set_rotation(30)
-        ## Print to screen
-        plt.tight_layout()
-        plt.savefig(fig_path+f'{identifier}_goodness-fit-NM.pdf')
-        #plt.show()
-        plt.close()
+            ax[1].set_title(f'{state} (Flu A)')
+            ## Flu B
+            ax[2].scatter(x_calibration_data, 7*df_calib['H_inc_B'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[2].scatter(x_validation_data, 7*df_valid['H_inc_B'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[2].plot(out['date'], 7*out['H_inc'].sel(strain='B'), color='blue', alpha=1, linewidth=2)
+            ax[2].grid(False)
+            ax[2].set_title(f'{state} (Flu B)')
+            ## ILI
+            if args.use_ED_visits:
+                ax[3].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                if not df_valid.empty:
+                    ax[3].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                ax[3].plot(out['date'], 7*out['I_inc'].sum(dim=['strain']), color='blue', alpha=1, linewidth=2)
+                ax[3].grid(False)
+                ax[3].set_title('Influenza-like illness')
+            ## format dates
+            ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
+            for tick in ax[-1].get_xticklabels():
+                tick.set_rotation(30)
+            ## Print to screen
+            plt.tight_layout()
+            plt.savefig(fig_path+f'{identifier}_goodness-fit-NM.pdf')
+            plt.show()
+            plt.close()
 
         ##########
         ## MCMC ##
         ##########
 
         # Perturbate previously obtained estimate
-        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.33*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
+        ndim, nwalkers, pos = perturbate_theta(theta, pert=0.10*np.ones(len(theta)), multiplier=multiplier_mcmc, bounds=objective_function.expanded_bounds)
         # Append some usefull settings to the samples dictionary
         settings={'start_simulation': start_simulation.strftime('%Y-%m-%d'), 'start_calibration': start_calibration.strftime('%Y-%m-%d'), 'end_calibration': end_date.strftime('%Y-%m-%d'),
-                  'season': season, 'starting_estimate': theta,
-                  'spatial_resolution': sr, 'age_resolution': ar, 'distinguish_daytype': dd}
+                  'season': args.season, 'starting_estimate': theta}
         # Sample n_mcmc iterations
         sampler, samples_xr = run_EnsembleSampler(pos, n_mcmc, identifier, objective_function, fig_path=fig_path, samples_path=samples_path, print_n=print_n, backend=None, processes=processes, progress=True, 
                                                     moves=[(emcee.moves.DEMove(), 0.5*0.9),(emcee.moves.DEMove(gamma0=1.0), 0.5*0.1), (emcee.moves.StretchMove(live_dangerously=True), 0.50)], discard=discard, thin=thin,
@@ -331,49 +374,120 @@ if __name__ == '__main__':
         # Build figure
         # ------------
 
-        # Visualize
-        fig, ax = plt.subplots(n_rows_figs+1, 1, sharex=True, figsize=(8.3, 11.7/5*(n_rows_figs+1)))
-        props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
-        ## State
-        x_calibration_data = df_calib.index.unique().values
-        x_validation_data = df_valid.index.unique().values
-        ax[0].scatter(x_calibration_data, 7*df_calib['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        if not df_valid.empty:
-            ax[0].scatter(x_validation_data, 7*df_valid['H_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[0].fill_between(out['date'], 7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=0.05/2),
-                            7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
-        ax[0].fill_between(out['date'], 7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=0.50/2),
-                            7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
-        ax[0].grid(False)
-        ax[0].set_title(f'{state}\nHospitalisations')
-        ax[0].set_ylabel('Weekly hospital inc. (-)')
-        ax[0].set_ylim([0,1850])
-        ## ILI incidences
-        next_ax = 1
-        if use_ED_visits:
-            next_ax = 2
-            ax[1].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+        if not args.strains:
+            # Visualize
+            fig, ax = plt.subplots(n_rows_figs+1, 1, sharex=True, figsize=(8.3, 11.7/5*(n_rows_figs+1)))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
+            ## State
+            x_calibration_data = df_calib.index.unique().values
+            x_validation_data = df_valid.index.unique().values
+            ax[0].scatter(x_calibration_data, 7*df_calib['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
             if not df_valid.empty:
-                ax[1].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-            ax[1].fill_between(out['date'], 7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=0.05/2),
-                                7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
-            ax[1].fill_between(out['date'], 7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=0.50/2),
-                                7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
+                ax[0].scatter(x_validation_data, 7*df_valid['H_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[0].fill_between(out['date'], 7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=0.05/2),
+                                7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+            ax[0].fill_between(out['date'], 7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=0.50/2),
+                                7*out['H_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
+            ax[0].grid(False)
+            ax[0].set_title(f'{state}\nHospitalisations')
+            ax[0].set_ylabel('Weekly hospital inc. (-)')
+            ax[0].set_ylim([0,1850])
+            ## ILI incidences
+            next_ax = 1
+            if args.use_ED_visits:
+                next_ax = 2
+                ax[1].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                if not df_valid.empty:
+                    ax[1].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                ax[1].fill_between(out['date'], 7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=0.05/2),
+                                    7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+                ax[1].fill_between(out['date'], 7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=0.50/2),
+                                    7*out['I_inc'].sel(strain='A+B').quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
+                ax[1].grid(False)
+                ax[1].set_title(f'Influenza-like illness')
+                ax[1].set_ylabel('Weekly ILI inc. (-)')
+            ## Temporal betas
+            ax[next_ax].plot(x, y, color='black')
+            ax[next_ax].fill_between(x, lower, upper, color='black', alpha=0.1)
+            ax[next_ax].grid(False)
+            ax[next_ax].set_title('Temporal modifiers transmission coefficient')
+            ax[next_ax].set_ylabel('$\\Delta \\beta (t)$')
+            ax[next_ax].set_ylim([0.6,1.4])
+            ## format dates
+            ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
+            for tick in ax[-1].get_xticklabels():
+                tick.set_rotation(30)
+            ## Print to screen
+            plt.tight_layout()
+            plt.savefig(fig_path+f'{identifier}_goodness-fit-MCMC.pdf')
+            plt.close()
+        else:
+            # Visualize
+            fig, ax = plt.subplots(n_rows_figs+1, 1, sharex=True, figsize=(8.3, 11.7/5*(n_rows_figs+1)))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=1.0)
+            ## State
+            x_calibration_data = df_calib.index.unique().values
+            x_validation_data = df_valid.index.unique().values
+            ax[0].scatter(x_calibration_data, 7*(df_calib['H_inc_A'] + df_calib['H_inc_B']), color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[0].scatter(x_validation_data, 7*(df_valid['H_inc_A'] + df_valid['H_inc_B']), color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.05/2),
+                                7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+            ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.50/2),
+                                7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
+            ax[0].grid(False)
+            ax[0].set_title(f'{state}\nHospitalisations')
+            ax[0].set_ylabel('Weekly hospital inc. (-)')
+            ax[0].set_ylim([0,2000])
+            ## Flu A
+            ax[1].scatter(x_calibration_data, 7*df_calib['H_inc_A'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[1].scatter(x_validation_data, 7*df_valid['H_inc_A'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[1].fill_between(out['date'], 7*out['H_inc'].sel(strain='A').quantile(dim='draws', q=0.05/2),
+                                7*out['H_inc'].sel(strain='A').quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+            ax[1].fill_between(out['date'], 7*out['H_inc'].sel(strain='A').quantile(dim='draws', q=0.50/2),
+                                7*out['H_inc'].sel(strain='A').quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
             ax[1].grid(False)
-            ax[1].set_title(f'Influenza-like illness')
-            ax[1].set_ylabel('Weekly ILI inc. (-)')
-        ## Temporal betas
-        ax[next_ax].plot(x, y, color='black')
-        ax[next_ax].fill_between(x, lower, upper, color='black', alpha=0.1)
-        ax[next_ax].grid(False)
-        ax[next_ax].set_title('Temporal modifiers transmission coefficient')
-        ax[next_ax].set_ylabel('$\\Delta \\beta (t)$')
-        ax[next_ax].set_ylim([0.6,1.4])
-        ## format dates
-        ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
-        for tick in ax[-1].get_xticklabels():
-            tick.set_rotation(30)
-        ## Print to screen
-        plt.tight_layout()
-        plt.savefig(fig_path+f'{identifier}_goodness-fit-MCMC.pdf')
-        plt.close()
+            ax[1].set_title('Influenza A')
+            ax[1].set_ylabel('Weekly hospital inc. (-)')
+            ## Flu B
+            ax[2].scatter(x_calibration_data, 7*df_calib['H_inc_B'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            if not df_valid.empty:
+                ax[2].scatter(x_validation_data, 7*df_valid['H_inc_B'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+            ax[2].fill_between(out['date'], 7*out['H_inc'].sel(strain='B').quantile(dim='draws', q=0.05/2),
+                                7*out['H_inc'].sel(strain='B').quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+            ax[2].fill_between(out['date'], 7*out['H_inc'].sel(strain='B').quantile(dim='draws', q=0.50/2),
+                                7*out['H_inc'].sel(strain='B').quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
+            ax[2].grid(False)
+            ax[2].set_title('Influenza B')
+            ax[2].set_ylabel('Weekly hospital inc. (-)')
+            ## ILI incidences
+            next_ax = 3
+            if args.use_ED_visits:
+                next_ax = 4
+                ax[3].scatter(x_calibration_data, 7*df_calib['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                if not df_valid.empty:
+                    ax[3].scatter(x_validation_data, 7*df_valid['I_inc'], color='red', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
+                ax[3].fill_between(out['date'], 7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.05/2),
+                                    7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+                ax[3].fill_between(out['date'], 7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.50/2),
+                                    7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)    
+                ax[3].grid(False)
+                ax[3].set_title(f'Influenza-like illness')
+                ax[3].set_ylabel('Weekly ILI inc. (-)')
+            ## Temporal betas
+            ax[next_ax].plot(x, y, color='black')
+            ax[next_ax].fill_between(x, lower, upper, color='black', alpha=0.1)
+            ax[next_ax].grid(False)
+            ax[next_ax].set_title('Temporal modifiers transmission coefficient')
+            ax[next_ax].set_ylabel('$\\Delta \\beta (t)$')
+            ax[next_ax].set_ylim([0.70,1.30])
+            ## format dates
+            ax[-1].xaxis.set_major_locator(plt.MaxNLocator(5))
+            for tick in ax[-1].get_xticklabels():
+                tick.set_rotation(30)
+            ## Print to screen
+            plt.tight_layout()
+            plt.savefig(fig_path+f'{identifier}_goodness-fit-MCMC.pdf')
+            plt.close()
+

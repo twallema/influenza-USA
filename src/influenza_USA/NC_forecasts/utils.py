@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from datetime import datetime, timedelta
-from influenza_USA.shared.utils import construct_coordinates_dictionary, name2fips, get_contact_matrix, compute_case_hospitalisation_rate
+from influenza_USA.shared.utils import name2fips
 
 # all paths relative to the location of this file
 abs_dir = os.path.dirname(__file__)
@@ -97,9 +97,9 @@ def initialise_model(strains=True, state=None, season='2023-2024'):
             ## initial condition function
             'f_I': np.array([1e-4, 1e-4]),                                                                  # initial fraction of infected
             'season': season,                                                                               # current season
-            'f_R_min1': np.array([5e-5, 5e-5]),                                                             # importance of season - 1 on immunity
-            'f_R_min2': np.array([5e-5, 5e-5]),                                                             # importance of season - 2 on immunity
-            'f_R_min3': np.array([5e-5, 5e-5])                                                              # importance of season - 3 on immunity
+            'f_R_min1': np.array([5e-5, 1e-3]),                                                             # importance of season - 1 on immunity
+            'f_R_min2': np.array([5e-5, 1e-3]),                                                             # importance of season - 2 on immunity
+            'f_R_min3': np.array([5e-5, 1e-3])                                                              # importance of season - 3 on immunity
             }
         # coordinates
         coordinates = {'strain': ['A', 'B']}
@@ -252,6 +252,10 @@ def pySODM_to_hubverse(simout: xr.Dataset,
     - target: str
         - simulation target, typically 'wk inc flu hosp'.
 
+    - model_state: str
+        - model state representing the right simulation target. 
+        - automatically sums over dimension "strain"
+
     - path: str
         - path to save result in. if no path provided, does not save result.
 
@@ -295,11 +299,11 @@ def pySODM_to_hubverse(simout: xr.Dataset,
         if not quantiles:
             for draw in output_type_id:
                 df.loc[((df['output_type_id'] == draw) & (df['location'] == loc)), 'value'] = \
-                    7*simout[model_state].sel({'draws': draw}).interp(date=target_end_date).values
+                    7*simout[model_state].sum(dim='strain').sel({'draws': draw}).interp(date=target_end_date).values
         else:
             for q in output_type_id:
                 df.loc[((df['output_type_id'] == q) & (df['location'] == loc)), 'value'] = \
-                    7*simout[model_state].quantile(q=q, dim='draws').interp(date=target_end_date).values
+                    7*simout[model_state].sum(dim='strain').quantile(q=q, dim='draws').interp(date=target_end_date).values
     
     # hubverse uses
     df['location'] = df['location'].apply(lambda x: x[:2])
