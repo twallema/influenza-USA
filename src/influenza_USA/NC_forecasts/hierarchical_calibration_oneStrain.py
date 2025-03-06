@@ -85,21 +85,45 @@ def log_posterior_probability(theta, model, datasets, seasons, pars_model_names,
         # compute priors of the season's parameters using the hyperparameters
         lpp += gamma.logpdf(theta_season['rho_i'], loc=0, a=theta_hyperpars['rho_i_a'], scale=theta_hyperpars['rho_i_scale'])       # rho_i
         lpp += expon.logpdf(theta_season['T_h'], scale=theta_hyperpars['T_h_rate'])                                                 # T_h
-        lpp += gamma.logpdf(theta_season['rho_h'], loc=0, a=theta_hyperpars['rho_h_a'], scale=theta_hyperpars['rho_h_scale'])       # rho_h
-        lpp += norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma'])               # beta
-        lpp += norm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma'])   # f_R_min1
-        lpp += norm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma'])   # f_R_min2
-        lpp += norm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma'])   # f_R_min3
-        lpp += gamma.logpdf(theta_season['f_I'], a=theta_hyperpars['f_I_a'], loc=0, scale=theta_hyperpars['f_I_scale'])             # f_I
         lpp += np.sum(norm.logpdf(theta_season['delta_beta_temporal'], loc=theta_hyperpars['delta_beta_temporal_mu'], scale=theta_hyperpars['delta_beta_temporal_sigma']))
-        
+        # see if the user wants strains
+        if isinstance(theta_season['beta'], np.ndarray):
+            lpp += np.sum(gamma.logpdf(theta_season['rho_h'], loc=0, a=theta_hyperpars['rho_h_a'], scale=theta_hyperpars['rho_h_scale']))       # rho_h
+            lpp += np.sum(norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma']))               # beta
+            lpp += np.sum(norm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma']))   # f_R_min1
+            lpp += np.sum(norm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma']))   # f_R_min2
+            lpp += np.sum(norm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma']))   # f_R_min3
+            lpp += np.sum(gamma.logpdf(theta_season['f_I'], a=theta_hyperpars['f_I_a'], loc=0, scale=theta_hyperpars['f_I_scale']))             # f_I
+        else:
+            lpp += gamma.logpdf(theta_season['rho_h'], loc=0, a=theta_hyperpars['rho_h_a'], scale=theta_hyperpars['rho_h_scale'])       # rho_h
+            lpp += norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma'])               # beta
+            lpp += norm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma'])   # f_R_min1
+            lpp += norm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma'])   # f_R_min2
+            lpp += norm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma'])   # f_R_min3
+            lpp += gamma.logpdf(theta_season['f_I'], a=theta_hyperpars['f_I_a'], loc=0, scale=theta_hyperpars['f_I_scale'])             # f_I  
+
         # negative arguments in hyperparameters lead to a nan lpp --> redact to -np.inf and move on
+        print(theta_season)
+        print(theta_hyperpars)
+        print(lpp)
+        print('\n\n\n')
+
         if math.isnan(lpp):
             return -np.inf
         
-        # nor are negative betas
-        if theta_hyperpars['beta_mu'] <= 0:
-            return -np.inf
+        # nor are negative betas or negative f_R_min
+        if isinstance(theta_season['beta'], np.ndarray):
+            if (any(x<0) for x in theta_hyperpars['beta_mu']):
+                return -np.inf
+            if (any(x<0) for x in theta_hyperpars['f_R_min1_mu']):
+                return -np.inf
+            if (any(x<0) for x in theta_hyperpars['f_R_min2_mu']):
+                return -np.inf
+            if (any(x<0) for x in theta_hyperpars['f_R_min3_mu']):
+                return -np.inf
+        else:
+            if ((theta_hyperpars['beta_mu'] <= 0) | (theta_hyperpars['f_R_min1_mu'] <= 0) | (theta_hyperpars['f_R_min2_mu'] <= 0) | (theta_hyperpars['f_R_min3_mu'] <= 0)):
+                return -np.inf
         
         # or huge delta_beta_temporal_mu/sigma
         if ((any(((x < -0.5) | (x > 0.5)) for x in theta_hyperpars['delta_beta_temporal_mu'])) | (any(((x < 0) | (x > 0.50)) for x in theta_hyperpars['delta_beta_temporal_sigma']))):
@@ -109,16 +133,38 @@ def log_posterior_probability(theta, model, datasets, seasons, pars_model_names,
         model.parameters.update(theta_season)
 
         # run the forward simulation
-        simout = model.sim([min(data.index), max(data.index)], method='RK23', rtol=5e-3)
+        simout = model.sim([min(data.index), max(data.index)], method='RK23', rtol=1e-2)
         
         # compute the likelihood
-        for j, (state_model, state_data) in enumerate(zip(states_model, states_data)):
-            x = data[state_data].values
-            y = simout[state_model].sum(dim=['age_group','location']).interp({'date': data.index}, method='linear').values
-            # check model output for nans
-            if np.isnan(y).any():
-                raise ValueError(f"simulation output contains nan, most likely due to numerical unstability. try using more conservative bounds.")
-            lpp += w[i,j] * ll_poisson(x, y)
+        for j, state_data in enumerate(states_data):
+            # ILI
+            if state_data == 'I_inc':
+                x = data['I_inc'].values
+                y = simout['I_inc'].sum(dim='strain').interp({'date': data.index}, method='linear').values
+                if np.isnan(y).any():
+                    raise ValueError(f"simulation output contains nan, most likely due to numerical unstability. try using more conservative bounds.")
+                lpp += w[i,j] * ll_poisson(x, y)
+            # Influenza A
+            if state_data == 'H_inc_A':
+                x = data['H_inc_A'].values
+                y = simout['H_inc'].sel(strain='A').interp({'date': data.index}, method='linear').values
+                if np.isnan(y).any():
+                    raise ValueError(f"simulation output contains nan, most likely due to numerical unstability. try using more conservative bounds.")
+                lpp += w[i,j] * ll_poisson(x, y)
+            # Influenza B
+            if state_data == 'H_inc_B':
+                x = data['H_inc_B'].values
+                y = simout['H_inc'].sel(strain='B').interp({'date': data.index}, method='linear').values
+                if np.isnan(y).any():
+                    raise ValueError(f"simulation output contains nan, most likely due to numerical unstability. try using more conservative bounds.")
+                lpp += w[i,j] * ll_poisson(x, y)
+            # Influenza A + B
+            if state_data == 'H_inc':
+                x = data['H_inc'].values
+                y = simout['H_inc'].sum(dim='strain').interp({'date': data.index}, method='linear').values
+                if np.isnan(y).any():
+                    raise ValueError(f"simulation output contains nan, most likely due to numerical unstability. try using more conservative bounds.")
+                lpp += w[i,j] * ll_poisson(x, y)
 
     return lpp
 
