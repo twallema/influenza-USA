@@ -14,7 +14,7 @@ import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from scipy.stats import expon, beta, norm, gamma
+from scipy.stats import expon, beta, norm, gamma, lognorm
 from pySODM.optimization.utils import list_to_dict, add_poisson_noise
 from pySODM.optimization.objective_functions import ll_poisson, validate_calibrated_parameters, expand_bounds
 
@@ -83,46 +83,35 @@ def log_posterior_probability(theta, model, datasets, seasons, pars_model_names,
         theta_season = list_to_dict(theta_season, parameters_shapes, retain_floats=True)
 
         # compute priors of the season's parameters using the hyperparameters
-        lpp += gamma.logpdf(theta_season['rho_i'], loc=0, a=theta_hyperpars['rho_i_a'], scale=theta_hyperpars['rho_i_scale'])       # rho_i
+        lpp += lognorm.logpdf(theta_season['rho_i'], loc=theta_hyperpars['rho_i_mu'], scale=theta_hyperpars['rho_i_sigma'])       # rho_i
         lpp += expon.logpdf(theta_season['T_h'], scale=theta_hyperpars['T_h_rate'])                                                 # T_h
         lpp += np.sum(norm.logpdf(theta_season['delta_beta_temporal'], loc=theta_hyperpars['delta_beta_temporal_mu'], scale=theta_hyperpars['delta_beta_temporal_sigma']))
         # see if the user wants strains
         if isinstance(theta_season['beta'], np.ndarray):
-            lpp += np.sum(gamma.logpdf(theta_season['rho_h'], loc=0, a=theta_hyperpars['rho_h_a'], scale=theta_hyperpars['rho_h_scale']))       # rho_h
+            lpp += np.sum(lognorm.logpdf(theta_season['rho_h'], loc=theta_hyperpars['rho_h_mu'], scale=theta_hyperpars['rho_h_sigma']))       # rho_h
             lpp += np.sum(norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma']))               # beta
-            lpp += np.sum(norm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma']))   # f_R_min1
-            lpp += np.sum(norm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma']))   # f_R_min2
-            lpp += np.sum(norm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma']))   # f_R_min3
-            lpp += np.sum(gamma.logpdf(theta_season['f_I'], a=theta_hyperpars['f_I_a'], loc=0, scale=theta_hyperpars['f_I_scale']))             # f_I
+            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma']))   # f_R_min1
+            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma']))   # f_R_min2
+            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma']))   # f_R_min3
+            lpp += np.sum(lognorm.logpdf(theta_season['f_I'], loc=theta_hyperpars['f_I_mu'], scale=theta_hyperpars['f_I_sigma']))             # f_I
         else:
-            lpp += gamma.logpdf(theta_season['rho_h'], loc=0, a=theta_hyperpars['rho_h_a'], scale=theta_hyperpars['rho_h_scale'])       # rho_h
+            lpp += lognorm.logpdf(theta_season['rho_h'], loc=theta_hyperpars['rho_h_mu'], scale=theta_hyperpars['rho_h_sigma'])       # rho_h
             lpp += norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma'])               # beta
-            lpp += norm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma'])   # f_R_min1
-            lpp += norm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma'])   # f_R_min2
-            lpp += norm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma'])   # f_R_min3
-            lpp += gamma.logpdf(theta_season['f_I'], a=theta_hyperpars['f_I_a'], loc=0, scale=theta_hyperpars['f_I_scale'])             # f_I  
+            lpp += lognorm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma'])   # f_R_min1
+            lpp += lognorm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma'])   # f_R_min2
+            lpp += lognorm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma'])   # f_R_min3
+            lpp += lognorm.logpdf(theta_season['f_I'], loc=theta_hyperpars['f_I_mu'], scale=theta_hyperpars['f_I_sigma'])             # f_I  
 
         # negative arguments in hyperparameters lead to a nan lpp --> redact to -np.inf and move on
-        print(theta_season)
-        print(theta_hyperpars)
-        print(lpp)
-        print('\n\n\n')
-
         if math.isnan(lpp):
             return -np.inf
         
-        # nor are negative betas or negative f_R_min
+        # nor are negative beta_mu
         if isinstance(theta_season['beta'], np.ndarray):
             if (any(x<0) for x in theta_hyperpars['beta_mu']):
                 return -np.inf
-            if (any(x<0) for x in theta_hyperpars['f_R_min1_mu']):
-                return -np.inf
-            if (any(x<0) for x in theta_hyperpars['f_R_min2_mu']):
-                return -np.inf
-            if (any(x<0) for x in theta_hyperpars['f_R_min3_mu']):
-                return -np.inf
         else:
-            if ((theta_hyperpars['beta_mu'] <= 0) | (theta_hyperpars['f_R_min1_mu'] <= 0) | (theta_hyperpars['f_R_min2_mu'] <= 0) | (theta_hyperpars['f_R_min3_mu'] <= 0)):
+            if (theta_hyperpars['beta_mu'] <= 0):
                 return -np.inf
         
         # or huge delta_beta_temporal_mu/sigma
@@ -367,18 +356,18 @@ def plot_fit(model, datasets, samples_xr, pars_model_names, path, identifier, ru
         fig,ax=plt.subplots(nrows=2, figsize=(8.3, 11.7/5*2))
         # hosp
         ax[0].scatter(data.index, 7*data['H_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
-        ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
-                            7*out['H_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
+        ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.05/2),
+                            7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+        ax[0].fill_between(out['date'], 7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.50/2),
+                            7*out['H_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)
         ax[0].set_title(f'Hospitalisations')
         ax[0].set_ylabel('Weekly hospital inc. (-)')
         # ILI
         ax[1].scatter(data.index, 7*data['I_inc'], color='black', alpha=1, linestyle='None', facecolors='None', s=60, linewidth=2)
-        ax[1].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.05/2),
-                            7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
-        ax[1].fill_between(out['date'], 7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=0.50/2),
-                            7*out['I_inc'].sum(dim=['age_group', 'location']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)   
+        ax[1].fill_between(out['date'], 7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.05/2),
+                            7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.05/2), color='blue', alpha=0.15)
+        ax[1].fill_between(out['date'], 7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=0.50/2),
+                            7*out['I_inc'].sum(dim=['strain']).quantile(dim='draws', q=1-0.50/2), color='blue', alpha=0.20)   
         ax[1].set_title(f'Influenza-like illness')
         ax[1].set_ylabel('Weekly ILI inc. (-)')
         fig.suptitle(f'{season}')

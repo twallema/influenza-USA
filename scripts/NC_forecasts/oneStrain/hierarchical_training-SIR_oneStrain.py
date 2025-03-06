@@ -32,12 +32,12 @@ end_calibration_month = 5                                                       
 # Define number of chains
 max_n = 25000
 multiplier_chains = 2
-pert = 0.8
+pert = 0.1 
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-2024-2025'
-print_n = 50
+print_n = 10
 backend = None
-discard = 0
+discard = 50
 thin = 1
 processes = int(os.environ.get('NUM_CORES', '16'))
 
@@ -86,35 +86,36 @@ if not use_ED_visits:
 # define model parameters to calibrate to every season and their bounds
 # not how we're not cutting out the parameters associated with the ED visit data
 pars_model_names = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R_min1', 'f_R_min2', 'f_R_min3', 'f_I', 'delta_beta_temporal']
-pars_model_bounds = [(1e-6,0.10), (0.5, 7), (1e-6,0.10), (0.01,1), (0,0.1), (0,0.1), (0,0.1), (1e-7,1e-3), (-0.5,0.5)]
+pars_model_bounds = [(1e-6,0.10), (0.5, 7), (1e-6,0.10), (0.01,1), (0,0.01), (0,0.01), (0,0.01), (1e-7,1e-3), (-0.5,0.5)]
 _, pars_model_shapes = validate_calibrated_parameters(pars_model_names, model.parameters)
 n_pars = sum([v[0] for v in pars_model_shapes.values()])
 
 # define hyperparameters
 if not strains: 
     hyperpars_shapes = {
-        'rho_i_a': (1,), 'rho_i_scale': (1,),
+        'rho_i_mu': (1,), 'rho_i_sigma': (1,),
         'T_h_rate': (1,),
-        'rho_h_a': (1,), 'rho_h_scale': (1,),
+        'rho_h_mu': (1,), 'rho_h_sigma': (1,),
         'beta_mu': (1,), 'beta_sigma': (1,),
         'f_R_min1_mu': (1,), 'f_R_min1_sigma': (1,),
         'f_R_min2_mu': (1,), 'f_R_min2_sigma': (1,),
         'f_R_min3_mu': (1,), 'f_R_min3_sigma': (1,),
-        'f_I_a': (1,), 'f_I_scale': (1,),
+        'f_I_mu': (1,), 'f_I_sigma': (1,),
         'delta_beta_temporal_mu': (len(model.parameters['delta_beta_temporal']),), 'delta_beta_temporal_sigma': (len(model.parameters['delta_beta_temporal']),),
     }
 else:
     hyperpars_shapes = {
-        'rho_i_a': (1,), 'rho_i_scale': (1,),
+        'rho_i_mu': (1,), 'rho_i_sigma': (1,),
         'T_h_rate': (1,),
-        'rho_h_a': (2,), 'rho_h_scale': (2,),
+        'rho_h_mu': (2,), 'rho_h_sigma': (2,),
         'beta_mu': (2,), 'beta_sigma': (2,),
         'f_R_min1_mu': (2,), 'f_R_min1_sigma': (2,),
         'f_R_min2_mu': (2,), 'f_R_min2_sigma': (2,),
         'f_R_min3_mu': (2,), 'f_R_min3_sigma': (2,),
-        'f_I_a': (2,), 'f_I_scale': (2,),
+        'f_I_mu': (2,), 'f_I_sigma': (2,),
         'delta_beta_temporal_mu': (len(model.parameters['delta_beta_temporal']),), 'delta_beta_temporal_sigma': (len(model.parameters['delta_beta_temporal']),),
     }
+
 ####################################
 ## Fetch initial guess parameters ##
 ####################################
@@ -129,15 +130,15 @@ pars_0 = list(pars_model_0.transpose().values.flatten())
 # hyperparameters
 if not strains:
     hyperpars_0 = [
-                5.0, 1.0e-02,                                                                # rho_i
+                -3.52, 0.53,                                                                # rho_i
                 1.7,                                                                         # T_h
-                5.7, 1.1e-03,                                                                # rho_h
-                0.50, 0.005,                                                                 # beta
-                4.3e-5, 2.6e-5,                                                              # f_R_min1
-                6.7e-5, 4.25e-5,                                                             # f_R_min2
-                2e-4, 2.7e-4,                                                                # f_R_min3
-                4.3, 2.8e-05,                                                                # f_I
-                -0.06, -0.02, 0, 0.03, 0.14, -0.11, 0.03, 0.10, 0.03, 0.05, 0.03, -0.04,     # delta_beta_temporal_mu
+                -5.56, 0.43,                                                                # rho_h
+                0.50, 0.05,                                                                  # beta
+                -10.21, 0.57,                                                              # f_R_min1
+                -9.77, 0.58,                                                             # f_R_min2
+                -9.0, 1.01,                                                                # f_R_min3
+                -9.0, 0.40,                                                                # f_I
+                -0.06, -0.02, 0.005, 0.03, 0.14, -0.11, 0.03, 0.10, 0.03, 0.05, 0.03, -0.04,     # delta_beta_temporal_mu
                 0.02, 0.06, 0.04, 0.07, 0.08, 0.11, 0.09, 0.08, 0.13, 0.10, 0.18, 0.08,      # delta_beta_temporal_sigma
                     ]
 else:
