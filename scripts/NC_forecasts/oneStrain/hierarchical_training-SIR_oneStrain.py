@@ -31,8 +31,8 @@ end_calibration_month = 5                                                       
 
 # Define number of chains
 max_n = 25000
-multiplier_chains = 2
-pert = 0.1 
+multiplier_chains = 3
+pert = 0.20
 run_date = datetime.today().strftime("%Y-%m-%d")
 identifier = 'exclude-2024-2025'
 print_n = 1000
