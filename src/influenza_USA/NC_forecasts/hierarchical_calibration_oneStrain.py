@@ -83,24 +83,24 @@ def log_posterior_probability(theta, model, datasets, seasons, pars_model_names,
         theta_season = list_to_dict(theta_season, parameters_shapes, retain_floats=True)
 
         # compute priors of the season's parameters using the hyperparameters
-        lpp += lognorm.logpdf(theta_season['rho_i'], loc=theta_hyperpars['rho_i_mu'], scale=theta_hyperpars['rho_i_sigma'])       # rho_i
-        lpp += expon.logpdf(theta_season['T_h'], scale=theta_hyperpars['T_h_rate'])                                                 # T_h
+        lpp += lognorm.logpdf(theta_season['rho_i'], scale=theta_hyperpars['rho_i_mu'], s=theta_hyperpars['rho_i_sigma'])                           # rho_i
+        lpp += expon.logpdf(theta_season['T_h'], scale=theta_hyperpars['T_h_rate'])                                                                 # T_h
         lpp += np.sum(norm.logpdf(theta_season['delta_beta_temporal'], loc=theta_hyperpars['delta_beta_temporal_mu'], scale=theta_hyperpars['delta_beta_temporal_sigma']))
         # see if the user wants strains
         if isinstance(theta_season['beta'], np.ndarray):
-            lpp += np.sum(lognorm.logpdf(theta_season['rho_h'], loc=theta_hyperpars['rho_h_mu'], scale=theta_hyperpars['rho_h_sigma']))       # rho_h
-            lpp += np.sum(norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma']))               # beta
-            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma']))   # f_R_min1
-            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma']))   # f_R_min2
-            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma']))   # f_R_min3
-            lpp += np.sum(lognorm.logpdf(theta_season['f_I'], loc=theta_hyperpars['f_I_mu'], scale=theta_hyperpars['f_I_sigma']))             # f_I
+            lpp += np.sum(lognorm.logpdf(theta_season['rho_h'], scale=theta_hyperpars['rho_h_mu'], s=theta_hyperpars['rho_h_sigma']))               # rho_h
+            lpp += np.sum(norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma']))                   # beta
+            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min1'], scale=theta_hyperpars['f_R_min1_mu'], s=theta_hyperpars['f_R_min1_sigma']))      # f_R_min1
+            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min2'], scale=theta_hyperpars['f_R_min2_mu'], s=theta_hyperpars['f_R_min2_sigma']))      # f_R_min2
+            lpp += np.sum(lognorm.logpdf(theta_season['f_R_min3'], scale=theta_hyperpars['f_R_min3_mu'], s=theta_hyperpars['f_R_min3_sigma']))      # f_R_min3
+            lpp += np.sum(lognorm.logpdf(theta_season['f_I'], scale=theta_hyperpars['f_I_mu'], s=theta_hyperpars['f_I_sigma']))                     # f_I
         else:
-            lpp += lognorm.logpdf(theta_season['rho_h'], loc=theta_hyperpars['rho_h_mu'], scale=theta_hyperpars['rho_h_sigma'])       # rho_h
-            lpp += norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma'])               # beta
-            lpp += lognorm.logpdf(theta_season['f_R_min1'], loc=theta_hyperpars['f_R_min1_mu'], scale=theta_hyperpars['f_R_min1_sigma'])   # f_R_min1
-            lpp += lognorm.logpdf(theta_season['f_R_min2'], loc=theta_hyperpars['f_R_min2_mu'], scale=theta_hyperpars['f_R_min2_sigma'])   # f_R_min2
-            lpp += lognorm.logpdf(theta_season['f_R_min3'], loc=theta_hyperpars['f_R_min3_mu'], scale=theta_hyperpars['f_R_min3_sigma'])   # f_R_min3
-            lpp += lognorm.logpdf(theta_season['f_I'], loc=theta_hyperpars['f_I_mu'], scale=theta_hyperpars['f_I_sigma'])             # f_I  
+            lpp += lognorm.logpdf(theta_season['rho_h'], scale=theta_hyperpars['rho_h_mu'], s=theta_hyperpars['rho_h_sigma'])                       # rho_h
+            lpp += norm.logpdf(theta_season['beta'], loc=theta_hyperpars['beta_mu'], scale=theta_hyperpars['beta_sigma'])                           # beta
+            lpp += lognorm.logpdf(theta_season['f_R_min1'], scale=theta_hyperpars['f_R_min1_mu'], s=theta_hyperpars['f_R_min1_sigma'])              # f_R_min1
+            lpp += lognorm.logpdf(theta_season['f_R_min2'], scale=theta_hyperpars['f_R_min2_mu'], s=theta_hyperpars['f_R_min2_sigma'])              # f_R_min2
+            lpp += lognorm.logpdf(theta_season['f_R_min3'], scale=theta_hyperpars['f_R_min3_mu'], s=theta_hyperpars['f_R_min3_sigma'])              # f_R_min3
+            lpp += lognorm.logpdf(theta_season['f_I'], scale=theta_hyperpars['f_I_mu'], s=theta_hyperpars['f_I_sigma'])                             # f_I  
 
         # negative arguments in hyperparameters lead to a nan lpp --> redact to -np.inf and move on
         if math.isnan(lpp):
@@ -235,7 +235,7 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
     for _, (ax, par_name, bound) in enumerate(zip(axes.flatten(), pars_model_names, bounds)):
         
         # define x based on plausible range
-        x = np.linspace(start=bound[0],stop=bound[1],num=100)
+        x = np.linspace(start=bound[0],stop=bound[1],num=1000)
 
         ## EXPONENTIAL
         if par_name == 'T_h':
@@ -251,23 +251,8 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
             ax.text(0.05, 0.95, f"scale={m:.1f}", transform=ax.transAxes, fontsize=7,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
             ax.set_ylabel('$T_h$')
-        ## GAMMA
-        elif par_name in ['rho_i', 'rho_h', 'f_I']:
-            a_name = f'{par_name}_a'
-            scale_name = f'{par_name}_scale'
-            # draw a random chain and iteration
-            for _ in range(N):
-                i = random.randint(0, len(samples_xr.coords['iteration'])-1)
-                j = random.randint(0, len(samples_xr.coords['chain'])-1)
-                ax.plot(x, gamma.pdf(x, a=samples_xr[a_name].sel({'iteration': i, 'chain': j}).values, scale=samples_xr[scale_name].sel({'iteration': i, 'chain': j}).values), alpha=0.05, color='black')        
-            # draw mean
-            ax.plot(x, gamma.pdf(x, a=samples_xr[a_name].median(dim=['iteration', 'chain']).values, scale=samples_xr[scale_name].median(dim=['iteration', 'chain']).values), color='red', linestyle='--')
-            # add parameter box
-            ax.text(0.05, 0.95, f"a={samples_xr[a_name].median(dim=['iteration', 'chain']).values:.1e}, scale={samples_xr[scale_name].median(dim=['iteration', 'chain']).values:.1e}", transform=ax.transAxes, fontsize=7,
-                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
-            ax.set_ylabel(par_name)
         ## NORMAL
-        elif par_name in ['beta', 'f_R_min1', 'f_R_min2', 'f_R_min3']:
+        elif par_name in ['beta',]:
             mu_name = f'{par_name}_mu'
             sigma_name = f'{par_name}_sigma'
             # draw a random chain and iteration
@@ -279,6 +264,21 @@ def hyperdistributions(samples_xr, path_filename, pars_model_shapes, bounds, N):
             ax.plot(x, norm.pdf(x, loc=samples_xr[mu_name].median(dim=['iteration', 'chain']).values, scale=samples_xr[sigma_name].median(dim=['iteration', 'chain']).values), color='red', linestyle='--')
             # add parameter box
             ax.text(0.05, 0.95, f"avg={samples_xr[mu_name].median(dim=['iteration', 'chain']).values:.1e}, stdev={samples_xr[sigma_name].median(dim=['iteration', 'chain']).values:.1e}", transform=ax.transAxes, fontsize=7,
+                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
+            ax.set_ylabel(par_name)
+        ## LOGNORMAL
+        elif par_name in ['rho_i', 'rho_h', 'f_I', 'f_R_min1', 'f_R_min2', 'f_R_min3']:
+            mu_name = f'{par_name}_mu'
+            sigma_name = f'{par_name}_sigma'
+            # draw a random chain and iteration
+            for _ in range(N):
+                i = random.randint(0, len(samples_xr.coords['iteration'])-1)
+                j = random.randint(0, len(samples_xr.coords['chain'])-1)
+                ax.plot(x, lognorm.pdf(x, scale=samples_xr[mu_name].sel({'iteration': i, 'chain': j}).values, s=samples_xr[sigma_name].sel({'iteration': i, 'chain': j}).values), alpha=0.05, color='black')        
+            # draw mean
+            ax.plot(x, lognorm.pdf(x, scale=samples_xr[mu_name].median(dim=['iteration', 'chain']).values, s=samples_xr[sigma_name].median(dim=['iteration', 'chain']).values), color='red', linestyle='--')
+            # add parameter box
+            ax.text(0.05, 0.95, f"scale={samples_xr[mu_name].median(dim=['iteration', 'chain']).values:.1e}, s={samples_xr[sigma_name].median(dim=['iteration', 'chain']).values:.1e}", transform=ax.transAxes, fontsize=7,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=1))
             ax.set_ylabel(par_name)
         ## TEMPORAL BETAS
