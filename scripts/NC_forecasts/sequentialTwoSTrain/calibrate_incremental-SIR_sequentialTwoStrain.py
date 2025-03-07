@@ -176,10 +176,10 @@ if __name__ == '__main__':
 
     for end_date in incremental_enddates:
 
-        print(f"Working on calibration ending on {end_date.strftime('%Y-%m-%d')}")
+        print(f"Working on calibration ending on {end_date.strftime('%Y-%m-%d')}, HubVerse reference date: {(end_date+timedelta(weeks=1)).strftime('%Y-%m-%d')}")
 
         # Make folder structure
-        identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
+        identifier = f'end-{(end_date+timedelta(weeks=1)).strftime('%Y-%m-%d')}' # identifier
         if use_ED_visits:
             samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/sequentialTwoStrain/{informed}_{hyperparameters}/use_ED_visits/{season}/{identifier}/' # Path to backend
         else:
