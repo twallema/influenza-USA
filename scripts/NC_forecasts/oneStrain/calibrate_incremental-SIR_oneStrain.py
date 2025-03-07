@@ -170,14 +170,14 @@ if __name__ == '__main__':
 
     for end_date in incremental_enddates:
 
-        print(f"Working on calibration ending on {end_date.strftime('%Y-%m-%d')}")
+        print(f"Working on calibration ending on {end_date.strftime('%Y-%m-%d')}, HubVerse reference date: {(end_date+timedelta(weeks=1)).strftime('%Y-%m-%d')}")
 
         # Make folder structure
-        identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
+        identifier = f'reference_date-{(end_date+timedelta(weeks=1)).strftime('%Y-%m-%d')}' # identifier
         if use_ED_visits:
             samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}_{hyperparameters}/use_ED_visits/{season}/{identifier}/' # Path to backend
         else:
-            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}_{hyperparameters}/not_use_ED_visits/{season}/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}_{hyperparameters}/not_use_ED_visits/{season}/{identifier}/'
         run_date = datetime.today().strftime("%Y-%m-%d") # get current date
         # check if samples folder exists, if not, make it
         if not os.path.exists(samples_path):
