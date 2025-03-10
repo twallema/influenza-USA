@@ -329,3 +329,142 @@ def pySODM_to_hubverse(simout: xr.Dataset,
         df.to_csv(path+reference_date.strftime('%Y-%m-%d')+'-JHU_IDD'+'-hierarchSIM.csv', index=False)
 
     return df
+
+def simulate_baseline_model(sigma, data_end_date, data_end_value, n_sim=1000, n_weeks=4):
+    """
+    Runs a flat baseline model and return its output in Hubverse format.
+
+    Baseline model
+    --------------
+
+    - Y_t = np.log(X_t),
+    - Y_{t+1} = Y_{t} + epsilon_t,
+    - epsilon_t ~ N(0, sigma**2),
+
+    this model has a constant median on the forecast horizon. 
+
+    Input
+    -----
+
+    - sigma: float
+        - Controls the size of the uncertainty cone on the baseline model forecast.
+
+    - data_end_date: datetime
+        - The start date of the baseline model simulation.
+
+    - data_end_value: float
+        - The initial value of the baseline model simulation.
+
+    - n_sim: int
+        - The number of stochastic realisations of the baseline model.
+
+    - n_weeks: int
+        -  The number of simulated weeks. Default: (Hubverse standard) 4 weeks.
+        
+    Output
+    ------
+
+    - simout: pd.DataFrame
+        - Simulation output in Hubverse format.
+        - Columns: 'reference_date', 'target', 'horizon', 'location', 'output_type', 'output_type_id', 'target_end_date', 'value'. 
+    """
+    
+    ## Run model 
+    # initialise daterange
+    dates = pd.date_range(start=data_end_date, end=data_end_date+timedelta(weeks=n_weeks), freq='D')
+    # pre-allocate output
+    output = np.zeros([len(dates), n_sim])
+    # pre-allocate startpoint
+    output[0,:] = np.log(data_end_value) + np.random.normal(0, sigma**2, size=n_sim)
+    # simulate
+    for i,_ in enumerate(dates[1:]):
+        output[i+1,:] = output[i,:] + np.random.normal(0, sigma**2, size=n_sim)
+    # transform back to linear space
+    output = np.exp(output) # dates x chains
+
+    ## Convert to Hubverse format
+    ### Pre-allocate dataframe
+    reference_date = data_end_date + timedelta(weeks=1)
+    target = 'wk inc flu hosp'
+    horizon = range(-1,4)
+    location = '37'
+    output_type = 'quantiles'
+    output_type_id = [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99]
+    idx = pd.MultiIndex.from_product([[reference_date,], [target,], horizon, [location,], [output_type,], output_type_id],
+                                        names=['reference_date', 'target', 'horizon', 'location', 'output_type', 'output_type_id'])
+    df = pd.DataFrame(index=idx, columns=['value'])
+    # attach target end date
+    df = df.reset_index()
+    df['target_end_date'] = df.apply(lambda row: row['reference_date'] + timedelta(weeks=row['horizon']), axis=1)
+    ### Interpolate baseline to daily frequency
+    # put in xarray dataset
+    ds = xr.Dataset({"simout": (["dates", "draws"], output)}, coords={"dates": dates, "draws": range(n_sim)})
+    # interpolate to weekly frequency
+    output_dates = pd.date_range(start=data_end_date, end=data_end_date+timedelta(weeks=n_weeks), freq='W-SAT')
+    ds = ds.interp(dates=output_dates)
+    ### Fill in dataframe
+    for q in output_type_id:
+        df.loc[df['output_type_id'] == q, 'value'] = ds['simout'].quantile(dim='draws', q=q).values
+    return df
+
+
+def compute_WIS(simout, data):
+    """
+    Compute the WIS of a simulation in Hubverse format `simout` on groundtruth `data`.
+
+    Input
+    -----
+
+    - simout: pd.DataFrame
+        - Simulation in Hubverse format. 
+
+    - data: pd.Series
+        - Groundtruth data.
+
+    Output
+    ------
+
+    - WIS: pd.DataFrame
+        - Columns: 'reference_date', 'horizon'
+    """
+
+    # get metadata
+    reference_dates = simout['reference_date'].unique()
+    horizon = simout['horizon'].unique()
+    quantiles = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
+    # pre-allocate output dataframe
+    idx = pd.MultiIndex.from_product([reference_dates, horizon], names=['reference_date', 'horizon'])
+    WIS = pd.Series(index=idx, name='WIS')
+    for reference_date in reference_dates:
+        # Loop over horizon
+        for n in horizon:
+            n = float(n)
+            ## get date
+            date = reference_date+timedelta(weeks=n)
+            ## get data
+            y = data.loc[date]
+            ## compute IS
+            IS_alpha = []
+            for q in quantiles:
+                # get quantiles
+                try:
+                    l = simout[((simout['target_end_date'] == reference_date+timedelta(weeks=n)) & (simout['output_type_id'] == q/2))]['value'].values[0]
+                    u = simout[((simout['target_end_date'] == reference_date+timedelta(weeks=n)) & (simout['output_type_id'] == 1-q/2))]['value'].values[0]
+                except:
+                    l = np.nan
+                    u = np.nan
+                # compute IS
+                IS = (u - l)
+                if y < l:
+                    IS += 2/q * (l-y)
+                elif y > u:
+                    IS += 2/q * (y-u)
+                IS_alpha.append(IS)
+            IS_alpha = np.array(IS_alpha)
+            ## compute WIS & assign
+            try:
+                m = simout[((simout['target_end_date'] == reference_date+timedelta(weeks=n)) & (simout['output_type_id'] == 0.50))]['value'].values[0]
+            except:
+                m = np.nan
+            WIS.loc[reference_date, n] = (1 / (len(quantiles) + 0.5)) * (0.5 * np.abs(y-m) + np.sum(0.5*np.array(quantiles) * IS_alpha))
+        return WIS
