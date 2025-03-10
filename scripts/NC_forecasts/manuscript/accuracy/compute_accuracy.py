@@ -1,9 +1,10 @@
 """
-A script to compute the Weighted Interval Score (WIS) accuracy metric of a model
+A script to compute the Weighted Interval Score (WIS) accuracy metric a set of forecasts
 
-To use this script, place it in a folder containing the following structure:
+Designed for use with the following folder structure:
 
 MY_FOLDER
+|--- flatBaselineModel-accuracy.csv
 |--- compute_accuracy.py
 |--- 2023-2024
     |--- end-2023-12-16
@@ -18,10 +19,9 @@ import os
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-from influenza_USA.NC_forecasts.utils import get_NC_influenza_data
+from influenza_USA.NC_forecasts.utils import get_NC_influenza_data, compute_WIS
 
 # settings
-norm = True
 prediction_horizon_weeks = 4
 quantiles_WIS = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
 start_month = 12
@@ -31,7 +31,7 @@ end_day = 7
 
 # finding the right simulations
 location = 37                           # NC FIPS code
-model_name = 'JHU_IDD-hierarchSIM'      # 
+model_name = 'JHU_IDD-hierarchSIM'      # tentative model name
 seasons = [entry for entry in os.listdir(os.path.dirname(__file__)) if os.path.isdir(os.path.join(os.path.dirname(__file__), entry))]
 seasons.sort()
 
@@ -41,9 +41,6 @@ for season in seasons:
 
     # derive start of season year
     season_start = int(season[:4])
-
-    # compute maximum of season for normalisation
-    max_data = max(get_NC_influenza_data(datetime(season_start,9,1), datetime(season_start+1,9,1), season)['H_inc']*7)
 
     # get all enddates of forecasts in a given season from the folder names
     subdirectories = [entry for entry in os.listdir(os.path.join(os.path.dirname(__file__), season)) if os.path.isdir(os.path.join(os.path.join(os.path.dirname(__file__), season), entry))]
@@ -60,73 +57,48 @@ for season in seasons:
             filtered_reference_dates.append(reference_date)
     subdirectories = filtered_subdirectories
     reference_dates = filtered_reference_dates
-
-    # loop over directories to collect groundtruth and forecasts
+    # loop over directories to collect groundtruth, forecasts and baseline model WIS
     datas = []
     simouts = []
+    baselines = []
     for subdir, reference_date in zip(subdirectories, reference_dates):
         ## get forecast
         tmp = pd.read_csv(os.path.join(season, subdir, f'{reference_date.date()}-{model_name}.csv'), parse_dates=True, date_format='%Y-%m-%d')
         ## slice location, quantiles and right target
         tmp = tmp[((tmp['location'] == location) & (tmp['output_type'] == 'quantile') & (tmp['target'] == 'wk inc flu hosp'))]
-        ## only need horizon numbers 0, 1, 2 and 3
-        tmp = tmp[tmp['horizon'] != -1]
         ## make sure ref date is datetime
+        tmp['reference_date'] = pd.to_datetime(tmp['reference_date'])
         tmp['target_end_date'] = pd.to_datetime(tmp['target_end_date'])
-        ## save only horizon, output_type_id and value
-        tmp = tmp[['target_end_date', 'output_type_id', 'value']]
-        ## normalize if needed
-        if norm:
-            tmp['value'] /= max_data
         ## append to list
         simouts.append(tmp)
         ## get groundthruth data (+ the forecast horizon of four weeks)
-        data = get_NC_influenza_data(reference_date, reference_date+timedelta(weeks=3), season)['H_inc']*7
-        if norm:
-            data /= max_data
+        data = get_NC_influenza_data(reference_date+timedelta(weeks=-1), reference_date+timedelta(weeks=3), season)['H_inc']*7
         datas.append(data)
+        ## get baseline WIS scores
+        baseline = pd.read_csv('flatBaselineModel-accuracy.csv', parse_dates=True, date_format='%Y-%m-%d')
+        baseline['reference_date'] = pd.to_datetime(baseline['reference_date'])
+        baseline = baseline[baseline['reference_date'] == reference_date]
+        baselines.append(baseline[['reference_date', 'horizon', 'WIS']])
 
     # make a dataframe for the output of the season
-    idx = pd.MultiIndex.from_product([[season,], reference_dates, range(0,prediction_horizon_weeks)], names=['season', 'reference_date', 'horizon'])
-    season_accuracy = pd.Series(index=idx, name='WIS')
+    idx = pd.MultiIndex.from_product([[season,], reference_dates, range(-1,prediction_horizon_weeks)], names=['season', 'reference_date', 'horizon'])
+    season_accuracy = pd.DataFrame(index=idx, columns=['WIS', 'relative_WIS'])
 
     # loop over weeks
-    for reference_date, simout, data in zip(reference_dates, simouts, datas):
-        # WIS
-        for n in range(0,prediction_horizon_weeks):
-            ## get date
-            date = reference_date+timedelta(weeks=n)
-            ## get data
-            y = data.loc[date]
-            ## compute IS
-            IS_alpha = []
-            for q in quantiles_WIS:
-                # get quantiles
-                try:
-                    l = simout[((simout['target_end_date'] == reference_date+timedelta(weeks=n)) & (simout['output_type_id'] == q/2))]['value'].values[0]
-                    u = simout[((simout['target_end_date'] == reference_date+timedelta(weeks=n)) & (simout['output_type_id'] == 1-q/2))]['value'].values[0]
-                except:
-                    l = np.nan
-                    u = np.nan
-                # compute IS
-                IS = (u - l)
-                if y < l:
-                    IS += 2/q * (l-y)
-                elif y > u:
-                    IS += 2/q * (y-u)
-                IS_alpha.append(IS)
-            IS_alpha = np.array(IS_alpha)
-            ## compute WIS & assign
-            try:
-                m = simout[((simout['target_end_date'] == reference_date+timedelta(weeks=n)) & (simout['output_type_id'] == 0.50))]['value'].values[0]
-            except:
-                m = np.nan
-            season_accuracy.loc[season, reference_date, n] = (1 / (len(quantiles_WIS) + 0.5)) * (0.5 * np.abs(y-m) + np.sum(0.5*np.array(quantiles_WIS) * IS_alpha))
+    for reference_date, simout, data, baseline in zip(reference_dates, simouts, datas, baselines):
+        # compute WIS and relative WIS
+        season_accuracy.loc[(season, reference_date, slice(None)), 'WIS'] = compute_WIS(simout, data).values
+        season_accuracy.loc[(season, reference_date, slice(None)), 'relative_WIS'] = compute_WIS(simout, data).values / baseline['WIS'].values
     # collect season results
     gather_seasons.append(season_accuracy)
 
 # concatenate season results
 output = pd.concat(gather_seasons, axis=0)
+
+# omit horizon -1
+output = output.reset_index()
+output = output[output['horizon'] != -1]
+output = output.set_index(['season', 'reference_date', 'horizon'])
 
 print(output.mean())
 print(output.groupby(by=['season']).mean())

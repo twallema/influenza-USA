@@ -31,7 +31,7 @@ def objective_func(sigma, start_optimisation_month, start_optimisation_day, end_
         data = 7*get_NC_influenza_data(datetime(int(season[0:4]), start_optimisation_month, start_optimisation_day), datetime(int(season[0:4])+1, end_optimisation_month, end_optimisation_day)+timedelta(weeks=4), season)['H_inc']
         ## LOOP weeks
         collect_weeks=[]
-        for date in data.index[:-5]:
+        for date in data.index[:-4]:
             ### CONSTRUCT baseline model
             simout = simulate_baseline_model(sigma, date, data.loc[date], 1000, 4)
             ### COMPUTE WIS score
@@ -48,7 +48,7 @@ def objective_func(sigma, start_optimisation_month, start_optimisation_day, end_
 ## compute WIS in function of sigma
 ### compute WIS
 WIS=[]
-sigma = np.arange(0.15,0.60,0.20)
+sigma = np.arange(0.15,0.60,0.025)
 for s in sigma:
     WIS.append(objective_func(s, start_optimisation_month, start_optimisation_day, end_optimisation_month, end_optimisation_day))
 WIS_sum = [sum(df['WIS']) for df in WIS]
