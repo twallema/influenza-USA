@@ -33,7 +33,7 @@ def objective_func(sigma, start_optimisation_month, start_optimisation_day, end_
         collect_weeks=[]
         for date in data.index[:-4]:
             ### CONSTRUCT baseline model
-            simout = simulate_baseline_model(sigma, date, data.loc[date], 1000, 4)
+            simout = simulate_baseline_model(sigma, date, data.loc[date], 10000, 4)
             ### COMPUTE WIS score
             collect_weeks.append(compute_WIS(simout, data))
         ## CONCATENATE WEEKS
@@ -56,7 +56,7 @@ WIS_sum = [sum(df['WIS']) for df in WIS]
 sigma_optim = sigma[np.argmin(WIS_sum)]
 WIS_optim = WIS[np.argmin(WIS_sum)]
 ### report maximum
-print(f'Optimal sigma: {sigma_optim:.2f}\n')
+print(f'Optimal sigma: {sigma_optim:.3f}\n')
 
 ## visualise result
 fig,ax=plt.subplots(figsize=(8.3,11.7/4))

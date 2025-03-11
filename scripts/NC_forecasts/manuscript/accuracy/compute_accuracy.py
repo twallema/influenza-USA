@@ -57,6 +57,7 @@ for season in seasons:
             filtered_reference_dates.append(reference_date)
     subdirectories = filtered_subdirectories
     reference_dates = filtered_reference_dates
+
     # loop over directories to collect groundtruth, forecasts and baseline model WIS
     datas = []
     simouts = []
