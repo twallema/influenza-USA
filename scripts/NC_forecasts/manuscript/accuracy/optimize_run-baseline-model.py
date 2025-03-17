@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from influenza_USA.NC_forecasts.utils import get_NC_influenza_data, simulate_baseline_model, compute_WIS
 
 # settings
-start_optimisation_month = 12
+start_optimisation_month = 12 # expressed as Hubverse reference date
 start_optimisation_day = 1
 end_optimisation_month = 4
 end_optimisation_day = 7
@@ -26,9 +26,11 @@ def objective_func(sigma, start_optimisation_month, start_optimisation_day, end_
     
     # LOOP seasons
     collect_seasons=[]
-    for season in seasons:
+    for season in ['2023-2024']:
         ## get the data
-        data = 7*get_NC_influenza_data(datetime(int(season[0:4]), start_optimisation_month, start_optimisation_day), datetime(int(season[0:4])+1, end_optimisation_month, end_optimisation_day)+timedelta(weeks=4), season)['H_inc']
+        data = 7*get_NC_influenza_data(datetime(int(season[0:4]), start_optimisation_month, start_optimisation_day) - timedelta(weeks=1),
+                                       datetime(int(season[0:4])+1, end_optimisation_month, end_optimisation_day)+timedelta(weeks=4),
+                                       season)['H_inc']
         ## LOOP weeks
         collect_weeks=[]
         for date in data.index[:-4]:
