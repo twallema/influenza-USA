@@ -35,7 +35,7 @@ model = initialise_model(strains=True, spatial_resolution=sr, age_resolution=ar,
 # wrap timer
 import timeit
 def to_time():
-    model.sim([start_sim, end_sim])
+    model.sim([start_sim, end_sim], method='RK23', rtol=1e-3)
 # Measure the execution time for 20 repetitions
 execution_time = timeit.timeit(to_time, number=20)
 print(f"Total execution time for 20 runs: {execution_time:.6f} seconds")
