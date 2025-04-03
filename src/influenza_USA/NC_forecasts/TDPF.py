@@ -84,7 +84,7 @@ class make_initial_condition_function():
         """
 
         return {'S':  (1 - f_I - f_R) * self.demography,
-                'I':f_I * self.demography,   
+                'I': f_I * self.demography,   
                 'R': f_R * self.demography,
                 }
 

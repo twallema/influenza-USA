@@ -78,7 +78,7 @@ n = 500                                                     # Number of simulati
 
 # calibration parameters
 pars = ['rho_i', 'T_h', 'rho_h', 'beta', 'f_R', 'f_I', 'delta_beta_temporal']                                   # parameters to calibrate
-bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0.2,0.6), (1e-7,3e-4), (-0.01,0.01)]                # parameter bounds
+bounds = [(1e-4,0.10), (0.5, 7), (1e-4,0.01), (0.01,0.04), (0.2,0.6), (1e-7,3e-4), (-0.50,0.50)]                # parameter bounds
 labels = [r'$\rho_{i}$', r'$T_h$', r'$\rho_{h}$', r'$\beta$',  r'$f_{R}$', r'$f_{I}$', r'$\Delta \beta_{t}$']   # labels in output figures
 # UNINFORMED: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if not informed:
@@ -170,14 +170,14 @@ if __name__ == '__main__':
 
     for end_date in incremental_enddates:
 
-        print(f"Working on calibration ending on {end_date.strftime('%Y-%m-%d')}")
+        print(f"Working on calibration ending on {end_date.strftime('%Y-%m-%d')}, HubVerse reference date: {(end_date+timedelta(weeks=1)).strftime('%Y-%m-%d')}")
 
         # Make folder structure
-        identifier = f'end-{end_date.strftime('%Y-%m-%d')}' # identifier
+        identifier = f'reference_date-{(end_date+timedelta(weeks=1)).strftime('%Y-%m-%d')}' # identifier
         if use_ED_visits:
-            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}/use_ED_visits/{season}/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}_{hyperparameters}/use_ED_visits/{season}/{identifier}/' # Path to backend
         else:
-            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}/not_use_ED_visits/{season}/{identifier}/' # Path to backend
+            samples_path=fig_path=f'../../../data/interim/calibration/incremental-calibration/oneStrain/{informed}_{hyperparameters}/not_use_ED_visits/{season}/{identifier}/'
         run_date = datetime.today().strftime("%Y-%m-%d") # get current date
         # check if samples folder exists, if not, make it
         if not os.path.exists(samples_path):
