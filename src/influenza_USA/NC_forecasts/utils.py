@@ -330,24 +330,51 @@ def pySODM_to_hubverse(simout: xr.Dataset,
 
     return df
 
-def simulate_baseline_model(sigma, data_end_date, data_end_value, n_sim=1000, n_weeks=4):
+from scipy.stats import linregress
+def get_historic_drift(focal_season, seasons, date, drift_horizon):
+    """A function to compute the drift in a historical dataset over a horizon
     """
-    Runs a flat baseline model and return its output in Hubverse format.
+    historic_slopes=[]
+    historic_slopes_std=[]
+    for historic_season in [x for x in seasons if x != focal_season]:
+        #### have to get right year in season (before or after Jan 1)
+        year = int(historic_season[0:4])+1 if int(date.year) > int(focal_season[0:4]) else int(historic_season[0:4])
+        #### handle leap year
+        month, day = (3,1) if ((date.month == 2) & (date.day == 29) & (year % 4 != 0)) else (date.month, date.day)
+        #### extract data
+        historic_data = 7*get_NC_influenza_data(datetime(year, month, day) - timedelta(weeks=drift_horizon),
+                                datetime(year, month, day)+timedelta(days=1),
+                                historic_season)['H_inc'].to_frame().iloc[-drift_horizon:]
+        historic_data = historic_data.reset_index()
+        historic_data['horizon'] = 7*np.array((range(-drift_horizon, 0)))
+        historic_data = historic_data[['horizon', 'H_inc']]
+        ### get slope (scipy.stats)
+        result = linregress(historic_data['horizon'].values , np.log(historic_data['H_inc'].values))
+        historic_slopes.append(result.slope)
+        historic_slopes_std.append(result.stderr)
+    return np.mean(historic_slopes), np.mean(historic_slopes_std)
+
+def simulate_geometric_random_walk(mu, sigma, data_end_date, data_end_value, n_sim=1000, n_weeks=4):
+    """
+    Simulates a geometric random walk with drift and returns its output in Hubverse format.
 
     Baseline model
     --------------
 
     - Y_t = np.log(X_t),
     - Y_{t+1} = Y_{t} + epsilon_t,
-    - epsilon_t ~ N(0, sigma**2),
+    - epsilon_t ~ N(mu, sigma**2),
 
-    this model has a constant median on the forecast horizon. 
+    for mu = 0 the median is constant over the predicted horizon.
 
     Input
     -----
 
+    - mu: float
+        - Drift (in log space).
+
     - sigma: float
-        - Controls the size of the uncertainty cone on the baseline model forecast.
+        - Uncertainty on the drift (in log space).
 
     - data_end_date: datetime
         - The start date of the baseline model simulation.
@@ -375,10 +402,10 @@ def simulate_baseline_model(sigma, data_end_date, data_end_value, n_sim=1000, n_
     # pre-allocate output
     output = np.zeros([len(dates), n_sim])
     # pre-allocate startpoint
-    output[0,:] = np.log(data_end_value) + np.random.normal(0, sigma**2, size=n_sim)
+    output[0,:] = np.log(data_end_value) + np.random.normal(mu, sigma**2, size=n_sim)
     # simulate
     for i,_ in enumerate(dates[1:]):
-        output[i+1,:] = output[i,:] + np.random.normal(0, sigma**2, size=n_sim)
+        output[i+1,:] = output[i,:] + np.random.normal(mu, sigma**2, size=n_sim)
     # transform back to linear space
     output = np.exp(output) # dates x chains
 
