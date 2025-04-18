@@ -370,8 +370,9 @@ def simulate_geometric_random_walk(mu, sigma, data_end_date, data_end_value, n_s
     Input
     -----
 
-    - mu: float
-        - Drift (in log space).
+    - mu: list
+        - Weekly drift (in log space).
+        - `len(mu) == n_weeks`
 
     - sigma: float
         - Uncertainty on the drift (in log space).
@@ -399,13 +400,19 @@ def simulate_geometric_random_walk(mu, sigma, data_end_date, data_end_value, n_s
     ## Run model 
     # initialise daterange
     dates = pd.date_range(start=data_end_date, end=data_end_date+timedelta(weeks=n_weeks), freq='D')
+    # expand mu
+    if not isinstance(mu, (list, np.ndarray)):
+        raise TypeError('`mu` must be a list/1D np.ndarray of length `n_weeks`')
+    if len(mu) != n_weeks:
+        raise ValueError('`mu` must be of length `n_weeks`')
+    mu = [value for value in mu for _ in range(7)]
     # pre-allocate output
     output = np.zeros([len(dates), n_sim])
     # pre-allocate startpoint
-    output[0,:] = np.log(data_end_value) + np.random.normal(mu, sigma**2, size=n_sim)
+    output[0,:] = np.log(data_end_value) + np.random.normal(mu[0], sigma**2, size=n_sim)
     # simulate
     for i,_ in enumerate(dates[1:]):
-        output[i+1,:] = output[i,:] + np.random.normal(mu, sigma**2, size=n_sim)
+        output[i+1,:] = output[i,:] + np.random.normal(mu[i], sigma**2, size=n_sim)
     # transform back to linear space
     output = np.exp(output) # dates x chains
 
